@@ -1,0 +1,3798 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/png" href="/asset/image/treasure.png">
+    <link href="/asset/style/tacit.css?02a6d15c76fe68a034e09b3a67c8fd72" rel="stylesheet" type="text/css">
+    <title>Battle Cats Rolls - Tracks</title>
+    <style>
+      
+      /* https://htmlcolorcodes.com/color-names/ */
+      :root {
+        --rare: white;
+        --supa_fest: yellow;
+        --supa: gold;
+        --uber_fest: salmon;
+        --uber: red;
+        --legend_fest: mediumslateblue;
+        --legend: darkviolet;
+        --found: lime;
+        --owned: lightcyan;
+        --exclusive: aqua;
+      }
+      
+
+      
+      .legend_fest a, .legend a,
+      .major_legend_fest a, .major_legend a { color: #d8a56f; }
+      
+
+      
+        .score, .cat { border-bottom-style: none; }
+        .cat { border-top-style: none; }
+      
+    </style>
+    <script>
+      function roll(element) {
+        element.form.submit();
+      };
+      function pick(position) {
+        window.location = '//bc.godfat.org/?seed=1234567&event=2026-10-16_1068&count=40' + '&pick=' + position
+          + '#N' + position.replace(/[RGX]/g, '');
+      };
+    </script>
+  </head>
+  <body>
+    <div class="menu">
+      <a href="//bc.godfat.org/?seed=1234567&amp;event=2026-10-16_1068&amp;count=40" title="Tracks / Permalink">
+        <img src="/asset/image/treasure.png" alt="Tracks">
+        <span>Tracks</span>
+      </a>
+      <a href="//bc.godfat.org/cats?seed=1234567&amp;event=2026-10-16_1068&amp;count=40" title="Show me all cats">
+        <img src="/asset/image/cats.png" alt="Cats">
+        <span>Cats</span>
+      </a>
+      <a href="//bc.godfat.org/help?seed=1234567&amp;event=2026-10-16_1068&amp;count=40" title="Help!">
+        <img src="/asset/image/help.png" alt="Help">
+        <span>Help</span>
+      </a>
+      <a href="//bc.godfat.org/logs?seed=1234567&amp;event=2026-10-16_1068&amp;count=40" title="What's changed?">
+        <img src="/asset/image/logs.png" alt="Logs">
+        <span>News</span>
+      </a>
+      <a href="//bc-seek.godfat.org/seek?seed=1234567&amp;event=2026-10-16_1068&amp;count=40" title="Looking for your seed?">
+        <img src="/asset/image/seek.png" alt="Seek">
+        <span>Seek</span>
+      </a>
+    </div>
+    <hr>
+
+    <div id="notice" class="section">
+    </div>
+
+    <div id="content">
+      <div class="form">
+  <form method="get" action="/" enctype="application/x-www-form-urlencoded">
+    
+<div class="options">
+  <label for="lang_select" title="The Battle Cats app region">Region:</label>
+  <select id="lang_select" name="lang" onchange="roll(this)">
+    <option value="en" selected="selected">BCEN</option>
+    <option value="tw">BCTW</option>
+    <option value="jp">BCJP</option>
+    <option value="kr">BCKR</option>
+  </select>
+
+  <label for="ui_select" title="Default UI language will match the app region. You can pick a different language, too">UI language:</label>
+  <select id="ui_select" name="ui" onchange="roll(this)">
+    <option value="" selected="selected">Default</option>
+    <option value="en">
+      EN (godfat)
+    </option>
+    <option value="tw">
+      TW (godfat)
+    </option>
+    <option value="jp">
+      JP (えんぷてぃ)
+    </option>
+    <option value="kr">
+      KR (-)
+    </option>
+  </select>
+
+  
+  <label for="display_select" title="How to show predicted cats in the track table">Display:</label>
+  <select id="display_select" name="display" onchange="roll(this)">
+    <option value="text" selected="selected">Text</option>
+    <option value="image">Image</option>
+    <option value="both">Both</option>
+  </select>
+  
+
+  
+  <label for="name_select" title="Evolution form used for cat names and images">Form:</label>
+  <select id="name_select" name="name" onchange="roll(this)">
+    <option value="0" selected="selected">Base</option>
+    <option value="1">Evolved</option>
+    <option value="2">True</option>
+    <option value="3">Ultra</option>
+  </select>
+  
+
+  
+  <label for="highlighting_select" title="How we highlight the cells">Highlighting:</label>
+  <select id="highlighting_select" name="highlighting" onchange="roll(this)">
+    <option value="basic" selected="selected">Basic</option>
+    <option value="advanced">Advanced</option>
+    <option value="consistent">Consistent</option>
+  </select>
+
+  <label for="theme_select" title="Color theme for highlighting">Theme:</label>
+  <select id="theme_select" name="theme" onchange="roll(this)">
+    <option value="" selected="selected">Default</option>
+    <option value="alternate">Alternate</option>
+    <option value="mkweb">mkweb (colorblind friendly)</option>
+  </select>
+
+  <label for="text_bg_input" title="Add background color for text to improve readability">Text background:
+    <input type="checkbox" id="text_bg_input" name="text_bg" onchange="roll(this)">
+  </label>
+  
+
+  
+    <input type="hidden" name="advanced_filters" value="">
+
+<input type="hidden" name="hide_wave" value="">
+
+<input type="hidden" name="exclude_talents" value="">
+
+<input type="hidden" name="sum_no_wave" value="">
+
+<input type="hidden" name="dps_no_critical" value="">
+
+<input type="hidden" name="level" value="30">
+
+<input type="hidden" name="speed_unit" value="rs">
+
+  
+</div>
+
+
+<input type="hidden" name="o" value="">
+
+
+    
+<div class="events">
+  <label for="event_select" title="Gacha banner to show">Event:</label>
+  <select id="event_select" name="event" onchange="roll(this)">
+    
+
+    
+      
+    
+
+    <optgroup label="Upcoming:">
+      
+        <option value="2026-07-24_1063">
+            2026-07-24 ~ 2026-10-16: Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!</option>
+      
+        <option value="2026-07-24_1064">
+            2026-07-24 ~ 2026-10-16: Get a Guaranteed Uber or Legend Rare from the Legend Capsules!</option>
+      
+        <option value="2026-10-05_1061">
+            2026-10-05 ~ 2026-10-09: Squire Luno added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-10-05_1077">
+            2026-10-05 ~ 2026-10-09: Limited Uber Rare unit Metal Maiden Koneko added! 120M DL Special Capsules!</option>
+      
+        <option value="2026-10-05_942">
+            2026-10-05 ~ 2026-10-09: Conjurer Dynasaurus Cat joins the fight! ★Tap banner for info!</option>
+      
+        <option value="2026-10-09_1043">
+            2026-10-09 ~ 2026-10-11: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+        <option value="2026-10-09_1077">
+            2026-10-09 ~ 2026-10-16: Limited Uber Rare unit Metal Maiden Koneko added! 120M DL Special Capsules!</option>
+      
+        <option value="2026-10-09_1078">
+            2026-10-09 ~ 2026-10-13: Joining forces from Seasonal sets, with higher drop rates!</option>
+      
+        <option value="2026-10-11_946">
+            2026-10-11 ~ 2026-10-13: Hanasaka Cat added! Mythical fantasy Cat heroes!</option>
+      
+        <option value="2026-10-13_1059">
+            2026-10-13 ~ 2026-10-16: Vornado added! Dragon kings of overwhelming power!</option>
+      
+        <option value="2026-10-13_991">
+            2026-10-13 ~ 2026-10-16: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-10-16_1068" selected="selected">
+            2026-10-16 ~ 2026-10-20: New unit Akane Tounji added! An awesome variety pack of crazy Cats!</option>
+      
+        <option value="2026-10-16_1071">
+            2026-10-16 ~ 2030-01-01: Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!</option>
+      
+        <option value="2026-10-16_1072">
+            2026-10-16 ~ 2030-01-01: Get a Guaranteed Uber or Legend Rare from the Legend Capsules!</option>
+      
+        <option value="2026-10-16_979">
+            2026-10-16 ~ 2026-10-18: Mighty Morta-Loncha added! Ultimate anti-Zombie firepower!</option>
+      
+        <option value="2026-10-16_986">
+            2026-10-16 ~ 2026-10-18: Mamoluga added! Unstoppable Eldritch Cats(?)!</option>
+      
+        <option value="2026-10-18_1021">
+            2026-10-18 ~ 2026-10-20: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-10-18_1043">
+            2026-10-18 ~ 2026-10-20: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+    </optgroup>
+
+    <optgroup label="Custom:">
+      <option value="custom">Customize...</option>
+    </optgroup>
+
+    <optgroup label="Past:">
+      
+        <option value="2026-10-02_1015">
+            2026-10-02 ~ 2026-10-05: Sorceress Sidmi added! Spooky beauties from beyond!</option>
+      
+        <option value="2026-09-30_947">
+            2026-09-30 ~ 2026-10-02: Command mighty Conjurer Mech Patrol Axel! ★Tap banner for info!</option>
+      
+        <option value="2026-09-28_1081">
+            2026-09-28 ~ 2026-10-05: NEW Uber Rare heroes Shirou Emiya and True Assassin! ★ Tap the banner for more info on this collab capsule set!</option>
+      
+        <option value="2026-09-28_1004">
+            2026-09-28 ~ 2026-09-30: Conjurer hero Komori joins the fight! ★Tap for details!</option>
+      
+        <option value="2026-09-25_772">
+            2026-09-25 ~ 2026-09-28: Capsules featuring Colossus Slayer units!  With Increasing Capsules!</option>
+      
+        <option value="2026-09-25_523">
+            2026-09-25 ~ 2026-09-28: Defend your Cats with the Wave Busters! ★ With Increasing Capsules!</option>
+      
+        <option value="2026-09-21_979">
+            2026-09-21 ~ 2026-09-25: Mighty Morta-Loncha added! Ultimate anti-Zombie firepower!</option>
+      
+        <option value="2026-09-21_1081">
+            2026-09-21 ~ 2026-09-28: NEW Uber Rare heroes Shirou Emiya and True Assassin! ★ Tap the banner for more info on this collab capsule set!</option>
+      
+        <option value="2026-09-21_1021">
+            2026-09-21 ~ 2026-09-25: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-09-18_986">
+            2026-09-18 ~ 2026-09-21: Mamoluga added! Unstoppable Eldritch Cats(?)!</option>
+      
+        <option value="2026-09-18_1081">
+            2026-09-18 ~ 2026-09-21: NEW Uber Rare heroes Shirou Emiya and True Assassin! ★ Tap the banner for more info on this collab capsule set!</option>
+      
+        <option value="2026-09-18_1062">
+            2026-09-18 ~ 2026-09-21: Lone Moon Lunos added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-09-14_991">
+            2026-09-14 ~ 2026-09-18: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-09-11_1076">
+            2026-09-11 ~ 2026-09-18: Limited Summer capsules with a new hero! Tap banner for info!</option>
+      
+        <option value="2026-09-11_1059">
+            2026-09-11 ~ 2026-09-14: Vornado added! Dragon kings of overwhelming power!</option>
+      
+        <option value="2026-09-11_1002">
+            2026-09-11 ~ 2026-09-18: Survive! Mola Mola! Collab Capsules! ★ Tap the banner for info!</option>
+      
+        <option value="2026-09-04_1076">
+            2026-09-04 ~ 2026-09-11: Limited Summer capsules with a new hero! Tap banner for info!</option>
+      
+        <option value="2026-09-04_1061">
+            2026-09-04 ~ 2026-09-11: Squire Luno added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-09-04_1002">
+            2026-09-04 ~ 2026-09-11: Survive! Mola Mola! Collab Capsules! ★ Tap the banner for info!</option>
+      
+        <option value="2026-09-02_942">
+            2026-09-02 ~ 2026-09-04: Conjurer Dynasaurus Cat joins the fight! ★Tap banner for info!</option>
+      
+        <option value="2026-08-31_947">
+            2026-08-31 ~ 2026-09-02: Command mighty Conjurer Mech Patrol Axel! ★Tap banner for info!</option>
+      
+        <option value="2026-08-28_1076">
+            2026-08-28 ~ 2026-09-04: Limited Summer capsules with a new hero! Tap banner for info!</option>
+      
+        <option value="2026-08-28_1004">
+            2026-08-28 ~ 2026-08-31: Conjurer hero Komori joins the fight! ★Tap for details!</option>
+      
+        <option value="2026-08-28_1002">
+            2026-08-28 ~ 2026-09-04: Survive! Mola Mola! Collab Capsules! ★ Tap the banner for info!</option>
+      
+        <option value="2026-08-26_946">
+            2026-08-26 ~ 2026-08-28: Hanasaka Cat added! Mythical fantasy Cat heroes!</option>
+      
+        <option value="2026-08-26_1043">
+            2026-08-26 ~ 2026-08-28: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+        <option value="2026-08-24_1021">
+            2026-08-24 ~ 2026-08-26: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-08-24_1015">
+            2026-08-24 ~ 2026-08-26: Sorceress Sidmi added! Spooky beauties from beyond!</option>
+      
+        <option value="2026-08-21_986">
+            2026-08-21 ~ 2026-08-24: Mamoluga added! Unstoppable Eldritch Cats(?)!</option>
+      
+        <option value="2026-08-21_979">
+            2026-08-21 ~ 2026-08-24: Mighty Morta-Loncha added! Ultimate anti-Zombie firepower!</option>
+      
+        <option value="2026-08-21_1075">
+            2026-08-21 ~ 2026-08-28: Limited Summer capsules with a exciting hero! Tap banner for info!</option>
+      
+        <option value="2026-08-19_991">
+            2026-08-19 ~ 2026-08-21: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-08-17_1059">
+            2026-08-17 ~ 2026-08-19: Vornado added! Dragon kings of overwhelming power!</option>
+      
+        <option value="2026-08-14_946">
+            2026-08-14 ~ 2026-08-17: Hanasaka Cat with Conjurer evolved form joins! ★Tap banner for info!</option>
+      
+        <option value="2026-08-14_1075">
+            2026-08-14 ~ 2026-08-21: Limited Summer capsules with a exciting hero! Tap banner for info!</option>
+      
+        <option value="2026-08-14_1062">
+            2026-08-14 ~ 2026-08-21: Lone Moon Lunos added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-08-12_1043">
+            2026-08-12 ~ 2026-08-14: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+        <option value="2026-08-12_1015">
+            2026-08-12 ~ 2026-08-14: Sorceress Sidmi added! Spooky beauties from beyond!</option>
+      
+        <option value="2026-08-10_979">
+            2026-08-10 ~ 2026-08-12: Mighty Morta-Loncha added! Ultimate anti-Zombie firepower!</option>
+      
+        <option value="2026-08-10_1021">
+            2026-08-10 ~ 2026-08-12: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-08-07_986">
+            2026-08-07 ~ 2026-08-10: Mamoluga added! Unstoppable Eldritch Cats(?)!</option>
+      
+        <option value="2026-08-07_1075">
+            2026-08-07 ~ 2026-08-14: Limited Summer capsules with a exciting hero! Tap banner for info!</option>
+      
+        <option value="2026-08-07_1004">
+            2026-08-07 ~ 2026-08-10: Conjurer hero Komori joins the fight! ★Tap for details!</option>
+      
+        <option value="2026-08-05_991">
+            2026-08-05 ~ 2026-08-07: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-08-05_942">
+            2026-08-05 ~ 2026-08-07: Conjurer Dynasaurus Cat joins the fight! ★Tap banner for info!</option>
+      
+        <option value="2026-08-05_1059">
+            2026-08-05 ~ 2026-08-07: Vornado added! Dragon kings of overwhelming power!</option>
+      
+        <option value="2026-08-03_947">
+            2026-08-03 ~ 2026-08-05: Command mighty Conjurer Mech Patrol Axel! ★Tap banner for info!</option>
+      
+        <option value="2026-08-03_946">
+            2026-08-03 ~ 2026-08-05: Hanasaka Cat with Conjurer evolved form joins! ★Tap banner for info!</option>
+      
+        <option value="2026-08-03_1043">
+            2026-08-03 ~ 2026-08-05: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+        <option value="2026-08-01_1021">
+            2026-08-01 ~ 2026-08-03: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-08-01_1015">
+            2026-08-01 ~ 2026-08-03: Sorceress Sidmi added! Spooky beauties from beyond!</option>
+      
+        <option value="2026-07-29_986">
+            2026-07-29 ~ 2026-08-01: Mystery creature Mamoluga awaits your summoning! ★ Tap banner for info!</option>
+      
+        <option value="2026-07-29_979">
+            2026-07-29 ~ 2026-08-01: New Conjurer Unit Mighty Morta-Loncha, with Explosive attacks! ★Tap for details!</option>
+      
+        <option value="2026-07-29_1061">
+            2026-07-29 ~ 2026-08-03: Squire Luno added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-07-27_942">
+            2026-07-27 ~ 2026-07-29: Conjurer Dynasaurus Cat joins the fight! ★Tap banner for info!</option>
+      
+        <option value="2026-07-27_1065">
+            2026-07-27 ~ 2026-07-29: New units added to June Bride Capsules ★ Tap banner for info!</option>
+      
+        <option value="2026-07-27_1004">
+            2026-07-27 ~ 2026-07-29: Conjurer hero Komori joins the fight! ★Tap for details!</option>
+      
+        <option value="2026-07-24_991">
+            2026-07-24 ~ 2026-07-27: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-07-24_1065">
+            2026-07-24 ~ 2026-07-27: New units added to June Bride Capsules ★ Tap banner for info!</option>
+      
+        <option value="2026-07-24_1060">
+            2026-07-24 ~ 2026-07-27: New unit Vornado added! Dragon kings of overwhelming power!</option>
+      
+        <option value="2026-07-20_939">
+            2026-07-20 ~ 2026-07-24: Units from Busters sets join forces! ★ Uber Rare drop rates UP!</option>
+      
+        <option value="2026-07-20_1030">
+            2026-07-20 ~ 2026-07-24: 13 Year Celebration: Ultra Selection! ★ Tap banner for info!</option>
+      
+        <option value="2026-07-17_947">
+            2026-07-17 ~ 2026-07-20: Command mighty Conjurer Mech Patrol Axel! ★Tap banner for info!</option>
+      
+        <option value="2026-07-15_946">
+            2026-07-15 ~ 2026-07-17: Hanasaka Cat with Conjurer evolved form joins! ★Tap banner for info!</option>
+      
+        <option value="2026-07-13_1043">
+            2026-07-13 ~ 2026-07-15: Fuma Kotaro added! Masters of battle join the Cat cause!</option>
+      
+        <option value="2026-07-11_1058">
+            2026-07-11 ~ 2026-07-24: Get a Guaranteed Uber or Legend Rare from the Legend Capsules!</option>
+      
+        <option value="2026-07-11_1057">
+            2026-07-11 ~ 2026-07-24: Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!</option>
+      
+        <option value="2026-07-11_1051">
+            2026-07-11 ~ 2026-07-20: New unit Lone Moon Lunos added! Special Capsules featuring powerful limited units!</option>
+      
+        <option value="2026-07-10_1065">
+            2026-07-10 ~ 2026-07-24: New units added to June Bride Capsules ★ Tap banner for info!</option>
+      
+        <option value="2026-07-10_1021">
+            2026-07-10 ~ 2026-07-13: Raclesa added! Cosmic cuties, here to crush your enemies!</option>
+      
+        <option value="2026-07-07_945">
+            2026-07-07 ~ 2026-07-10: Conjure spirits with new hero Gunduros! Tap banner for info!</option>
+      
+        <option value="2026-07-07_1015">
+            2026-07-07 ~ 2026-07-10: Sorceress Sidmi added! Spooky beauties from beyond!</option>
+      
+        <option value="2026-07-06_1054">
+            2026-07-06 ~ 2026-07-11: 13 Year Celebration: Miracle Selection! ★ Tap banner for info!</option>
+      
+        <option value="2026-07-03_986">
+            2026-07-03 ~ 2026-07-07: Mystery creature Mamoluga awaits your summoning! ★ Tap banner for info!</option>
+      
+        <option value="2026-07-03_979">
+            2026-07-03 ~ 2026-07-07: New Conjurer Unit Mighty Morta-Loncha, with Explosive attacks! ★Tap for details!</option>
+      
+        <option value="2026-07-03_1045">
+            2026-07-03 ~ 2026-07-06: New unit Squire Luno added! ★Uber Rare drop rate UP!</option>
+      
+        <option value="2026-06-30_1004">
+            2026-06-30 ~ 2026-07-03: Conjurer hero Komori joins the fight! ★Tap for details!</option>
+      
+        <option value="2026-06-26_991">
+            2026-06-26 ~ 2026-06-30: The Almighties, supreme beings of Catkind! ★ Tap banner for info!</option>
+      
+        <option value="2026-06-26_1053">
+            2026-06-26 ~ 2026-07-03: Agent Staal joins the 13th anniversary Capsules! ★Check banner for details!</option>
+      
+        <option value="2026-06-26_1052">
+            2026-06-26 ~ 2026-07-03: Trixi joins the 13th anniversary Capsules! ★Check banner for details!</option>
+      
+        <option value="2026-06-24_946">
+            2026-06-24 ~ 2026-06-26: Hanasaka Cat with Conjurer evolved form joins! ★Tap banner for info!</option>
+      
+        <option value="2026-06-24_942">
+            2026-06-24 ~ 2026-06-26: Conjurer Dynasaurus Cat joins the fight! ★Tap banner for info!</option>
+      
+    </optgroup>
+
+    <option value="next_page">Next page...</option>
+  </select>
+
+  
+</div>
+
+<input type="hidden" name="event_page" value="1">
+
+
+    <input type="hidden" name="pos" value="1A">
+
+
+
+<div class="control">
+  <label for="seed_input" title="Seed to determine the tracks">Seed:</label>
+  <input type="number" id="seed_input" name="seed" value="1234567" onclick="this.select()">
+
+  <label for="details_input" title="Show gacha information and seed values used to determine the rarities and slots">Details:
+    <input type="checkbox" id="details_input" name="details" onchange="roll(this)">
+  </label>
+
+  <label for="count_input" title="Steps to show in the tracks">Count:</label>
+  <input type="number" id="count_input" name="count" min="1" max="300" value="40" onclick="this.select()">
+
+  <input type="submit" value="Roll">
+
+  
+  <label for="last_select" title="This is used to determine if 1A is a duplicated rare or not">Last roll:</label>
+  <select id="last_select" name="last" onchange="roll(this)">
+    <option value="0"></option>
+
+    <optgroup label="Rare:">
+      
+        <option value="524">Wushu Cat</option>
+      
+        <option value="496">Matador Cat</option>
+      
+        <option value="377">Rover Cat</option>
+      
+        <option value="326">Welterweight Cat</option>
+      
+        <option value="309">Gardener Cat</option>
+      
+        <option value="199">Onmyoji Cat</option>
+      
+        <option value="198">Psychocat</option>
+      
+        <option value="150">Mer-Cat</option>
+      
+        <option value="149">Rocker Cat</option>
+      
+        <option value="148">Tin Cat</option>
+      
+        <option value="147">Stilts Cat</option>
+      
+        <option value="146">Cat Gunslinger</option>
+      
+        <option value="59">Swordsman Cat</option>
+      
+        <option value="57">Archer Cat</option>
+      
+        <option value="56">Witch Cat</option>
+      
+        <option value="53">Shaman Cat</option>
+      
+        <option value="52">Fortune Teller Cat</option>
+      
+        <option value="51">Bishop Cat</option>
+      
+        <option value="50">Thief Cat</option>
+      
+        <option value="49">Pirate Cat</option>
+      
+        <option value="48">Viking Cat</option>
+      
+        <option value="47">Jurassic Cat</option>
+      
+        <option value="42">Salon Cat</option>
+      
+        <option value="39">Wheel Cat</option>
+      
+        <option value="38">Pogo Cat</option>
+      
+    </optgroup>
+
+    <optgroup label="Super:">
+      
+        <option value="448">Miter Saw Cat</option>
+      
+        <option value="447">Backhoe Cat</option>
+      
+        <option value="446">Cutter Cat</option>
+      
+        <option value="445">Piledriver Cat</option>
+      
+        <option value="444">Driller Cat</option>
+      
+        <option value="201">Metal Cat</option>
+      
+        <option value="145">Cat Base Mini</option>
+      
+        <option value="132">Neneko</option>
+      
+        <option value="130">Gold Cat</option>
+      
+        <option value="238">Freshman Cat Jobs</option>
+      
+        <option value="239">Rich Cat III</option>
+      
+        <option value="240">Sniper the Recruit</option>
+      
+        <option value="523">Nymph Cat</option>
+      
+        <option value="378">Fencer Cat</option>
+      
+        <option value="308">Vaulter Cat</option>
+      
+        <option value="200">Surfer Cat</option>
+      
+        <option value="154">Cat Toaster</option>
+      
+        <option value="153">Figure Skating Cats</option>
+      
+        <option value="152">Weightlifter Cat</option>
+      
+        <option value="151">Juliet Cat</option>
+      
+        <option value="62">Sushi Cat</option>
+      
+        <option value="41">Bath Cat</option>
+      
+        <option value="40">Apple Cat</option>
+      
+        <option value="37">Swimmer Cat</option>
+      
+        <option value="36">Nerd Cat</option>
+      
+        <option value="34">Kotatsu Cat</option>
+      
+        <option value="33">Hip Hop Cat</option>
+      
+        <option value="32">Delinquent Cat</option>
+      
+        <option value="31">Bodhisattva Cat</option>
+      
+    </optgroup>
+
+    <optgroup label="Uber:">
+      
+        <option value="870">Akane Tounji</option>
+      
+        <option value="764">Dynasaurus Cat</option>
+      
+        <option value="669">Cat Tengu</option>
+      
+        <option value="618">Summoner Satoru</option>
+      
+        <option value="520">Lasvoss</option>
+      
+        <option value="428">Cat Clan Heroes</option>
+      
+        <option value="144">Nurse Cat</option>
+      
+        <option value="60">Baby Cat</option>
+      
+        <option value="58">Marauder Cat</option>
+      
+        <option value="45">Lesser Demon Cat</option>
+      
+        <option value="44">Cat Machine</option>
+      
+        <option value="43">Ice Cat</option>
+      
+    </optgroup>
+
+    <optgroup label="Legendary:">
+      
+        <option value="456">Wonder MOMOCO</option>
+      
+    </optgroup>
+  </select>
+  
+</div>
+
+
+    
+<div class="find">
+  <label for="find_select" title="Highlight the cat in the tracks selected here">Find next:</label>
+  <select id="find_select" name="find" onchange="roll(this)">
+    <option></option>
+
+    <optgroup label="Legendary:">
+      
+        <option value="456">Wonder MOMOCO</option>
+      
+    </optgroup>
+
+    <optgroup label="Uber:">
+      
+        <option value="870">Akane Tounji</option>
+      
+        <option value="764">Dynasaurus Cat</option>
+      
+        <option value="669">Cat Tengu</option>
+      
+        <option value="618">Summoner Satoru</option>
+      
+        <option value="520">Lasvoss</option>
+      
+        <option value="428">Cat Clan Heroes</option>
+      
+        <option value="144">Nurse Cat</option>
+      
+        <option value="60">Baby Cat</option>
+      
+        <option value="58">Marauder Cat</option>
+      
+        <option value="45">Lesser Demon Cat</option>
+      
+        <option value="44">Cat Machine</option>
+      
+        <option value="43">Ice Cat</option>
+      
+    </optgroup>
+
+    <optgroup label="Super:">
+      
+        <option value="448">Miter Saw Cat</option>
+      
+        <option value="447">Backhoe Cat</option>
+      
+        <option value="446">Cutter Cat</option>
+      
+        <option value="445">Piledriver Cat</option>
+      
+        <option value="444">Driller Cat</option>
+      
+        <option value="201">Metal Cat</option>
+      
+        <option value="145">Cat Base Mini</option>
+      
+        <option value="132">Neneko</option>
+      
+        <option value="130">Gold Cat</option>
+      
+        <option value="238">Freshman Cat Jobs</option>
+      
+        <option value="239">Rich Cat III</option>
+      
+        <option value="240">Sniper the Recruit</option>
+      
+        <option value="523">Nymph Cat</option>
+      
+        <option value="378">Fencer Cat</option>
+      
+        <option value="308">Vaulter Cat</option>
+      
+        <option value="200">Surfer Cat</option>
+      
+        <option value="154">Cat Toaster</option>
+      
+        <option value="153">Figure Skating Cats</option>
+      
+        <option value="152">Weightlifter Cat</option>
+      
+        <option value="151">Juliet Cat</option>
+      
+        <option value="62">Sushi Cat</option>
+      
+        <option value="41">Bath Cat</option>
+      
+        <option value="40">Apple Cat</option>
+      
+        <option value="37">Swimmer Cat</option>
+      
+        <option value="36">Nerd Cat</option>
+      
+        <option value="34">Kotatsu Cat</option>
+      
+        <option value="33">Hip Hop Cat</option>
+      
+        <option value="32">Delinquent Cat</option>
+      
+        <option value="31">Bodhisattva Cat</option>
+      
+    </optgroup>
+
+    <optgroup label="Rare:">
+      
+        <option value="524">Wushu Cat</option>
+      
+        <option value="496">Matador Cat</option>
+      
+        <option value="377">Rover Cat</option>
+      
+        <option value="326">Welterweight Cat</option>
+      
+        <option value="309">Gardener Cat</option>
+      
+        <option value="199">Onmyoji Cat</option>
+      
+        <option value="198">Psychocat</option>
+      
+        <option value="150">Mer-Cat</option>
+      
+        <option value="149">Rocker Cat</option>
+      
+        <option value="148">Tin Cat</option>
+      
+        <option value="147">Stilts Cat</option>
+      
+        <option value="146">Cat Gunslinger</option>
+      
+        <option value="59">Swordsman Cat</option>
+      
+        <option value="57">Archer Cat</option>
+      
+        <option value="56">Witch Cat</option>
+      
+        <option value="53">Shaman Cat</option>
+      
+        <option value="52">Fortune Teller Cat</option>
+      
+        <option value="51">Bishop Cat</option>
+      
+        <option value="50">Thief Cat</option>
+      
+        <option value="49">Pirate Cat</option>
+      
+        <option value="48">Viking Cat</option>
+      
+        <option value="47">Jurassic Cat</option>
+      
+        <option value="42">Salon Cat</option>
+      
+        <option value="39">Wheel Cat</option>
+      
+        <option value="38">Pogo Cat</option>
+      
+    </optgroup>
+  </select>
+
+  
+    <label for="no_guaranteed_input" title="Do not show guaranteed. This can be useful when you're trying to find next uber without using guaranteed">Exclude guaranteed:
+      <input type="checkbox" id="no_guaranteed_input" name="no_guaranteed" value="true" onchange="roll(this)">
+    </label>
+  
+
+  <label for="force_guaranteed_input" title="Force show guaranteed even when this gacha banner doesn't have it. This can be useful when you expect there's a guaranteed counterpart for this gacha banner">Simulate guaranteed:</label>
+  <select id="force_guaranteed_input" name="force_guaranteed" onchange="roll(this)">
+    
+      <option value=""></option>
+    
+      <option value="2">2</option>
+    
+      <option value="7">7</option>
+    
+      <option value="11">11</option>
+    
+      <option value="15">15</option>
+    
+  </select>
+
+  <label for="add_future_ubers" title="Add some fake future ubers. This can be useful to guess how ubers will be rotated around when new ubers are added">Add future ubers:</label>
+  <select id="add_future_ubers" name="ubers" onchange="roll(this)">
+    
+      <option value="0" selected="selected">0</option>
+    
+      <option value="1">1</option>
+    
+      <option value="2">2</option>
+    
+      <option value="3">3</option>
+    
+      <option value="4">4</option>
+    
+      <option value="5">5</option>
+    
+      <option value="6">6</option>
+    
+      <option value="7">7</option>
+    
+      <option value="8">8</option>
+    
+      <option value="9">9</option>
+    
+  </select>
+</div>
+
+
+  </form>
+</div>
+
+
+
+  <div class="found_cats">
+  
+    <p>Found cats:</p>
+  
+  <ul>
+    
+      <li>
+        <span class="position legend">
+          <span><a href="//bc.godfat.org/?seed=911104069&amp;last=456&amp;event=2026-10-16_1068&amp;count=40" title="*Wonder MOMOCO | Cutie MOMOCO | Starlight MOMOCO
+Cosmic policegirl hunting interdimensional
+criminals with lovely plasma beams of justice.
+Area Wave attacks Freeze Red/Dark/Angels.">Wonder MOMOCO</a> <a href="//bc.godfat.org/cats/456?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+        </span>:
+        170A
+      </li>
+    
+  </ul>
+</div>
+
+  <div class="information">
+  
+</div>
+
+  <div class="table">
+  <table><tbody>
+    <tr>
+      <th title="Label for this position">No.</th>
+      
+        <th title="Expected cat">Result</th>
+      
+      <th title="Expected cat when rolling a guaranteed at this position">Guaranteed</th>
+      
+        <th>Alt. result</th>
+      
+      <th>Alt. guaranteed</th>
+      
+      <th>Alt. No.</th>
+    </tr>
+
+    
+      <tr>
+        <td rowspan="2" id="N1A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;event=2026-10-16_1068&amp;count=40#N1A">1A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare next_position" onclick="pick('1AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('1AGX')">
+  
+</td>
+
+
+        
+        
+        <td colspan="3">
+        
+          <a href="//bc.godfat.org/?seed=447537278&amp;event=2026-10-16_1068&amp;count=40">Backtrack</a>
+        </td>
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare next_position" onclick="pick('1A')">
+  <span><a href="//bc.godfat.org/?seed=2225988032&amp;last=150&amp;event=2026-10-16_1068&amp;count=40" title="*Mer-Cat | Commando Cat | Cameraman Cat
+A mermaid who came onshore to meet a
+prince. Survives on land by taking long breaths.
+Strong vs floating, might survive a lethal strike.">Mer-Cat</a> <a href="//bc.godfat.org/cats/150?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('1AG')">
+  <span><a href="//bc.godfat.org/?seed=868645151&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 11B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('1BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('1BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N1B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=1B&amp;event=2026-10-16_1068&amp;count=40#N1B">1B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N2A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=2A&amp;event=2026-10-16_1068&amp;count=40#N2A">2A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa_fest major_supa_fest" onclick="pick('2AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('2AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('1B')">
+  <span><a href="//bc.godfat.org/?seed=3327196554&amp;last=151&amp;event=2026-10-16_1068&amp;count=40" title="*Juliet Cat | Princess Juliet Cat | Juliet the Maiko
+Dreams of a Romeo she met online.
+Favorite book: &quot;Pride, Prejudice and Haircuts&quot;
+Briefly freezes Angels (Area Attack)">Juliet Cat</a> <a href="//bc.godfat.org/cats/151?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('1BG')">
+  <span>&lt;- 12A <a href="//bc.godfat.org/?seed=257124205&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa_fest major_supa_fest" onclick="pick('2A')">
+  <span><a href="//bc.godfat.org/?seed=828166522&amp;last=42&amp;event=2026-10-16_1068&amp;count=40" title="*Salon Cat | Paris Cat | Cyborg Cat
+Has no limit when it comes to beauty care.
+Works very well with Sexy Legs Cat.
+Exceptional Range Attack (Area Attack)">Salon Cat</a> <a href="//bc.godfat.org/cats/42?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('2AG')">
+  <span>&lt;- 13A <a href="//bc.godfat.org/?seed=82101674&amp;last=669&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Tengu | Grand Yokai Tengu | Immortal Master Tengu
+Cat that endured all manner of difficult training in the 
+mountains to become a yokai. Colossus Slayer, 
+strong against Red/Angels, sometimes Knockback.">Cat Tengu</a> <a href="//bc.godfat.org/cats/669?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa_fest major_supa_fest" onclick="pick('2BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('2BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N2B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=2B&amp;event=2026-10-16_1068&amp;count=40#N2B">2B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N3A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=3A&amp;event=2026-10-16_1068&amp;count=40#N3A">3A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('3AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('3AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa_fest major_supa_fest" onclick="pick('2B')">
+  <span><a href="//bc.godfat.org/?seed=1225934019&amp;last=49&amp;event=2026-10-16_1068&amp;count=40" title="*Pirate Cat | Captain Cat | Dread Pirate Catley
+Influenced by a certain pirate cartoon,
+and dreams of being a Pirate King. Can't swim.
+Might knockback Red enemies.">Pirate Cat</a> <a href="//bc.godfat.org/cats/49?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('2BG')">
+  <span>&lt;- 13A <a href="//bc.godfat.org/?seed=82101674&amp;last=669&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Tengu | Grand Yokai Tengu | Immortal Master Tengu
+Cat that endured all manner of difficult training in the 
+mountains to become a yokai. Colossus Slayer, 
+strong against Red/Angels, sometimes Knockback.">Cat Tengu</a> <a href="//bc.godfat.org/cats/669?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('3A')">
+  <span><a href="//bc.godfat.org/?seed=327754758&amp;last=149&amp;event=2026-10-16_1068&amp;count=40" title="*Rocker Cat | Artist Cat | Ramen Cat
+A peanut farmer's son, became a rocker to
+avoid coming out about his nut allergies to his
+family. Resistant to Angelic attacks.">Rocker Cat</a> <a href="//bc.godfat.org/cats/149?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('3AG')">
+  <span>&lt;- 14A <a href="//bc.godfat.org/?seed=1025096690&amp;last=669&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Tengu | Grand Yokai Tengu | Immortal Master Tengu
+Cat that endured all manner of difficult training in the 
+mountains to become a yokai. Colossus Slayer, 
+strong against Red/Angels, sometimes Knockback.">Cat Tengu</a> <a href="//bc.godfat.org/cats/669?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('3BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('3BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N3B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=3B&amp;event=2026-10-16_1068&amp;count=40#N3B">3B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N4A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=4A&amp;event=2026-10-16_1068&amp;count=40#N4A">4A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('4AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('4AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('3B')">
+  <span><a href="//bc.godfat.org/?seed=3368615810&amp;last=147&amp;event=2026-10-16_1068&amp;count=40" title="*Stilts Cat | Totem Cat | Acrobat Cats
+A cat so ambitious that he built wooden stilts
+to better reach for the stars.
+Knocks back Angels every once in a while.">Stilts Cat</a> <a href="//bc.godfat.org/cats/147?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('3BG')">
+  <span>&lt;- 14A <a href="//bc.godfat.org/?seed=1025096690&amp;last=669&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Tengu | Grand Yokai Tengu | Immortal Master Tengu
+Cat that endured all manner of difficult training in the 
+mountains to become a yokai. Colossus Slayer, 
+strong against Red/Angels, sometimes Knockback.">Cat Tengu</a> <a href="//bc.godfat.org/cats/669?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('4A')">
+  <span><a href="//bc.godfat.org/?seed=3174552606&amp;last=198&amp;event=2026-10-16_1068&amp;count=40" title="*Psychocat | Neo Psychocat | Corrupted Psychocat
+Bends metal when excited. Loves cereal, but
+always ends up with a useless spoon before he
+can eat. Sometimes slows Alien movement.">Psychocat</a> <a href="//bc.godfat.org/cats/198?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('4AG')">
+  <span>&lt;- 15A <a href="//bc.godfat.org/?seed=3003667374&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('4BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('4BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N4B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=4B&amp;event=2026-10-16_1068&amp;count=40#N4B">4B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N5A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=5A&amp;event=2026-10-16_1068&amp;count=40#N5A">5A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('5AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('5AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('4B')">
+  <span><a href="//bc.godfat.org/?seed=1549154244&amp;last=49&amp;event=2026-10-16_1068&amp;count=40" title="*Pirate Cat | Captain Cat | Dread Pirate Catley
+Influenced by a certain pirate cartoon,
+and dreams of being a Pirate King. Can't swim.
+Might knockback Red enemies.">Pirate Cat</a> <a href="//bc.godfat.org/cats/49?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('4BG')">
+  <span>&lt;- 15A <a href="//bc.godfat.org/?seed=3003667374&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('5A')">
+  <span><a href="//bc.godfat.org/?seed=3890707091&amp;last=52&amp;event=2026-10-16_1068&amp;count=40" title="*Fortune Teller Cat | Fisherman Cat | Doctor Cat
+A Cat that loves the idea of fortune telling.
+Has read one too many astrology books.
+Might knockback Floating enemies.">Fortune Teller Cat</a> <a href="//bc.godfat.org/cats/52?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('5AG')">
+  <span>&lt;- 16A <a href="//bc.godfat.org/?seed=962215067&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('5BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('5BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N5B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=5B&amp;event=2026-10-16_1068&amp;count=40#N5B">5B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N6A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=6A&amp;event=2026-10-16_1068&amp;count=40#N6A">6A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('6AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('6AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('5B')">
+  <span><a href="//bc.godfat.org/?seed=2278661833&amp;last=31&amp;event=2026-10-16_1068&amp;count=40" title="*Bodhisattva Cat | Avalokitesvara Cat | Tathagata Cat
+A Cat that has reached a state of peace
+and pushed its body beyond physical limits.
+Might slow Floating enemies (Area Attack)">Bodhisattva Cat</a> <a href="//bc.godfat.org/cats/31?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('5BG')">
+  <span>&lt;- 16A <a href="//bc.godfat.org/?seed=962215067&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('6A')">
+  <span><a href="//bc.godfat.org/?seed=3329123533&amp;last=149&amp;event=2026-10-16_1068&amp;count=40" title="*Rocker Cat | Artist Cat | Ramen Cat
+A peanut farmer's son, became a rocker to
+avoid coming out about his nut allergies to his
+family. Resistant to Angelic attacks.">Rocker Cat</a> <a href="//bc.godfat.org/cats/149?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('6AG')">
+  <span>&lt;- 17A <a href="//bc.godfat.org/?seed=2523171419&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('6BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('6BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N6B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=6B&amp;event=2026-10-16_1068&amp;count=40#N6B">6B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N7A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=7A&amp;event=2026-10-16_1068&amp;count=40#N7A">7A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('7AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('7AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('6B')">
+  <span><a href="//bc.godfat.org/?seed=3928801718&amp;last=50&amp;event=2026-10-16_1068&amp;count=40" title="*Thief Cat | Phantom Thief Cat | Goemon Cat
+Moves fast. Steals faster.
+More money earned when defeating an enemy.">Thief Cat</a> <a href="//bc.godfat.org/cats/50?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('6BG')">
+  <span>&lt;- 17A <a href="//bc.godfat.org/?seed=2523171419&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('7A')">
+  <span><a href="//bc.godfat.org/?seed=1850194107&amp;last=150&amp;event=2026-10-16_1068&amp;count=40" title="*Mer-Cat | Commando Cat | Cameraman Cat
+A mermaid who came onshore to meet a
+prince. Survives on land by taking long breaths.
+Strong vs floating, might survive a lethal strike.">Mer-Cat</a> <a href="//bc.godfat.org/cats/150?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('7AG')">
+  <span>&lt;- 18A <a href="//bc.godfat.org/?seed=3383365300&amp;last=520&amp;event=2026-10-16_1068&amp;count=40" title="*Lasvoss | Ultimate Lasvoss | Lasvoss Reborn
+Incarnation of Evil summoned to eradicate the forces
+of Good. May strike a Savage Blow imbued with dark
+power. Survives once, stronger after taking damage.">Lasvoss</a> <a href="//bc.godfat.org/cats/520?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('7BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('7BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N7B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=7B&amp;event=2026-10-16_1068&amp;count=40#N7B">7B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N8A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=8A&amp;event=2026-10-16_1068&amp;count=40#N8A">8A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('8AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('8AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('7B')">
+  <span><a href="//bc.godfat.org/?seed=3545830419&amp;last=49&amp;event=2026-10-16_1068&amp;count=40" title="*Pirate Cat | Captain Cat | Dread Pirate Catley
+Influenced by a certain pirate cartoon,
+and dreams of being a Pirate King. Can't swim.
+Might knockback Red enemies.">Pirate Cat</a> <a href="//bc.godfat.org/cats/49?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('7BG')">
+  <span>&lt;- 18A <a href="//bc.godfat.org/?seed=3383365300&amp;last=520&amp;event=2026-10-16_1068&amp;count=40" title="*Lasvoss | Ultimate Lasvoss | Lasvoss Reborn
+Incarnation of Evil summoned to eradicate the forces
+of Good. May strike a Savage Blow imbued with dark
+power. Survives once, stronger after taking damage.">Lasvoss</a> <a href="//bc.godfat.org/cats/520?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('8A')">
+  <span><a href="//bc.godfat.org/?seed=2007239934&amp;last=148&amp;event=2026-10-16_1068&amp;count=40" title="*Tin Cat | Plane Cat | Robocat
+Cutting-edge firepower masked by the
+soulful nostalgia of yesteryear.
+May Knockback Dark enemies.">Tin Cat</a> <a href="//bc.godfat.org/cats/148?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('8AG')">
+  <span>&lt;- 19A <a href="//bc.godfat.org/?seed=2755125438&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_uber major_uber" onclick="pick('8BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('8BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N8B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=8B&amp;event=2026-10-16_1068&amp;count=40#N8B">8B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N9A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=9A&amp;event=2026-10-16_1068&amp;count=40#N9A">9A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('9AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('9AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_uber major_uber" onclick="pick('8B')">
+  <span><a href="//bc.godfat.org/?seed=768227299&amp;last=60&amp;event=2026-10-16_1068&amp;count=40" title="*Baby Cat | Baby Cats | Cats in the Cradle | Cats in the Stroller
+A baby Cat that still can't do anything
+by itself. Luckily, daddy is there to help.
+Might knockback Floating &amp; Aliens (Area Atk)">Baby Cat</a> <a href="//bc.godfat.org/cats/60?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('8BG')">
+  <span>&lt;- 19A <a href="//bc.godfat.org/?seed=2755125438&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('9A')">
+  <span><a href="//bc.godfat.org/?seed=1510630008&amp;last=32&amp;event=2026-10-16_1068&amp;count=40" title="*Delinquent Cat | Angry Delinquent Cat | Ultra Delinquent Cat
+Known as the Bancho of Cat School.
+Might freeze Floating enemies (Area Attack)">Delinquent Cat</a> <a href="//bc.godfat.org/cats/32?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('9AG')">
+  <span>&lt;- 20A <a href="//bc.godfat.org/?seed=4132246367&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('9BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('9BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N9B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=9B&amp;event=2026-10-16_1068&amp;count=40#N9B">9B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N10A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=10A&amp;event=2026-10-16_1068&amp;count=40#N10A">10A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('10AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('10AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('9B')">
+  <span><a href="//bc.godfat.org/?seed=2733140314&amp;last=56&amp;event=2026-10-16_1068&amp;count=40" title="*Witch Cat | Sorceress Cat | Enchantress Cat
+A Magical Cat that would rather be
+a Magical Girl than a Witch.
+Might slow Red enemies.">Witch Cat</a> <a href="//bc.godfat.org/cats/56?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('9BG')">
+  <span>&lt;- 20A <a href="//bc.godfat.org/?seed=4132246367&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('10A')">
+  <span><a href="//bc.godfat.org/?seed=278855355&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('10AG')">
+  <span>&lt;- 21A <a href="//bc.godfat.org/?seed=2279950488&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('10BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('10BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N10B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=10B&amp;event=2026-10-16_1068&amp;count=40#N10B">10B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="3" id="N11A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=11A&amp;event=2026-10-16_1068&amp;count=40#N11A">11A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score navigate minor_rare major_rare" onclick="pick('11AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score navigate minor_rare major_rare" onclick="pick('11AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('10B')">
+  <span><a href="//bc.godfat.org/?seed=868645151&amp;last=496&amp;event=2026-10-16_1068&amp;count=40" title="*Matador Cat | Flamenco Cat | Bellydance Cat
+Fearless bullfighter dodging danger with a hearty Olé!
+Pacifist at heart, his only weapon is his crimson cape.
+Has a chance to dodge Red attacks.">Matador Cat</a> <a href="//bc.godfat.org/cats/496?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('10BG')">
+  <span>&lt;- 21A <a href="//bc.godfat.org/?seed=2279950488&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11A')">
+  <span><a href="//bc.godfat.org/?seed=257124205&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11AG')">
+  <span><a href="//bc.godfat.org/?seed=17293283&amp;last=43&amp;event=2026-10-16_1068&amp;count=40" title="*Ice Cat | Ice Queen Cat | Ice Crystal Cat
+A Cat that was entranced by a girl
+hailing from the Land of Ice. It is frozen.
+Might freeze Red enemies. (Area Attack)">Ice Cat</a> <a href="//bc.godfat.org/cats/43?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 21B</span>
+</td>
+
+
+        <td rowspan="2" class="position score pick minor_rare major_rare" onclick="pick('11BX')">
+  &nbsp;
+</td>
+
+<td rowspan="2" class="position score pick minor_rare major_rare" onclick="pick('11BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="3" id="N11B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=11B&amp;event=2026-10-16_1068&amp;count=40#N11B">11B</a>
+</td>
+
+      </tr>
+
+      
+        <tr><td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11AR')">
+  <span><a href="//bc.godfat.org/?seed=417855154&amp;last=146&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Gunslinger | Cat Eastwood | Rodeo Cat
+Nameless legend of the Western frontier.
+Today, he's out bringing bandits to justice.
+May Slow Dark enemies.">Cat Gunslinger</a> <a href="//bc.godfat.org/cats/146?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 12B</span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11ARG')">
+  <span>&lt;- 22A <a href="//bc.godfat.org/?seed=464831134&amp;last=44&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Machine | Cat Machine Mk 2 | Cat Machine Mk 3
+Series 1 Weaponized Machine System (MS)
+developed by the government (Area Attack)
+Resistant to Red &amp; Alien attacks.">Cat Machine</a> <a href="//bc.godfat.org/cats/44?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+</tr>
+      
+    
+      <tr>
+        <td rowspan="2" id="N12A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=12A&amp;event=2026-10-16_1068&amp;count=40#N12A">12A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('12AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('12AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11B')">
+  <span><a href="//bc.godfat.org/?seed=417855154&amp;last=309&amp;event=2026-10-16_1068&amp;count=40" title="*Gardener Cat | Lumbercat | Weedwacker Cat
+Bought lovely bonsai shears by mail-order.
+Now there are no more branches left in reach
+by the Cat Base. Might freeze Zombies.">Gardener Cat</a> <a href="//bc.godfat.org/cats/309?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('11BG')">
+  <span>&lt;- 22A <a href="//bc.godfat.org/?seed=464831134&amp;last=44&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Machine | Cat Machine Mk 2 | Cat Machine Mk 3
+Series 1 Weaponized Machine System (MS)
+developed by the government (Area Attack)
+Resistant to Red &amp; Alien attacks.">Cat Machine</a> <a href="//bc.godfat.org/cats/44?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('12A')">
+  <span><a href="//bc.godfat.org/?seed=82101674&amp;last=38&amp;event=2026-10-16_1068&amp;count=40" title="*Pogo Cat | Masai Cat | Jiangshi Cat
+Sucked in to the recent (?) trend of toys.
+Still, looks pretty fun.
+Cheap to produce, might survive being broken.">Pogo Cat</a> <a href="//bc.godfat.org/cats/38?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('12AG')">
+  <span><a href="//bc.godfat.org/?seed=575783789&amp;last=428&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Clan Heroes | Cat Guild Heroes | Cat Quest Heroes | Heavenly Cat Heroes
+A brave band of Cats out to defeat the King of Evil.
+Long-range Area strikes have chance of Critical.
+100% Weaken vs. Red/Dark/Floating.">Cat Clan Heroes</a> <a href="//bc.godfat.org/cats/428?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 22B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('12BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('12BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N12B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=12B&amp;event=2026-10-16_1068&amp;count=40#N12B">12B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N13A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=13A&amp;event=2026-10-16_1068&amp;count=40#N13A">13A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('13AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('13AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('12B')">
+  <span><a href="//bc.godfat.org/?seed=2039532418&amp;last=50&amp;event=2026-10-16_1068&amp;count=40" title="*Thief Cat | Phantom Thief Cat | Goemon Cat
+Moves fast. Steals faster.
+More money earned when defeating an enemy.">Thief Cat</a> <a href="//bc.godfat.org/cats/50?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('12BG')">
+  <span>&lt;- 23A <a href="//bc.godfat.org/?seed=755363443&amp;last=60&amp;event=2026-10-16_1068&amp;count=40" title="*Baby Cat | Baby Cats | Cats in the Cradle | Cats in the Stroller
+A baby Cat that still can't do anything
+by itself. Luckily, daddy is there to help.
+Might knockback Floating &amp; Aliens (Area Atk)">Baby Cat</a> <a href="//bc.godfat.org/cats/60?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('13A')">
+  <span><a href="//bc.godfat.org/?seed=1025096690&amp;last=53&amp;event=2026-10-16_1068&amp;count=40" title="*Shaman Cat | Necromancer Cat | Necro-Dancer Cat
+Able to communicate with the supernatural.
+… is what it says on the Wiki.
+Might freeze Floating enemies.">Shaman Cat</a> <a href="//bc.godfat.org/cats/53?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('13AG')">
+  <span><a href="//bc.godfat.org/?seed=1942013462&amp;last=669&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Tengu | Grand Yokai Tengu | Immortal Master Tengu
+Cat that endured all manner of difficult training in the 
+mountains to become a yokai. Colossus Slayer, 
+strong against Red/Angels, sometimes Knockback.">Cat Tengu</a> <a href="//bc.godfat.org/cats/669?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 23B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa_fest major_supa_fest" onclick="pick('13BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('13BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N13B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=13B&amp;event=2026-10-16_1068&amp;count=40#N13B">13B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N14A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=14A&amp;event=2026-10-16_1068&amp;count=40#N14A">14A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_uber_fest major_uber_fest" onclick="pick('14AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('14AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa_fest major_supa_fest" onclick="pick('13B')">
+  <span><a href="//bc.godfat.org/?seed=4110909121&amp;last=47&amp;event=2026-10-16_1068&amp;count=40" title="*Jurassic Cat | Jurassic Cat Sitter | Catasaurus
+Descendant of an Ancient Cat Race that
+existed during the Jurassic Age.
+Might perform Critical attacks">Jurassic Cat</a> <a href="//bc.godfat.org/cats/47?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('13BG')">
+  <span>&lt;- 24A <a href="//bc.godfat.org/?seed=1925821335&amp;last=618&amp;event=2026-10-16_1068&amp;count=40" title="*Summoner Satoru | Dark Summoner Satoru | Devil Hunter Satoru
+To save the world, this boy made a pact with the Aku.
+Commands dark minions for a good cause... for now.
+Long-range Area attacks 100% Slow vs Aku">Summoner Satoru</a> <a href="//bc.godfat.org/cats/618?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_uber_fest major_uber_fest" onclick="pick('14A')">
+  <span><a href="//bc.godfat.org/?seed=3003667374&amp;last=447&amp;event=2026-10-16_1068&amp;count=40" title="*Backhoe Cat | Power Backhoe Cat | Neo Backhoe Cat
+No one digs like this guy. Don't even try, you'll lose.
+Only attacks Metal, with Critical chance!
+Gains extra money when defeating enemies!">Backhoe Cat</a> <a href="//bc.godfat.org/cats/447?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('14AG')">
+  <span><a href="//bc.godfat.org/?seed=4234047946&amp;last=44&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Machine | Cat Machine Mk 2 | Cat Machine Mk 3
+Series 1 Weaponized Machine System (MS)
+developed by the government (Area Attack)
+Resistant to Red &amp; Alien attacks.">Cat Machine</a> <a href="//bc.godfat.org/cats/44?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 24B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('14BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('14BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N14B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=14B&amp;event=2026-10-16_1068&amp;count=40#N14B">14B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N15A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=15A&amp;event=2026-10-16_1068&amp;count=40#N15A">15A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('15AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('15AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('14B')">
+  <span><a href="//bc.godfat.org/?seed=1593167632&amp;last=33&amp;event=2026-10-16_1068&amp;count=40" title="*Hip Hop Cat | Dancing Flasher Cat | Can Can Cat
+Flunking student from a certain dance school.
+Can be produced in masses. Flash Mob!
+Might slow Red enemies.">Hip Hop Cat</a> <a href="//bc.godfat.org/cats/33?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('14BG')">
+  <span>&lt;- 25A <a href="//bc.godfat.org/?seed=2786830585&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('15A')">
+  <span><a href="//bc.godfat.org/?seed=962215067&amp;last=33&amp;event=2026-10-16_1068&amp;count=40" title="*Hip Hop Cat | Dancing Flasher Cat | Can Can Cat
+Flunking student from a certain dance school.
+Can be produced in masses. Flash Mob!
+Might slow Red enemies.">Hip Hop Cat</a> <a href="//bc.godfat.org/cats/33?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('15AG')">
+  <span><a href="//bc.godfat.org/?seed=2746835323&amp;last=60&amp;event=2026-10-16_1068&amp;count=40" title="*Baby Cat | Baby Cats | Cats in the Cradle | Cats in the Stroller
+A baby Cat that still can't do anything
+by itself. Luckily, daddy is there to help.
+Might knockback Floating &amp; Aliens (Area Atk)">Baby Cat</a> <a href="//bc.godfat.org/cats/60?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 25B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('15BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('15BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N15B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=15B&amp;event=2026-10-16_1068&amp;count=40#N15B">15B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N16A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=16A&amp;event=2026-10-16_1068&amp;count=40#N16A">16A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('16AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('16AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('15B')">
+  <span><a href="//bc.godfat.org/?seed=3476481023&amp;last=39&amp;event=2026-10-16_1068&amp;count=40" title="*Wheel Cat | Solar Cat | Chill Cat
+Got tired of changing wheels of vehicles
+so became one instead. Spins so fast it burns.
+Massive damage against Aliens (Area Attack)">Wheel Cat</a> <a href="//bc.godfat.org/cats/39?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('15BG')">
+  <span>&lt;- 26A <a href="//bc.godfat.org/?seed=2899199664&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('16A')">
+  <span><a href="//bc.godfat.org/?seed=2523171419&amp;last=49&amp;event=2026-10-16_1068&amp;count=40" title="*Pirate Cat | Captain Cat | Dread Pirate Catley
+Influenced by a certain pirate cartoon,
+and dreams of being a Pirate King. Can't swim.
+Might knockback Red enemies.">Pirate Cat</a> <a href="//bc.godfat.org/cats/49?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('16AG')">
+  <span><a href="//bc.godfat.org/?seed=1581675708&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 26B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('16BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('16BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N16B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=16B&amp;event=2026-10-16_1068&amp;count=40#N16B">16B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N17A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=17A&amp;event=2026-10-16_1068&amp;count=40#N17A">17A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('17AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('17AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('16B')">
+  <span><a href="//bc.godfat.org/?seed=4090096076&amp;last=496&amp;event=2026-10-16_1068&amp;count=40" title="*Matador Cat | Flamenco Cat | Bellydance Cat
+Fearless bullfighter dodging danger with a hearty Olé!
+Pacifist at heart, his only weapon is his crimson cape.
+Has a chance to dodge Red attacks.">Matador Cat</a> <a href="//bc.godfat.org/cats/496?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('16BG')">
+  <span>&lt;- 27A <a href="//bc.godfat.org/?seed=1320926420&amp;last=58&amp;event=2026-10-16_1068&amp;count=40" title="*Marauder Cat | Berserker Cat | Paladin Cat
+Its cursed sword reduces the offensive power
+but might deliver critical hits.
+Known as the &quot;Metal Killer&quot;.">Marauder Cat</a> <a href="//bc.godfat.org/cats/58?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('17A')">
+  <span><a href="//bc.godfat.org/?seed=3383365300&amp;last=524&amp;event=2026-10-16_1068&amp;count=40" title="*Wushu Cat | Sifu Cat | Shigong Cat
+Top student at a discount martial arts school that
+costs $40 per month. Goes twice weekly after work.
+Tough vs Zombies.">Wushu Cat</a> <a href="//bc.godfat.org/cats/524?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('17AG')">
+  <span><a href="//bc.godfat.org/?seed=2835554372&amp;last=58&amp;event=2026-10-16_1068&amp;count=40" title="*Marauder Cat | Berserker Cat | Paladin Cat
+Its cursed sword reduces the offensive power
+but might deliver critical hits.
+Known as the &quot;Metal Killer&quot;.">Marauder Cat</a> <a href="//bc.godfat.org/cats/58?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 27B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('17BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('17BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N17B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=17B&amp;event=2026-10-16_1068&amp;count=40#N17B">17B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N18A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=18A&amp;event=2026-10-16_1068&amp;count=40#N18A">18A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('18AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('18AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('17B')">
+  <span><a href="//bc.godfat.org/?seed=3979987594&amp;last=49&amp;event=2026-10-16_1068&amp;count=40" title="*Pirate Cat | Captain Cat | Dread Pirate Catley
+Influenced by a certain pirate cartoon,
+and dreams of being a Pirate King. Can't swim.
+Might knockback Red enemies.">Pirate Cat</a> <a href="//bc.godfat.org/cats/49?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('17BG')">
+  <span>&lt;- 28A <a href="//bc.godfat.org/?seed=778782401&amp;last=428&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Clan Heroes | Cat Guild Heroes | Cat Quest Heroes | Heavenly Cat Heroes
+A brave band of Cats out to defeat the King of Evil.
+Long-range Area strikes have chance of Critical.
+100% Weaken vs. Red/Dark/Floating.">Cat Clan Heroes</a> <a href="//bc.godfat.org/cats/428?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('18A')">
+  <span><a href="//bc.godfat.org/?seed=2755125438&amp;last=378&amp;event=2026-10-16_1068&amp;count=40" title="*Fencer Cat | Kendo Cat | The Kitty of Liberty
+Invincible swordscat unbeaten in 400 matches.
+Has to use his left hand to actually feel
+challenged. 100% chance of breaking Barriers.">Fencer Cat</a> <a href="//bc.godfat.org/cats/378?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('18AG')">
+  <span><a href="//bc.godfat.org/?seed=3833546136&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 28B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('18BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('18BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N18B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=18B&amp;event=2026-10-16_1068&amp;count=40#N18B">18B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N19A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=19A&amp;event=2026-10-16_1068&amp;count=40#N19A">19A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('19AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('19AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('18B')">
+  <span><a href="//bc.godfat.org/?seed=1584860334&amp;last=148&amp;event=2026-10-16_1068&amp;count=40" title="*Tin Cat | Plane Cat | Robocat
+Cutting-edge firepower masked by the
+soulful nostalgia of yesteryear.
+May Knockback Dark enemies.">Tin Cat</a> <a href="//bc.godfat.org/cats/148?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('18BG')">
+  <span>&lt;- 29A <a href="//bc.godfat.org/?seed=758334462&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('19A')">
+  <span><a href="//bc.godfat.org/?seed=4132246367&amp;last=51&amp;event=2026-10-16_1068&amp;count=40" title="*Bishop Cat | Monk Cat | Sanzo Cat
+A merciful Cat that brings peace and love
+to all of its followers. Charges for confessions.
+Might slow Floating enemies.">Bishop Cat</a> <a href="//bc.godfat.org/cats/51?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('19AG')">
+  <span><a href="//bc.godfat.org/?seed=367042904&amp;last=58&amp;event=2026-10-16_1068&amp;count=40" title="*Marauder Cat | Berserker Cat | Paladin Cat
+Its cursed sword reduces the offensive power
+but might deliver critical hits.
+Known as the &quot;Metal Killer&quot;.">Marauder Cat</a> <a href="//bc.godfat.org/cats/58?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 29B</span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('19BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('19BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N19B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=19B&amp;event=2026-10-16_1068&amp;count=40#N19B">19B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N20A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=20A&amp;event=2026-10-16_1068&amp;count=40#N20A">20A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('20AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('20AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('19B')">
+  <span><a href="//bc.godfat.org/?seed=947968332&amp;last=150&amp;event=2026-10-16_1068&amp;count=40" title="*Mer-Cat | Commando Cat | Cameraman Cat
+A mermaid who came onshore to meet a
+prince. Survives on land by taking long breaths.
+Strong vs floating, might survive a lethal strike.">Mer-Cat</a> <a href="//bc.godfat.org/cats/150?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('19BG')">
+  <span>&lt;- 30A <a href="//bc.godfat.org/?seed=3507823037&amp;last=428&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Clan Heroes | Cat Guild Heroes | Cat Quest Heroes | Heavenly Cat Heroes
+A brave band of Cats out to defeat the King of Evil.
+Long-range Area strikes have chance of Critical.
+100% Weaken vs. Red/Dark/Floating.">Cat Clan Heroes</a> <a href="//bc.godfat.org/cats/428?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('20A')">
+  <span><a href="//bc.godfat.org/?seed=2279950488&amp;last=239&amp;event=2026-10-16_1068&amp;count=40" title="*Rich Cat III | Rich Cat Sr. | Richest Cat
+Heir of the legendary Rich Cat. Born wealthy,
+still pinches every penny. Goes through the
+pockets of defeated enemies for extra cash.">Rich Cat III</a> <a href="//bc.godfat.org/cats/239?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('20AG')">
+  <span>&lt;- 31A <a href="//bc.godfat.org/?seed=229860548&amp;last=58&amp;event=2026-10-16_1068&amp;count=40" title="*Marauder Cat | Berserker Cat | Paladin Cat
+Its cursed sword reduces the offensive power
+but might deliver critical hits.
+Known as the &quot;Metal Killer&quot;.">Marauder Cat</a> <a href="//bc.godfat.org/cats/58?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('20BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('20BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N20B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=20B&amp;event=2026-10-16_1068&amp;count=40#N20B">20B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N21A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=21A&amp;event=2026-10-16_1068&amp;count=40#N21A">21A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('21AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('21AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('20B')">
+  <span><a href="//bc.godfat.org/?seed=17293283&amp;last=149&amp;event=2026-10-16_1068&amp;count=40" title="*Rocker Cat | Artist Cat | Ramen Cat
+A peanut farmer's son, became a rocker to
+avoid coming out about his nut allergies to his
+family. Resistant to Angelic attacks.">Rocker Cat</a> <a href="//bc.godfat.org/cats/149?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('20BG')">
+  <span>&lt;- 31A <a href="//bc.godfat.org/?seed=229860548&amp;last=58&amp;event=2026-10-16_1068&amp;count=40" title="*Marauder Cat | Berserker Cat | Paladin Cat
+Its cursed sword reduces the offensive power
+but might deliver critical hits.
+Known as the &quot;Metal Killer&quot;.">Marauder Cat</a> <a href="//bc.godfat.org/cats/58?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('21A')">
+  <span><a href="//bc.godfat.org/?seed=464831134&amp;last=148&amp;event=2026-10-16_1068&amp;count=40" title="*Tin Cat | Plane Cat | Robocat
+Cutting-edge firepower masked by the
+soulful nostalgia of yesteryear.
+May Knockback Dark enemies.">Tin Cat</a> <a href="//bc.godfat.org/cats/148?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('21AG')">
+  <span>&lt;- 32A <a href="//bc.godfat.org/?seed=1673757845&amp;last=428&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Clan Heroes | Cat Guild Heroes | Cat Quest Heroes | Heavenly Cat Heroes
+A brave band of Cats out to defeat the King of Evil.
+Long-range Area strikes have chance of Critical.
+100% Weaken vs. Red/Dark/Floating.">Cat Clan Heroes</a> <a href="//bc.godfat.org/cats/428?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('21BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('21BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N21B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=21B&amp;event=2026-10-16_1068&amp;count=40#N21B">21B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N22A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=22A&amp;event=2026-10-16_1068&amp;count=40#N22A">22A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('22AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('22AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('21B')">
+  <span><a href="//bc.godfat.org/?seed=575783789&amp;last=56&amp;event=2026-10-16_1068&amp;count=40" title="*Witch Cat | Sorceress Cat | Enchantress Cat
+A Magical Cat that would rather be
+a Magical Girl than a Witch.
+Might slow Red enemies.">Witch Cat</a> <a href="//bc.godfat.org/cats/56?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('21BG')">
+  <span>&lt;- 32A <a href="//bc.godfat.org/?seed=1673757845&amp;last=428&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Clan Heroes | Cat Guild Heroes | Cat Quest Heroes | Heavenly Cat Heroes
+A brave band of Cats out to defeat the King of Evil.
+Long-range Area strikes have chance of Critical.
+100% Weaken vs. Red/Dark/Floating.">Cat Clan Heroes</a> <a href="//bc.godfat.org/cats/428?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('22A')">
+  <span><a href="//bc.godfat.org/?seed=755363443&amp;last=50&amp;event=2026-10-16_1068&amp;count=40" title="*Thief Cat | Phantom Thief Cat | Goemon Cat
+Moves fast. Steals faster.
+More money earned when defeating an enemy.">Thief Cat</a> <a href="//bc.godfat.org/cats/50?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('22AG')">
+  <span>&lt;- 33A <a href="//bc.godfat.org/?seed=1793897737&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('22BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('22BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N22B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=22B&amp;event=2026-10-16_1068&amp;count=40#N22B">22B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N23A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=23A&amp;event=2026-10-16_1068&amp;count=40#N23A">23A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('23AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('23AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('22B')">
+  <span><a href="//bc.godfat.org/?seed=1942013462&amp;last=59&amp;event=2026-10-16_1068&amp;count=40" title="*Swordsman Cat | Sword Master Cat | Elemental Duelist Cat
+Trained in a certain game to become
+a magic swordsman. Very effective Battle Cat.
+Fire sword does massive damage to Red enemies.">Swordsman Cat</a> <a href="//bc.godfat.org/cats/59?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('22BG')">
+  <span>&lt;- 33A <a href="//bc.godfat.org/?seed=1793897737&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('23A')">
+  <span><a href="//bc.godfat.org/?seed=1925821335&amp;last=147&amp;event=2026-10-16_1068&amp;count=40" title="*Stilts Cat | Totem Cat | Acrobat Cats
+A cat so ambitious that he built wooden stilts
+to better reach for the stars.
+Knocks back Angels every once in a while.">Stilts Cat</a> <a href="//bc.godfat.org/cats/147?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('23AG')">
+  <span>&lt;- 34A <a href="//bc.godfat.org/?seed=2416421232&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('23BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('23BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N23B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=23B&amp;event=2026-10-16_1068&amp;count=40#N23B">23B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N24A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=24A&amp;event=2026-10-16_1068&amp;count=40#N24A">24A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('24AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('24AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('23B')">
+  <span><a href="//bc.godfat.org/?seed=4234047946&amp;last=47&amp;event=2026-10-16_1068&amp;count=40" title="*Jurassic Cat | Jurassic Cat Sitter | Catasaurus
+Descendant of an Ancient Cat Race that
+existed during the Jurassic Age.
+Might perform Critical attacks">Jurassic Cat</a> <a href="//bc.godfat.org/cats/47?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('23BG')">
+  <span>&lt;- 34A <a href="//bc.godfat.org/?seed=2416421232&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('24A')">
+  <span><a href="//bc.godfat.org/?seed=2786830585&amp;last=240&amp;event=2026-10-16_1068&amp;count=40" title="*Sniper the Recruit | Sniper the Heavy | Sniper the Deadeye
+Before the battlefield, boot camp. Only given
+a potato gun, so don't expect TOO much
+knockback from his super long-distance attack.">Sniper the Recruit</a> <a href="//bc.godfat.org/cats/240?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('24AG')">
+  <span>&lt;- 35A <a href="//bc.godfat.org/?seed=1622996535&amp;last=618&amp;event=2026-10-16_1068&amp;count=40" title="*Summoner Satoru | Dark Summoner Satoru | Devil Hunter Satoru
+To save the world, this boy made a pact with the Aku.
+Commands dark minions for a good cause... for now.
+Long-range Area attacks 100% Slow vs Aku">Summoner Satoru</a> <a href="//bc.godfat.org/cats/618?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('24BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('24BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N24B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=24B&amp;event=2026-10-16_1068&amp;count=40#N24B">24B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N25A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=25A&amp;event=2026-10-16_1068&amp;count=40#N25A">25A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('25AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('25AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('24B')">
+  <span><a href="//bc.godfat.org/?seed=2746835323&amp;last=39&amp;event=2026-10-16_1068&amp;count=40" title="*Wheel Cat | Solar Cat | Chill Cat
+Got tired of changing wheels of vehicles
+so became one instead. Spins so fast it burns.
+Massive damage against Aliens (Area Attack)">Wheel Cat</a> <a href="//bc.godfat.org/cats/39?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('24BG')">
+  <span>&lt;- 35A <a href="//bc.godfat.org/?seed=1622996535&amp;last=618&amp;event=2026-10-16_1068&amp;count=40" title="*Summoner Satoru | Dark Summoner Satoru | Devil Hunter Satoru
+To save the world, this boy made a pact with the Aku.
+Commands dark minions for a good cause... for now.
+Long-range Area attacks 100% Slow vs Aku">Summoner Satoru</a> <a href="//bc.godfat.org/cats/618?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('25A')">
+  <span><a href="//bc.godfat.org/?seed=2899199664&amp;last=56&amp;event=2026-10-16_1068&amp;count=40" title="*Witch Cat | Sorceress Cat | Enchantress Cat
+A Magical Cat that would rather be
+a Magical Girl than a Witch.
+Might slow Red enemies.">Witch Cat</a> <a href="//bc.godfat.org/cats/56?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('25AG')">
+  <span>&lt;- 36A <a href="//bc.godfat.org/?seed=984398565&amp;last=45&amp;event=2026-10-16_1068&amp;count=40" title="*Lesser Demon Cat | Greater Demon Cat | Greater Balrog Cat
+A mad cat that sacrificed itself to
+a demon from the netherworld.
+Attacks with extreme force.">Lesser Demon Cat</a> <a href="//bc.godfat.org/cats/45?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_uber major_uber" onclick="pick('25BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('25BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N25B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=25B&amp;event=2026-10-16_1068&amp;count=40#N25B">25B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N26A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=26A&amp;event=2026-10-16_1068&amp;count=40#N26A">26A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('26AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('26AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_uber major_uber" onclick="pick('25B')">
+  <span><a href="//bc.godfat.org/?seed=1581675708&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('25BG')">
+  <span>&lt;- 36A <a href="//bc.godfat.org/?seed=984398565&amp;last=45&amp;event=2026-10-16_1068&amp;count=40" title="*Lesser Demon Cat | Greater Demon Cat | Greater Balrog Cat
+A mad cat that sacrificed itself to
+a demon from the netherworld.
+Attacks with extreme force.">Lesser Demon Cat</a> <a href="//bc.godfat.org/cats/45?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('26A')">
+  <span><a href="//bc.godfat.org/?seed=1320926420&amp;last=48&amp;event=2026-10-16_1068&amp;count=40" title="*Viking Cat | Thor Cat | Maximum the Fighter
+A combat-class Cat that has
+read too many fantasy novels.
+Strong against Red enemies.">Viking Cat</a> <a href="//bc.godfat.org/cats/48?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('26AG')">
+  <span>&lt;- 37A <a href="//bc.godfat.org/?seed=4042048803&amp;last=618&amp;event=2026-10-16_1068&amp;count=40" title="*Summoner Satoru | Dark Summoner Satoru | Devil Hunter Satoru
+To save the world, this boy made a pact with the Aku.
+Commands dark minions for a good cause... for now.
+Long-range Area attacks 100% Slow vs Aku">Summoner Satoru</a> <a href="//bc.godfat.org/cats/618?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('26BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('26BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N26B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=26B&amp;event=2026-10-16_1068&amp;count=40#N26B">26B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N27A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=27A&amp;event=2026-10-16_1068&amp;count=40#N27A">27A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('27AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('27AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('26B')">
+  <span><a href="//bc.godfat.org/?seed=2835554372&amp;last=42&amp;event=2026-10-16_1068&amp;count=40" title="*Salon Cat | Paris Cat | Cyborg Cat
+Has no limit when it comes to beauty care.
+Works very well with Sexy Legs Cat.
+Exceptional Range Attack (Area Attack)">Salon Cat</a> <a href="//bc.godfat.org/cats/42?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('26BG')">
+  <span>&lt;- 37A <a href="//bc.godfat.org/?seed=4042048803&amp;last=618&amp;event=2026-10-16_1068&amp;count=40" title="*Summoner Satoru | Dark Summoner Satoru | Devil Hunter Satoru
+To save the world, this boy made a pact with the Aku.
+Commands dark minions for a good cause... for now.
+Long-range Area attacks 100% Slow vs Aku">Summoner Satoru</a> <a href="//bc.godfat.org/cats/618?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('27A')">
+  <span><a href="//bc.godfat.org/?seed=778782401&amp;last=496&amp;event=2026-10-16_1068&amp;count=40" title="*Matador Cat | Flamenco Cat | Bellydance Cat
+Fearless bullfighter dodging danger with a hearty Olé!
+Pacifist at heart, his only weapon is his crimson cape.
+Has a chance to dodge Red attacks.">Matador Cat</a> <a href="//bc.godfat.org/cats/496?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('27AG')">
+  <span>&lt;- 38A <a href="//bc.godfat.org/?seed=2865942642&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('27BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('27BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N27B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=27B&amp;event=2026-10-16_1068&amp;count=40#N27B">27B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N28A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=28A&amp;event=2026-10-16_1068&amp;count=40#N28A">28A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('28AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('28AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('27B')">
+  <span><a href="//bc.godfat.org/?seed=3833546136&amp;last=146&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Gunslinger | Cat Eastwood | Rodeo Cat
+Nameless legend of the Western frontier.
+Today, he's out bringing bandits to justice.
+May Slow Dark enemies.">Cat Gunslinger</a> <a href="//bc.godfat.org/cats/146?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('27BG')">
+  <span>&lt;- 38A <a href="//bc.godfat.org/?seed=2865942642&amp;last=144&amp;event=2026-10-16_1068&amp;count=40" title="*Nurse Cat | Heartful Nurse Cat | Joyful Nurse Cat
+Her warm smile and healing aura take away
+the sting of her piercing syringe (Area attack)
+Might Knockback/Slow Dark/Floating enemies.">Nurse Cat</a> <a href="//bc.godfat.org/cats/144?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('28A')">
+  <span><a href="//bc.godfat.org/?seed=758334462&amp;last=59&amp;event=2026-10-16_1068&amp;count=40" title="*Swordsman Cat | Sword Master Cat | Elemental Duelist Cat
+Trained in a certain game to become
+a magic swordsman. Very effective Battle Cat.
+Fire sword does massive damage to Red enemies.">Swordsman Cat</a> <a href="//bc.godfat.org/cats/59?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('28AG')">
+  <span>&lt;- 39A <a href="//bc.godfat.org/?seed=1537934580&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('28BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('28BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N28B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=28B&amp;event=2026-10-16_1068&amp;count=40#N28B">28B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="3" id="N29A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=29A&amp;event=2026-10-16_1068&amp;count=40#N29A">29A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score navigate minor_rare major_rare" onclick="pick('29AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score navigate minor_rare major_rare" onclick="pick('29AGX')">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('28B')">
+  <span><a href="//bc.godfat.org/?seed=367042904&amp;last=309&amp;event=2026-10-16_1068&amp;count=40" title="*Gardener Cat | Lumbercat | Weedwacker Cat
+Bought lovely bonsai shears by mail-order.
+Now there are no more branches left in reach
+by the Cat Base. Might freeze Zombies.">Gardener Cat</a> <a href="//bc.godfat.org/cats/309?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('28BG')">
+  <span>&lt;- 39A <a href="//bc.godfat.org/?seed=1537934580&amp;last=870&amp;event=2026-10-16_1068&amp;count=40" title="*Akane Tounji | Let's Go! Akane
+Stumbled onto a perfectly-fitting high-tech mech suit!
+Patrols the neighboorhood after the school bell rings.
+Only attacks Red/Dark but might Dodge attacks. (Area Atk)">Akane Tounji</a> <a href="//bc.godfat.org/cats/870?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29A')">
+  <span><a href="//bc.godfat.org/?seed=3507823037&amp;last=59&amp;event=2026-10-16_1068&amp;count=40" title="*Swordsman Cat | Sword Master Cat | Elemental Duelist Cat
+Trained in a certain game to become
+a magic swordsman. Very effective Battle Cat.
+Fire sword does massive damage to Red enemies.">Swordsman Cat</a> <a href="//bc.godfat.org/cats/59?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29AG')">
+  <span><a href="//bc.godfat.org/?seed=4152531310&amp;last=44&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Machine | Cat Machine Mk 2 | Cat Machine Mk 3
+Series 1 Weaponized Machine System (MS)
+developed by the government (Area Attack)
+Resistant to Red &amp; Alien attacks.">Cat Machine</a> <a href="//bc.godfat.org/cats/44?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 39B</span>
+</td>
+
+
+        <td rowspan="2" class="position score pick minor_rare major_rare" onclick="pick('29BX')">
+  &nbsp;
+</td>
+
+<td rowspan="2" class="position score pick minor_rare major_rare" onclick="pick('29BGX')">
+  
+</td>
+
+
+        
+        <td rowspan="3" id="N29B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=29B&amp;event=2026-10-16_1068&amp;count=40#N29B">29B</a>
+</td>
+
+      </tr>
+
+      
+        <tr><td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29AR')">
+  <span><a href="//bc.godfat.org/?seed=682933036&amp;last=309&amp;event=2026-10-16_1068&amp;count=40" title="*Gardener Cat | Lumbercat | Weedwacker Cat
+Bought lovely bonsai shears by mail-order.
+Now there are no more branches left in reach
+by the Cat Base. Might freeze Zombies.">Gardener Cat</a> <a href="//bc.godfat.org/cats/309?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 30B</span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29ARG')">
+  <span>&lt;- 40A <a href="//bc.godfat.org/?seed=557026105&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+</tr>
+      
+    
+      <tr>
+        <td rowspan="2" id="N30A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=30A&amp;event=2026-10-16_1068&amp;count=40#N30A">30A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('30AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29B')">
+  <span><a href="//bc.godfat.org/?seed=682933036&amp;last=146&amp;event=2026-10-16_1068&amp;count=40" title="*Cat Gunslinger | Cat Eastwood | Rodeo Cat
+Nameless legend of the Western frontier.
+Today, he's out bringing bandits to justice.
+May Slow Dark enemies.">Cat Gunslinger</a> <a href="//bc.godfat.org/cats/146?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('29BG')">
+  <span>&lt;- 40A <a href="//bc.godfat.org/?seed=557026105&amp;last=764&amp;event=2026-10-16_1068&amp;count=40" title="*Dynasaurus Cat | Mecha Dynasaurus Cat
+The top of the food chain, revived thanks to a Cat.
+Its scorching hot breath razes the land down to ash.
+Conjurer, Massive damage to Angels (Long-range/Area)">Dynasaurus Cat</a> <a href="//bc.godfat.org/cats/764?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('30A')">
+  <span><a href="//bc.godfat.org/?seed=229860548&amp;last=39&amp;event=2026-10-16_1068&amp;count=40" title="*Wheel Cat | Solar Cat | Chill Cat
+Got tired of changing wheels of vehicles
+so became one instead. Spins so fast it burns.
+Massive damage against Aliens (Area Attack)">Wheel Cat</a> <a href="//bc.godfat.org/cats/39?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('30BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N30B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=30B&amp;event=2026-10-16_1068&amp;count=40#N30B">30B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N31A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=31A&amp;event=2026-10-16_1068&amp;count=40#N31A">31A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('31AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('30B')">
+  <span><a href="//bc.godfat.org/?seed=2332251217&amp;last=51&amp;event=2026-10-16_1068&amp;count=40" title="*Bishop Cat | Monk Cat | Sanzo Cat
+A merciful Cat that brings peace and love
+to all of its followers. Charges for confessions.
+Might slow Floating enemies.">Bishop Cat</a> <a href="//bc.godfat.org/cats/51?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('31A')">
+  <span><a href="//bc.godfat.org/?seed=1673757845&amp;last=48&amp;event=2026-10-16_1068&amp;count=40" title="*Viking Cat | Thor Cat | Maximum the Fighter
+A combat-class Cat that has
+read too many fantasy novels.
+Strong against Red enemies.">Viking Cat</a> <a href="//bc.godfat.org/cats/48?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('31BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N31B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=31B&amp;event=2026-10-16_1068&amp;count=40#N31B">31B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N32A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=32A&amp;event=2026-10-16_1068&amp;count=40#N32A">32A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('32AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('31B')">
+  <span><a href="//bc.godfat.org/?seed=2244980029&amp;last=378&amp;event=2026-10-16_1068&amp;count=40" title="*Fencer Cat | Kendo Cat | The Kitty of Liberty
+Invincible swordscat unbeaten in 400 matches.
+Has to use his left hand to actually feel
+challenged. 100% chance of breaking Barriers.">Fencer Cat</a> <a href="//bc.godfat.org/cats/378?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('32A')">
+  <span><a href="//bc.godfat.org/?seed=1793897737&amp;last=59&amp;event=2026-10-16_1068&amp;count=40" title="*Swordsman Cat | Sword Master Cat | Elemental Duelist Cat
+Trained in a certain game to become
+a magic swordsman. Very effective Battle Cat.
+Fire sword does massive damage to Red enemies.">Swordsman Cat</a> <a href="//bc.godfat.org/cats/59?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('32BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N32B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=32B&amp;event=2026-10-16_1068&amp;count=40#N32B">32B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N33A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=33A&amp;event=2026-10-16_1068&amp;count=40#N33A">33A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_uber_fest major_uber_fest" onclick="pick('33AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('32B')">
+  <span><a href="//bc.godfat.org/?seed=165309231&amp;last=238&amp;event=2026-10-16_1068&amp;count=40" title="*Freshman Cat Jobs | Prof. Cat Jobs | Headmaster Cat Jobs
+A li'l smart aleck who aced his entrance exams
+for Nyarvard U. Uses his wit to spy enemy weak
+points and greatly weaken their offense.">Freshman Cat Jobs</a> <a href="//bc.godfat.org/cats/238?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_uber_fest major_uber_fest" onclick="pick('33A')">
+  <span><a href="//bc.godfat.org/?seed=2416421232&amp;last=446&amp;event=2026-10-16_1068&amp;count=40" title="*Cutter Cat | Power Cutter Cat | Neo Cutter Cat
+Does double duty cutting and cooking for
+the Grandon Cats. Huge Area damage vs Red,
+Survives, stronger after taking damage!">Cutter Cat</a> <a href="//bc.godfat.org/cats/446?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('33BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N33B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=33B&amp;event=2026-10-16_1068&amp;count=40#N33B">33B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N34A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=34A&amp;event=2026-10-16_1068&amp;count=40#N34A">34A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('34AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('33B')">
+  <span><a href="//bc.godfat.org/?seed=2832964580&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('34A')">
+  <span><a href="//bc.godfat.org/?seed=1622996535&amp;last=147&amp;event=2026-10-16_1068&amp;count=40" title="*Stilts Cat | Totem Cat | Acrobat Cats
+A cat so ambitious that he built wooden stilts
+to better reach for the stars.
+Knocks back Angels every once in a while.">Stilts Cat</a> <a href="//bc.godfat.org/cats/147?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa_fest major_supa_fest" onclick="pick('34BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N34B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=34B&amp;event=2026-10-16_1068&amp;count=40#N34B">34B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N35A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=35A&amp;event=2026-10-16_1068&amp;count=40#N35A">35A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('35AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa_fest major_supa_fest" onclick="pick('34B')">
+  <span><a href="//bc.godfat.org/?seed=3405736202&amp;last=377&amp;event=2026-10-16_1068&amp;count=40" title="*Rover Cat | Rover Cat Mk II | Catellite
+The first Cat probe produced by NYASA.
+Built to resist extraterrestrial attacks, with
+Warp Blocking and Strong against Aliens.">Rover Cat</a> <a href="//bc.godfat.org/cats/377?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('35A')">
+  <span><a href="//bc.godfat.org/?seed=984398565&amp;last=53&amp;event=2026-10-16_1068&amp;count=40" title="*Shaman Cat | Necromancer Cat | Necro-Dancer Cat
+Able to communicate with the supernatural.
+… is what it says on the Wiki.
+Might freeze Floating enemies.">Shaman Cat</a> <a href="//bc.godfat.org/cats/53?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('35BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N35B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=35B&amp;event=2026-10-16_1068&amp;count=40#N35B">35B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N36A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=36A&amp;event=2026-10-16_1068&amp;count=40#N36A">36A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('36AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('35B')">
+  <span><a href="//bc.godfat.org/?seed=2348731421&amp;last=151&amp;event=2026-10-16_1068&amp;count=40" title="*Juliet Cat | Princess Juliet Cat | Juliet the Maiko
+Dreams of a Romeo she met online.
+Favorite book: &quot;Pride, Prejudice and Haircuts&quot;
+Briefly freezes Angels (Area Attack)">Juliet Cat</a> <a href="//bc.godfat.org/cats/151?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('36A')">
+  <span><a href="//bc.godfat.org/?seed=4042048803&amp;last=326&amp;event=2026-10-16_1068&amp;count=40" title="*Welterweight Cat | Heavyweight Cat | Ectoweight Cat
+Successor to a legendary Japanese boxer.
+Looks the part, but he's always KO'ed in the 
+2nd round. Might knockback Zombies.">Welterweight Cat</a> <a href="//bc.godfat.org/cats/326?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_supa major_supa" onclick="pick('36BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N36B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=36B&amp;event=2026-10-16_1068&amp;count=40#N36B">36B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N37A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=37A&amp;event=2026-10-16_1068&amp;count=40#N37A">37A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_uber_fest major_uber_fest" onclick="pick('37AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('36B')">
+  <span><a href="//bc.godfat.org/?seed=550179079&amp;last=240&amp;event=2026-10-16_1068&amp;count=40" title="*Sniper the Recruit | Sniper the Heavy | Sniper the Deadeye
+Before the battlefield, boot camp. Only given
+a potato gun, so don't expect TOO much
+knockback from his super long-distance attack.">Sniper the Recruit</a> <a href="//bc.godfat.org/cats/240?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_uber_fest major_uber_fest" onclick="pick('37A')">
+  <span><a href="//bc.godfat.org/?seed=2865942642&amp;last=239&amp;event=2026-10-16_1068&amp;count=40" title="*Rich Cat III | Rich Cat Sr. | Richest Cat
+Heir of the legendary Rich Cat. Born wealthy,
+still pinches every penny. Goes through the
+pockets of defeated enemies for extra cash.">Rich Cat III</a> <a href="//bc.godfat.org/cats/239?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('37BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N37B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=37B&amp;event=2026-10-16_1068&amp;count=40#N37B">37B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="2" id="N38A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=38A&amp;event=2026-10-16_1068&amp;count=40#N38A">38A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('38AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('37B')">
+  <span><a href="//bc.godfat.org/?seed=2228414492&amp;last=51&amp;event=2026-10-16_1068&amp;count=40" title="*Bishop Cat | Monk Cat | Sanzo Cat
+A merciful Cat that brings peace and love
+to all of its followers. Charges for confessions.
+Might slow Floating enemies.">Bishop Cat</a> <a href="//bc.godfat.org/cats/51?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('38A')">
+  <span><a href="//bc.godfat.org/?seed=1537934580&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('38BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N38B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=38B&amp;event=2026-10-16_1068&amp;count=40#N38B">38B</a>
+</td>
+
+      </tr>
+
+      
+    
+      <tr>
+        <td rowspan="3" id="N39A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=39A&amp;event=2026-10-16_1068&amp;count=40#N39A">39A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score navigate minor_rare major_rare" onclick="pick('39AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('38B')">
+  <span><a href="//bc.godfat.org/?seed=4152531310&amp;last=147&amp;event=2026-10-16_1068&amp;count=40" title="*Stilts Cat | Totem Cat | Acrobat Cats
+A cat so ambitious that he built wooden stilts
+to better reach for the stars.
+Knocks back Angels every once in a while.">Stilts Cat</a> <a href="//bc.godfat.org/cats/147?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('39A')">
+  <span><a href="//bc.godfat.org/?seed=557026105&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="2" class="position score pick minor_rare major_rare" onclick="pick('39BX')">
+  &nbsp;
+</td>
+
+<td rowspan="2" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="3" id="N39B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=39B&amp;event=2026-10-16_1068&amp;count=40#N39B">39B</a>
+</td>
+
+      </tr>
+
+      
+        <tr><td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('39AR')">
+  <span><a href="//bc.godfat.org/?seed=299696915&amp;last=59&amp;event=2026-10-16_1068&amp;count=40" title="*Swordsman Cat | Sword Master Cat | Elemental Duelist Cat
+Trained in a certain game to become
+a magic swordsman. Very effective Battle Cat.
+Fire sword does massive damage to Red enemies.">Swordsman Cat</a> <a href="//bc.godfat.org/cats/59?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a> -&gt; 40B</span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+</tr>
+      
+    
+      <tr>
+        <td rowspan="2" id="N40A">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=40A&amp;event=2026-10-16_1068&amp;count=40#N40A">40A</a>
+</td>
+
+        
+        <td rowspan="1" class="position score pick minor_supa_fest major_supa_fest" onclick="pick('40AX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('39B')">
+  <span><a href="//bc.godfat.org/?seed=299696915&amp;last=53&amp;event=2026-10-16_1068&amp;count=40" title="*Shaman Cat | Necromancer Cat | Necro-Dancer Cat
+Able to communicate with the supernatural.
+… is what it says on the Wiki.
+Might freeze Floating enemies.">Shaman Cat</a> <a href="//bc.godfat.org/cats/53?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+        
+        
+      </tr>
+
+      
+
+      <tr>
+        
+        <td rowspan="1" class="position cat pick minor_supa_fest major_supa_fest" onclick="pick('40A')">
+  <span><a href="//bc.godfat.org/?seed=744045516&amp;last=52&amp;event=2026-10-16_1068&amp;count=40" title="*Fortune Teller Cat | Fisherman Cat | Doctor Cat
+A Cat that loves the idea of fortune telling.
+Has read one too many astrology books.
+Might knockback Floating enemies.">Fortune Teller Cat</a> <a href="//bc.godfat.org/cats/52?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+
+        <td rowspan="1" class="position score pick minor_rare major_rare" onclick="pick('40BX')">
+  &nbsp;
+</td>
+
+<td rowspan="1" class="position score ">
+  
+</td>
+
+
+        
+        <td rowspan="2" id="N40B">
+  <a href="//bc.godfat.org/?seed=1234567&amp;pos=40B&amp;event=2026-10-16_1068&amp;count=40#N40B">40B</a>
+</td>
+
+      </tr>
+
+      
+    
+
+    <tr>
+      
+        <td colspan="3"></td>
+      
+
+      
+      <td rowspan="1" class="position cat pick minor_rare major_rare" onclick="pick('40B')">
+  <span><a href="//bc.godfat.org/?seed=1410252380&amp;last=199&amp;event=2026-10-16_1068&amp;count=40" title="*Onmyoji Cat | Magica Cat | Thaumaturge Cat
+Exorcist who time travelled from the past.
+Always trying to purge sportscars of evil.
+Sometimes weakens non-Metal enemies.">Onmyoji Cat</a> <a href="//bc.godfat.org/cats/199?seed=1234567&amp;event=2026-10-16_1068&amp;count=40">🐾</a></span>
+</td>
+
+<td rowspan="1" class="position cat ">
+  
+</td>
+
+      
+    </tr>
+  </tbody></table>
+</div>
+
+  <div class="note">
+  <ul>
+    <li>Data was pulled from the app and event data.</li>
+    <li>Data was completely based on <a href="https://gitlab.com/godfat/battle-cats-rolls/blob/master/build/bc-en.yaml">bc-en.yaml</a>.</li>
+    <li>Clicking on the cat's name simulates rolling to that cat.</li>
+    <li>Clicking on 🐾 leads to the cat data.</li>
+    <li>Guaranteed cat will only show if the event has guaranteed cats.</li>
+    <li>Track A or B is purely perspective. Rolling a guaranteed cat will swap the track, not jump. You're always on track A, and the other track is the alternative track.</li>
+    <li>Step-up counts as 15 rolls by summing 3, 5, and 7.</li>
+    <li>
+      <ul class="position">
+        <li><span class="supa"><a>Super</a></span> cats</li>
+        <li><span class="supa_fest"><a>Super</a></span> in Uberfest or Epicfest only</li>
+        <li><span class="uber"><a>Uber</a></span> cats</li>
+        <li><span class="uber_fest"><a>Uber</a></span> in Uberfest or Epicfest only</li>
+        <li><span class="legend"><a>Legendary</a></span> cats</li>
+        <li><span class="legend_fest"><a>Legendary</a></span> cats in Royalfest or double legend chances only</li>
+        <li><span class="owned"><a>Owned</a></span> cats (original color on the left)</li>
+        <li><span class="found"><a>Found</a></span> cats</li>
+        <li><span class="exclusive"><a>Exclusive</a></span> cats</li>
+        <li>
+          Priority:
+          <span class="owned"><a>Owned</a></span> &gt;
+          <span class="found"><a>Found</a></span> &gt;
+          <span class="exclusive"><a>Exclusive</a></span> &gt;
+          others
+        </li>
+        <li><span class="picked">Rolled</span> cats</li>
+        <li><span class="picked_consecutively">Rolled</span> cats with consecutive (11 or 15) rolls</li>
+        <li><span class="next_position">Next position</span> after the rolls</li>
+      </ul>
+    </li>
+    <li>Server time is UTC. Event time isn't taken into account yet.</li>
+  </ul>
+</div>
+
+
+
+    </div>
+
+    <div id="footer">
+      <hr>
+      <a href="//bc.godfat.org/help">Help</a>
+      /
+      <a href="https://gitlab.com/godfat/battle-cats-rolls">Source</a>
+      ©
+      2018-2026 Lin Jen-Shin (godfat)
+    </div>
+  
+
+</body></html>

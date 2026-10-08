@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seed Router · Battle Cats</title>
+  <script>
+    // Apply the saved (or system) theme before the first paint: no white flash.
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('bc-seed-router-theme'); } catch (e) {}
+      if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <header class="brand">
+      <div>
+        <h1>Seed Router</h1>
+        <p>Planificador de tiros para <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a></p>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" title="Cambiar entre modo claro y oscuro">
+        <svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M6.2 1.1a.6.6 0 0 1 .6.8 5.6 5.6 0 0 0 7.3 7.3.6.6 0 0 1 .8.6A7 7 0 1 1 6.2 1.1z"/></svg>
+        <svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><g stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3"/></g></svg>
+        <span id="theme-label">Oscuro</span>
+      </button>
+    </header>
+
+    <form id="route-form" novalidate>
+      <section class="group">
+        <h2>Semilla</h2>
+        <label class="field">
+          <span>URL de godfat</span>
+          <input type="url" name="url" required placeholder="https://bc.godfat.org/?seed=…">
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Objetivos</h2>
+        <div class="field picker" id="picker">
+          <label for="picker-input">Gatos que quieres conseguir</label>
+          <div class="picker-search">
+            <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m10.6 10.6 3.6 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input id="picker-input" type="text" autocomplete="off" spellcheck="false"
+              role="combobox" aria-expanded="false" aria-controls="picker-list" aria-autocomplete="list"
+              placeholder="Buscar por nombre o forma…">
+            <ul class="picker-list" id="picker-list" role="listbox" hidden></ul>
+          </div>
+          <div class="picker-selected" id="picker-selected" hidden>
+            <div class="picker-selected-head">
+              <span id="picker-count"></span>
+              <button type="button" class="link-button" id="picker-clear">Quitar todos</button>
+            </div>
+            <ul class="selected-list" id="picker-chips" aria-label="Gatos elegidos"></ul>
+          </div>
+          <input type="hidden" name="targets" value="[]">
+          <small id="picker-status">Cargando lista de gatos…</small>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Eventos</h2>
+        <div class="pair">
+          <label class="field"><span>Desde</span><input type="date" name="from" required></label>
+          <label class="field"><span>Hasta</span><input type="date" name="to" required></label>
+        </div>
+        <label class="field">
+          <span>¿Cuántos tiros hacia delante revisar?</span>
+          <input type="number" name="rolls" min="20" max="1000" step="10" value="200" required>
+          <small>Hasta qué fila de tu semilla en godfat se busca (1A/1B, 2A/2B…). Con 200 casi siempre basta; más solo hace que el análisis tarde más.</small>
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>Inventario</h2>
+        <div class="pair">
+          <label class="field"><span>Rare Tickets</span><input type="number" name="tickets" min="0" step="1" value="0" required></label>
+          <label class="field"><span>Cat Food</span><input type="number" name="food" min="0" step="1" value="0" required></label>
+        </div>
+        <small class="hint">Cada tiro simple gasta un Rare Ticket mientras te queden; después cuesta 150 Cat Food. Para comparar rutas, 1 Rare Ticket = 150 Cat Food, como en el juego.</small>
+      </section>
+
+      <section class="group">
+        <h2>Descuentos disponibles</h2>
+        <p class="hint">Marca los que tengas activos ahora en tu cuenta. El plan decide si le conviene usarlos y en cada ruta verás en qué paso se usan o por qué no.</p>
+        <label class="check"><input type="checkbox" name="discount11"><span>Primer 11-Draw a 750 Cat Food <em>en vez de 1500; sirve para un 11-draw normal o garantizado</em></span></label>
+        <label class="check"><input type="checkbox" name="discount1"><span>Primer tiro simple a 50 Cat Food <em>en vez de 150; solo se aplica cuando ya no te quedan Rare Tickets</em></span></label>
+      </section>
+
+      <section class="group">
+        <h2>Protección de casillas de legendario</h2>
+        <p class="hint">Las rutas pueden pasar por estas casillas, pero si uno de tus gatos objetivo sale en una casilla protegida no cuenta: el plan lo buscará en otra para no gastar la oportunidad de legendario. Un legendario objetivo sí cuenta. Cada ruta indica igualmente por qué casillas de legendario pasa.</p>
+        <label class="check"><input type="checkbox" name="avoidLegend" checked><span><i class="dot legend"></i>Proteger moradas (Legendary)</span></label>
+        <label class="check"><input type="checkbox" name="avoidLegendFest" checked><span><i class="dot legend-fest"></i>Proteger lilas (Legendary en Royalfest / doble legend) <em>solo si hay un evento así en Upcoming</em></span></label>
+      </section>
+
+      <div class="actions">
+        <button type="submit" id="submit" class="primary">Calcular rutas</button>
+      </div>
+    </form>
+  </aside>
+
+  <main class="content">
+    <section id="empty" class="empty">
+      <h2>Sin resultados todavía</h2>
+      <p>Pega la URL actual de tu semilla, indica los gatos que quieres y pulsa <b>Calcular rutas</b>.</p>
+      <ol>
+        <li>Se leen los banners <i>Upcoming</i> del rango de fechas y sus próximos tiros.</li>
+        <li>Se buscan todas las combinaciones de banners, tiros simples, 11-draws y garantizados, incluidos los cambios de pista por rare duplicado entre banners.</li>
+        <li>Se muestra la ruta de menor gasto total y alternativas que priorizan un solo recurso.</li>
+      </ol>
+    </section>
+
+    <section id="status" class="status" hidden>
+      <div class="bar"><span></span></div>
+      <ol id="progress"></ol>
+    </section>
+
+    <section id="error" class="notice error" hidden></section>
+
+    <section id="results" hidden></section>
+  </main>
+
+  <script src="picker.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
