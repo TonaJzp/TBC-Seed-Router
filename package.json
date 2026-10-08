@@ -1,0 +1,21 @@
+{
+  "name": "battlecats-seed-router",
+  "version": "1.0.0",
+  "description": "Router local de semillas de Battle Cats sobre bc.godfat.org (Express + Playwright)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "app": "node server.js --open",
+    "test": "node --test \"test/*.test.js\"",
+    "test:live": "node scripts/validate.js",
+    "update-fixtures": "node scripts/update-fixtures.js",
+    "postinstall": "playwright install chromium"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "playwright": "^1.64.0"
+  },
+  "private": true
+}

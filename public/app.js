@@ -1,0 +1,473 @@
+'use strict';
+
+const $ = (sel) => document.querySelector(sel);
+const form = $('#route-form');
+const STORAGE_KEY = 'bc-seed-router-form';
+const picker = new TargetPicker($('#picker'));
+
+const esc = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const fmt = (n) => Number(n).toLocaleString('es-ES');
+// Dates in the user's own time zone (toISOString would give the UTC day).
+const isoDate = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayIso = () => isoDate(new Date());
+
+const KIND_LABEL = {
+  standard: 'Simples y 11-draw',
+  guaranteed: 'Garantizado 11',
+  stepup: 'Step-up 3+5+7',
+  unsupported: 'No soportado',
+};
+const ACTION_LABEL = {
+  single: (s) => (s.count > 1 ? `${s.count} tiros simples` : 'Tiro simple'),
+  multi: () => '11-draw',
+  guaranteed: () => '11-draw garantizado',
+  stepup: () => 'Step-up 3+5+7',
+};
+
+let current = null; // last result, to re-render when another route is selected
+
+// --- Form -----------------------------------------------------------------
+
+// The plan always starts today: no past dates, and "to" never before "from".
+// The calendar won't offer earlier days; typed ones are flagged, not changed.
+function syncDateLimits() {
+  const today = todayIso();
+  form.from.min = today;
+  form.to.min = form.from.value > today ? form.from.value : today;
+}
+
+function dateProblem() {
+  const today = todayIso();
+  const show = (iso) => iso.split('-').reverse().join('/');
+  if (form.from.value && form.from.value < today) return `La fecha «Desde» no puede ser anterior a hoy (${show(today)}).`;
+  if (form.to.value && form.to.value < form.from.value) return 'La fecha «Hasta» no puede ser anterior a «Desde».';
+  if (form.to.value && form.to.value < today) return `La fecha «Hasta» no puede ser anterior a hoy (${show(today)}).`;
+  return null;
+}
+
+function restoreForm() {
+  const today = new Date();
+  form.from.value = isoDate(today);
+  const inTwoWeeks = new Date(today);
+  inTwoWeeks.setDate(today.getDate() + 14);
+  form.to.value = isoDate(inTwoWeeks);
+  syncDateLimits();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    for (const [k, v] of Object.entries(saved)) {
+      const el = form.elements[k];
+      if (!el || k === 'from' || k === 'to') continue;
+      if (el.type === 'checkbox') el.checked = v;
+      else el.value = v;
+    }
+  } catch {
+    /* ignore corrupt storage */
+  }
+}
+
+function readForm() {
+  const data = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    data[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  return { ...data, targets: picker.value(), today: todayIso() };
+}
+
+function validateForm() {
+  syncDateLimits(); // the page may have been left open since yesterday
+  let ok = true;
+  for (const el of form.elements) {
+    if (!el.name || el.type === 'checkbox') continue;
+    const valid = el.checkValidity();
+    el.classList.toggle('invalid', !valid);
+    ok &&= valid;
+  }
+  const hasTargets = picker.value().length > 0;
+  $('#picker-input').classList.toggle('invalid', !hasTargets);
+  return ok && hasTargets;
+}
+
+// --- Request --------------------------------------------------------------
+
+function show(section) {
+  for (const id of ['empty', 'status', 'results']) $(`#${id}`).hidden = id !== section;
+}
+
+function showError(message) {
+  $('#error').textContent = message;
+  $('#error').hidden = false;
+}
+
+async function submit(event) {
+  event.preventDefault();
+  if (!validateForm()) {
+    showError(dateProblem() || (picker.value().length ? 'Revisa los campos marcados en rojo.' : 'Elige al menos un gato objetivo.'));
+    return;
+  }
+  const body = readForm();
+  $('#submit').disabled = true;
+  $('#error').hidden = true;
+  $('#progress').innerHTML = '';
+  show('status');
+  let gotResult = false;
+  try {
+    const res = await fetch('/api/routes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line) continue;
+        const msg = JSON.parse(line);
+        if (msg.type === 'progress') {
+          const li = document.createElement('li');
+          li.textContent = msg.message;
+          $('#progress').appendChild(li);
+        } else if (msg.type === 'error') {
+          showError(msg.message);
+        } else if (msg.type === 'result') {
+          gotResult = true;
+          current = { data: msg, selected: msg.routes.findIndex((r) => r.found) };
+          render();
+        }
+      }
+    }
+  } catch (err) {
+    showError(`Error de conexión con el servidor: ${err.message}`);
+  } finally {
+    $('#submit').disabled = false;
+    show(gotResult ? 'results' : 'empty');
+  }
+}
+
+// --- Rendering ------------------------------------------------------------
+
+function render() {
+  const { data } = current;
+  $('#results').innerHTML = [
+    renderContext(data),
+    renderNotices(data),
+    renderDiagnostics(data),
+    data.routes.length ? renderRoutesTable(data) : '',
+    renderDetail(data),
+  ].join('');
+  for (const tr of document.querySelectorAll('.routes tbody tr[data-i]')) {
+    tr.addEventListener('click', () => {
+      current.selected = Number(tr.dataset.i);
+      render();
+    });
+  }
+}
+
+function renderContext(data) {
+  const rows = data.events
+    .map(
+      (e) => `<tr>
+        <td class="num">${esc(e.start)} – ${esc(e.end)}</td>
+        <td>${esc(e.name)}</td>
+        <td class="kind">${esc(KIND_LABEL[e.kind] || e.kind)}</td>
+      </tr>`
+    )
+    .join('');
+  const skipped = data.skipped
+    .map((s) => `<tr><td></td><td class="muted">${esc(s.name)}</td><td class="kind">Excluido: ${esc(s.reason)}</td></tr>`)
+    .join('');
+  return `<div class="context">
+    <h2>Semilla ${esc(data.seed)}</h2>
+    <span>${data.rolls} tiros por pista · ${data.events.length} banners · coste total con 1 Rare Ticket = 150 Cat Food</span>
+    <details>
+      <summary>Banners analizados</summary>
+      <table class="banners"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
+      <tbody>${rows}${skipped}</tbody></table>
+    </details>
+    ${renderAllLegendCells(data)}
+  </div>`;
+}
+
+const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
+
+/** Legendaries a legend cell can give, each with a button to add it as a target. */
+function legendOptions(cell) {
+  if (!cell.legends.length) return '<span class="muted">ningún banner de tus fechas da legendario aquí (sale un uber)</span>';
+  const byName = new Map();
+  for (const l of cell.legends) byName.set(l.name, [...(byName.get(l.name) || []), l.eventName]);
+  return [...byName]
+    .map(
+      ([name, banners]) => `<span class="legend-option">
+        <b>${esc(name)}</b> <span class="muted">en ${banners.map(esc).join(', ')}</span>
+        ${picker.isSelected(name) ? '<span class="tag">ya es objetivo</span>' : `<button type="button" class="link-button" data-add-target="${esc(name)}">Añadir a objetivos y recalcular</button>`}
+      </span>`
+    )
+    .join('');
+}
+
+function renderAllLegendCells(data) {
+  const cells = data.legendCells || [];
+  if (!cells.length) return '';
+  const rows = cells
+    .map((c) => `<tr><td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td><td>${legendOptions(c)}</td></tr>`)
+    .join('');
+  return `<details>
+    <summary>Casillas de legendario en tus próximos ${data.rolls} tiros (${cells.length})</summary>
+    <table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table>
+  </details>`;
+}
+
+function renderRouteLegendCells(r) {
+  if (!r.legendCells.length) {
+    return '<h3 class="section-title">Casillas de legendario</h3><p class="muted">Esta ruta no pasa por ninguna casilla de legendario.</p>';
+  }
+  const rows = r.legendCells
+    .map((c) => {
+      const got =
+        c.got.rarity === 'legendary'
+          ? `<b>${esc(c.got.name)}</b> <span class="tag">legendario</span>`
+          : `${esc(c.got.name)} <span class="muted">(${esc(c.eventName)})</span>`;
+      return `<tr>
+        <td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td>
+        <td class="num">${c.step}</td>
+        <td>${got}</td>
+        <td>${c.got.rarity === 'legendary' ? '<span class="muted">—</span>' : legendOptions(c)}</td>
+      </tr>`;
+    })
+    .join('');
+  const lost = r.legendCells.filter((c) => c.got.rarity !== 'legendary' && c.legends.length).length;
+  const warn = lost
+    ? `<p class="notice">Esta ruta gasta ${lost} casilla${lost > 1 ? 's' : ''} de legendario sin sacar el legendario. Si quieres alguno, añádelo como objetivo y se recalculará la ruta para conseguirlo junto a los demás.</p>`
+    : '';
+  return `<h3 class="section-title">Casillas de legendario en esta ruta</h3>
+    ${warn}
+    <div class="table-wrap"><table class="banners">
+      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th>Legendario que podrías conseguir</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+// Why the plan can't get every cat: one card per cause, with the affected
+// cats, the concrete cells/banners, what to do, and links to check it on godfat.
+function renderDiagnostics(data) {
+  const items = data.diagnostics || [];
+  if (!items.length) return '';
+  const routeless = !data.routes.some((r) => r.found);
+  const intro = routeless
+    ? 'No se ha podido calcular ninguna ruta. Estos son los motivos:'
+    : 'La ruta recomendada no consigue todos los gatos elegidos. Estos son los motivos:';
+  const cards = items
+    .map(
+      (d) => `<article class="diag">
+        <h4>${esc(d.headline)}</h4>
+        ${d.target ? `<p class="diag-target">Afecta a: <b>${esc(d.target)}</b></p>` : ''}
+        <ul>${d.details.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+        ${d.fix ? `<p class="diag-fix"><span>Qué puedes hacer</span>${esc(d.fix)}</p>` : ''}
+        ${
+          d.links.length
+            ? `<p class="diag-links"><span>Compruébalo en godfat:</span> ${d.links
+                .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}">${esc(l.label.split(' · ')[0])}</a>`)
+                .join(' ')}</p>`
+            : ''
+        }
+      </article>`
+    )
+    .join('');
+  return `<section class="diagnostics">
+    <h3 class="section-title">Por qué no se puede conseguir todo</h3>
+    <p class="diag-intro">${intro}</p>
+    ${cards}
+  </section>`;
+}
+
+function renderNotices(data) {
+  const lines = [];
+  const p = data.protection;
+  if (p.legendFestRequested && !p.legendFest) {
+    lines.push('Las casillas lilas no se protegen: no hay ningún evento de doble legend en Upcoming.');
+  } else if (p.legendFest) {
+    lines.push(`Casillas lilas protegidas por: ${p.doubleLegendEvents.map((e) => esc(e.name)).join(', ')}.`);
+  }
+  return lines.length ? `<div class="notice">${lines.map((l) => `<p>${l}</p>`).join('')}</div>` : '';
+}
+
+function renderRoutesTable(data) {
+  const rows = data.routes
+    .map((r, i) => {
+      if (!r.found) {
+        return `<tr><td><span class="name">${esc(r.label)}</span><span class="sub">${esc(r.reason)}</span></td><td colspan="7"></td></tr>`;
+      }
+      const t = r.totals;
+      const got = r.targets.filter((x) => x.obtained).length;
+      const requested = r.targets.length + (data.unplanned || []).length;
+      const draws = t.multiDraws || t.guaranteedDraws ? `${t.multiDraws} + ${t.guaranteedDraws}` : '—';
+      const note = r.sameAs
+        ? `Misma ruta que «${esc(r.sameAs)}».`
+        : r.sameCostAs
+          ? `Mismo coste que «${esc(r.sameCostAs)}»: no hay alternativa mejor en este criterio.`
+          : esc(r.description);
+      return `<tr data-i="${i}" class="${i === current.selected ? 'selected' : ''}">
+        <td><span class="name">${esc(r.label)}${r.recommended ? '<span class="tag">Recomendada</span>' : ''}</span>
+          <span class="sub">${note}</span></td>
+        <td class="r num ${got < requested ? 'bad' : ''}">${got}/${requested}</td>
+        <td class="r num">${fmt(t.ticketsUsed)}</td>
+        <td class="r num">${fmt(t.foodUsed)}</td>
+        <td class="r num"><b>${fmt(t.totalCost)}</b></td>
+        <td class="r num">${fmt(t.pulls)}</td>
+        <td class="r num nowrap">${draws}</td>
+        <td class="r">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)}</span>`}</td>
+      </tr>`;
+    })
+    .join('');
+  return `<h3 class="section-title">Rutas</h3>
+    <div class="table-wrap"><table class="routes">
+      <thead><tr>
+        <th>Ruta</th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
+        <th class="r">Coste total</th><th class="r">Tiros</th><th class="r" title="11-draws normales + garantizados (incluye step-up)">11-draws + gar.</th><th class="r">Con tu Cat Food</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+function renderDetail(data) {
+  const r = data.routes[current.selected];
+  if (!r || !r.found) return '';
+  const t = r.totals;
+  const warnings = [
+    !r.complete &&
+      `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «Por qué no se puede conseguir todo».`,
+    r.exhausted && 'La búsqueda alcanzó su límite de tamaño: el resultado puede no ser el óptimo.',
+    r.overBudget && `Ninguna ruta cabe en tu Cat Food actual: esta necesita ${fmt(t.shortfall)} más.`,
+  ].filter(Boolean);
+  const discountLines = [
+    ['Primer 11-Draw a 750', r.discounts.multi],
+    ['Primer tiro simple a 50', r.discounts.single],
+  ]
+    .filter(([, d]) => d)
+    .map(([name, d]) =>
+      d.step
+        ? `<li><b>${name}</b>: se usa en el paso ${d.step}.</li>`
+        : `<li><b>${name}</b>: no se usa, ${esc(d.reason)}</li>`
+    )
+    .join('');
+
+  const targets = r.targets
+    .map((x) =>
+      x.obtained
+        ? `<li><span>${esc(x.names.join(' / '))}</span><span class="where">paso ${x.step}</span></li>`
+        : `<li class="missing"><span>${esc(x.names.join(' / '))}</span><span class="where">ver motivo arriba</span></li>`
+    )
+    .concat((data.unplanned || []).map((name) => `<li class="missing"><span>${esc(name)}</span><span class="where">ver motivo arriba</span></li>`))
+    .join('');
+
+  return `<section class="detail">
+    <div class="detail-head">
+      <h3>${esc(r.label)}</h3>
+      <p>${esc(r.description)}</p>
+    </div>
+    ${warnings.length ? `<div class="notice">${warnings.map((w) => `<p>${w}</p>`).join('')}</div>` : ''}
+    <dl class="figures">
+      <div><dt>Coste total</dt><dd>${fmt(t.totalCost)}</dd></div>
+      <div><dt>Rare Tickets</dt><dd>${fmt(t.ticketsUsed)} <span class="muted">/ ${fmt(data.inventory.tickets)}</span></dd></div>
+      <div><dt>Cat Food</dt><dd>${fmt(t.foodUsed)} <span class="muted">/ ${fmt(data.inventory.food)}</span></dd></div>
+      <div><dt>Tiros</dt><dd>${fmt(t.pulls)}</dd></div>
+      <div><dt>Posición final</dt><dd class="mono">${esc(t.finalPosition)}</dd></div>
+    </dl>
+    ${discountLines ? `<h3 class="section-title">Descuentos</h3><ul class="discounts">${discountLines}</ul>` : ''}
+    <h3 class="section-title">Objetivos</h3>
+    <ul class="targets">${targets}</ul>
+    ${renderRouteLegendCells(r)}
+    <h3 class="section-title">Pasos</h3>
+    <div class="table-wrap"><table class="steps">
+      <thead><tr><th>#</th><th>Fecha</th><th>Banner</th><th>Acción</th><th>Posición</th><th class="r">Pago</th><th>Gatos</th></tr></thead>
+      <tbody>${r.steps.map((s) => renderStep(s, data)).join('')}</tbody>
+    </table></div>
+    <div class="legend-row">
+      <span><span class="cat">Rare</span></span>
+      <span><span class="cat super">Super</span></span>
+      <span><span class="cat uber">Uber</span></span>
+      <span><span class="cat legendary">Legendary</span></span>
+      <span><span class="cat target">Objetivo</span></span>
+      <span>↺ rare duplicado (cambio de pista)</span>
+      <span>★ uber garantizado</span>
+      <span><i class="dot legend"></i>casilla morada · <i class="dot legend-fest"></i>casilla lila</span>
+    </div>
+  </section>`;
+}
+
+function renderStep(s, data) {
+  const link = `https://bc.godfat.org/?seed=${data.seed}&event=${encodeURIComponent(s.eventId)}&count=${data.rolls}#N${s.from}`;
+  const pay = [s.ticketsSpent && `${s.ticketsSpent} ticket${s.ticketsSpent > 1 ? 's' : ''}`, s.foodSpent && `${fmt(s.foodSpent)} CF`]
+    .filter(Boolean)
+    .join(' + ');
+  const note = /descuento/.test(s.payment) ? '<small>con descuento</small>' : '';
+  const jump = s.dupeSwitch ? '<span class="jump">cruce por duplicado</span>' : '';
+  const cats = s.cats
+    .map((c) => {
+      const cls = ['cat', c.rarity === 'rare' ? '' : c.rarity, c.target ? 'target' : ''].filter(Boolean).join(' ');
+      const marks = `${c.rerolled ? '<span class="mark">↺</span>' : ''}${c.guaranteed ? '<span class="mark">★</span>' : ''}`;
+      const dot = c.legendCell ? `<i class="dot ${COLOR_DOT[c.legendCell]}" title="Casilla ${c.legendCell} (${esc(c.cell)})"></i>` : '';
+      const title = c.protectedSkip ? ' title="Es un objetivo, pero cae en una casilla protegida: aquí no cuenta"' : '';
+      return `<span class="${cls}${c.protectedSkip ? ' skipped' : ''}"${title}>${dot}${esc(c.name)}${marks}</span>`;
+    })
+    .join('');
+  return `<tr class="${s.cats.some((c) => c.newTarget) ? 'hit' : ''}">
+    <td class="idx num">${s.index}</td>
+    <td class="num nowrap">${esc(s.date.slice(5))}</td>
+    <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${esc(s.eventName)}">${esc(s.eventName)}</a></td>
+    <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
+    <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
+    <td class="r pay num">${pay || '0'}</td>
+    <td><div class="cats">${cats}</div></td>
+  </tr>`;
+}
+
+// Opened as a file (double-clicking public/index.html) there is no server:
+// nothing can work, so say how to start the app instead.
+if (location.protocol === 'file:') {
+  showError('Esta página no funciona abriendo el archivo HTML directamente. Arranca la app con «Iniciar Seed Router.bat» (o «npm start») y abre http://localhost:3000');
+  $('#submit').disabled = true;
+}
+
+// --- Theme ----------------------------------------------------------------
+// The initial theme is set by the inline script in <head> (no flash).
+const THEME_KEY = 'bc-seed-router-theme';
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const dark = theme === 'dark';
+  $('#theme-toggle').setAttribute('aria-pressed', String(dark));
+  $('#theme-label').textContent = dark ? 'Claro' : 'Oscuro';
+}
+$('#theme-toggle').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+applyTheme(document.documentElement.dataset.theme || 'light');
+
+restoreForm();
+picker.load();
+form.from.addEventListener('change', syncDateLimits);
+form.to.addEventListener('change', syncDateLimits);
+form.addEventListener('submit', submit);
+
+// "Añadir a objetivos y recalcular" on a legendary suggested in the results.
+$('#results').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-add-target]');
+  if (!btn) return;
+  if (!picker.addByName(btn.dataset.addTarget)) {
+    showError(`No se encontró «${btn.dataset.addTarget}» en la lista de gatos.`);
+    return;
+  }
+  form.requestSubmit();
+});
