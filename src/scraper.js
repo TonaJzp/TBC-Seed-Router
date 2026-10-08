@@ -2,6 +2,7 @@
 
 const { chromium } = require('playwright');
 const { buildSequence } = require('./rng');
+const { site } = require('./site');
 
 const BASE = 'https://bc.godfat.org/';
 const DEFAULT_ROLLS = 200;
@@ -9,6 +10,7 @@ const MAX_ROLLS = 1000;
 const GODFAT_PAGE_ROWS = 300; // godfat ignores count values above 300
 const CONCURRENCY = 3;
 const CACHE_TTL_MS = 30 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 200;
 
 // Banners paid with Platinum/Legend tickets instead of Cat Food / Rare Tickets.
 const TICKET_ONLY_BANNER = /platinum capsule|legend capsule/i;
@@ -17,6 +19,14 @@ const DOUBLE_LEGEND_EVENT =
   /royal\s*fest|(double|x2|×2|2x|twice)[^!]*legend|legend[^!]*(double|x2|×2|2x|twice)/i;
 
 const cache = new Map();
+
+// Bounded cache: expired entries go first, then the oldest (Map keeps insertion order).
+function remember(key, value, now = Date.now()) {
+  for (const [k, e] of cache) if (now - e.at >= CACHE_TTL_MS) cache.delete(k);
+  cache.delete(key);
+  while (cache.size >= CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value);
+  cache.set(key, { at: now, value });
+}
 
 function parseSeedUrl(rawUrl) {
   let url;
@@ -43,7 +53,8 @@ function pageUrl({ seed }, extra = {}) {
 }
 
 async function newFastPage(browser) {
-  const page = await browser.newPage();
+  // Identifies the app (and how to reach its owner) instead of posing as a normal browser.
+  const page = await browser.newPage({ userAgent: site.userAgent });
   // The tables are server-rendered; skip everything that is not the document.
   await page.route('**/*', (route) =>
     route.request().resourceType() === 'document' ? route.continue() : route.abort()
@@ -293,7 +304,7 @@ async function scrapeSeed(rawUrl, { from, to, rolls = DEFAULT_ROLLS, onProgress 
 
     const events = await scrapeAll(browser, seedInfo, selected, rolls, onProgress);
     const value = { events, skipped, doubleLegendEvents, upcoming };
-    cache.set(cacheKey, { at: Date.now(), value });
+    remember(cacheKey, value);
     return { seedInfo, ...value };
   } finally {
     await browser.close();

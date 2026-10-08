@@ -443,6 +443,39 @@ td .dot { margin-right: 6px; }
 .legend-row { display: flex; flex-wrap: wrap; gap: 14px; margin: 8px 0 0; font-size: 12px; color: var(--ink-2); }
 .legend-row .cat { font-weight: 400; }
 
+/* Footer (credits, legal links) ------------------------------------------- */
+.site-footer { padding: 14px 22px 22px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); }
+.site-footer p { margin: 0 0 8px; line-height: 1.45; }
+.site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
+.site-footer nav a[hidden] { display: none; }
+
+/* Legal page --------------------------------------------------------------- */
+body.doc { display: block; }
+.doc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  padding: 14px 32px;
+  font-size: 13px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.doc-head nav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.doc-body { max-width: 760px; margin: 0 auto; padding: 28px 32px 72px; line-height: 1.55; }
+.doc-body h1 { font-size: 22px; letter-spacing: -0.01em; }
+.doc-body .updated { margin: 4px 0 0; color: var(--ink-3); font-size: 12.5px; }
+.doc-body section { padding-top: 28px; scroll-margin-top: 12px; }
+.doc-body h2 { font-size: 17px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.doc-body h3 { font-size: 14px; margin: 18px 0 4px; }
+.doc-body p, .doc-body ul { margin: 8px 0; }
+.doc-body ul { padding-left: 20px; }
+.doc-body li { margin: 6px 0; }
+.owner { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 12px 0 0; }
+.owner dt { color: var(--ink-2); }
+.owner dd { margin: 0; }
+
 @media (max-width: 1280px) {
   :root { --sidebar: 360px; }
   .content { padding: 22px 24px 56px; }
@@ -452,4 +485,6 @@ td .dot { margin-right: 6px; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .content { padding: 20px 16px 48px; }
   .steps .banner { max-width: 140px; }
+  .doc-head { padding: 12px 16px; }
+  .doc-body { padding: 20px 16px 48px; }
 }

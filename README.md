@@ -156,9 +156,13 @@ Si eliges un gato que no se puede conseguir, el análisis lo indica con el motiv
 
 ```
 public/            Frontend (HTML + JS sin dependencias; picker.js es el buscador de gatos)
-data/cats.json     Copia local de la lista de gatos de Miraheze
-server.js          API Express: POST /api/routes (NDJSON con progreso), GET /api/cats
+data/cats.json     Copia local de la lista de gatos de Miraheze (CC BY-SA 4.0, ver data/LICENSE.md)
+server.js          API Express: POST /api/routes (NDJSON con progreso), GET /api/cats, /legal, /icons
 src/catalog.js     Lista de gatos de Miraheze, con copia local y actualización automática
+src/site.js        Datos públicos del sitio (titular, contacto, hosting, apoyo) desde variables de entorno
+src/limits.js      Cola de búsquedas y límite por visitante para no sobrecargar godfat
+src/icons.js       Iconos de la wiki servidos desde el propio servidor, con caché en disco
+src/legal.js       Página /legal: aviso legal, privacidad, créditos y apoyo
 src/scraper.js     Playwright: lista de eventos Upcoming + N tiros por banner
 src/rng.js         xorshift32 y disposición de semillas en las pistas A/B
 src/simulator.js   Mecánica de tiros: duplicados, re-roll, garantizados, casillas protegidas
@@ -196,6 +200,36 @@ restantes, descuentos pendientes, momento). Las acciones son tiro simple o garan
 banner activo. Se ejecuta un Dijkstra por criterio, con dos podas exactas: el «último gato» solo se
 distingue si puede duplicarse en la casilla siguiente, y un estado con más objetivos conseguidos y
 coste menor o igual descarta al otro. Con 20 objetivos la búsqueda completa tarda unos segundos por ruta.
+
+## Publicar la app
+
+La web pública se despliega con el `Dockerfile` (imagen de Playwright con Chromium). Se configura con
+variables de entorno; `.env.example` las lista todas. Sin `CONTACT_EMAIL` y `SITE_URL` el servidor no
+arranca en producción, porque los necesitan el aviso legal y la identificación ante godfat y la wiki.
+
+| Variable | Para qué |
+|---|---|
+| `NODE_ENV=production` | Activa las comprobaciones, HSTS y el límite por visitante |
+| `SITE_URL`, `CONTACT_EMAIL`, `OWNER_NAME` | Aviso legal, privacidad y User-Agent |
+| `HOSTING_PROVIDER` | Quién aloja la web (política de privacidad) |
+| `TRUST_PROXY=1` | Leer la IP real del visitante detrás del proxy del hosting |
+| `MAX_JOBS`, `MAX_QUEUE` | Búsquedas simultáneas (2) y en cola (20) |
+| `RATE_LIMIT`, `RATE_WINDOW_MIN` | Búsquedas por visitante (10 cada 10 min) |
+| `GODFAT_ENABLED=false` | Deja de leer godfat sin apagar la web |
+| `DONATE_URL`, `DONATE_PLATFORM`, `OWNER_NIF`, `OWNER_ADDRESS` | Apoyo voluntario; el enlace solo aparece con las cuatro |
+
+**Cumplimiento.** Lo que hace la app para respetar a sus fuentes y a sus usuarios:
+
+- **godfat:** se identifica con un User-Agent que incluye la web y el email de contacto, solo pide el
+  documento HTML (sin imágenes ni scripts), guarda en caché cada consulta 30 min, limita las búsquedas
+  simultáneas y por visitante, y enlaza a godfat en cada paso. `GODFAT_ENABLED=false` lo desactiva al momento.
+- **Battle Cats Wiki:** atribución y licencia CC BY-SA 4.0 en el pie y en `/legal`. La lista adaptada se
+  publica con la misma licencia en `/api/cats`. Las consultas a la API llevan User-Agent con contacto y
+  `maxlag`. Los iconos se piden una sola vez y se sirven desde aquí.
+- **PONOS:** aviso de herramienta no oficial y de titularidad de marcas e imágenes; no se vende nada.
+- **Visitantes:** sin cookies, analítica ni recursos de terceros (CSP `default-src 'self'`). La IP solo se
+  usa en memoria para el límite, y el formulario se guarda solo en su navegador, con un botón para borrarlo.
+  `/legal` contiene el aviso legal (LSSI-CE) y la política de privacidad (RGPD).
 
 ## Tests
 

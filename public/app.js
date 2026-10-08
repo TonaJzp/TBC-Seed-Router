@@ -455,8 +455,31 @@ $('#theme-toggle').addEventListener('click', () => {
 });
 applyTheme(document.documentElement.dataset.theme || 'light');
 
+// --- Site -----------------------------------------------------------------
+// The support link only exists once the owner has configured it, and the
+// server can switch off reading godfat (e.g. if godfat asks to stop).
+async function loadSite() {
+  try {
+    const site = await (await fetch('/api/site')).json();
+    $('#support-link').hidden = !site.donations;
+    if (!site.godfatEnabled) {
+      showError('La lectura de bc.godfat.org está desactivada temporalmente, así que no se pueden calcular rutas. Vuelve a probar más adelante.');
+      $('#submit').disabled = true;
+    }
+  } catch {
+    /* the form still works; the server reports any problem on submit */
+  }
+}
+
+$('#forget-data').addEventListener('click', () => {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(THEME_KEY);
+  location.reload();
+});
+
 restoreForm();
 picker.load();
+if (location.protocol !== 'file:') loadSite();
 form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);
 form.addEventListener('submit', submit);

@@ -10,8 +10,14 @@
 const fs = require('fs');
 const path = require('path');
 
+const { site } = require('./site');
+
 const API = 'https://battlecats.miraheze.org/w/api.php';
-const HEADERS = { 'User-Agent': 'BattleCatsSeedRouter/1.0 (local planner)' };
+const HEADERS = { 'User-Agent': site.userAgent };
+// MediaWiki API etiquette: requests are serial, and with maxlag the wiki asks
+// us to wait (instead of answering) while its servers are busy.
+const MAXLAG_S = 5;
+const MAXLAG_RETRIES = 3;
 const SNAPSHOT = path.join(__dirname, '..', 'data', 'cats.json');
 const REFRESH_MS = 12 * 60 * 60 * 1000;
 // Wiki rarity -> { key, gacha }: only the last four come out of the rare gacha.
@@ -25,10 +31,19 @@ const RARITIES = new Map([
 ]);
 
 async function getJson(params) {
-  const url = `${API}?${new URLSearchParams({ format: 'json', origin: '*', ...params })}`;
-  const res = await fetch(url, { headers: HEADERS });
-  if (!res.ok) throw new Error(`Miraheze respondió HTTP ${res.status}`);
-  return res.json();
+  const url = `${API}?${new URLSearchParams({ format: 'json', origin: '*', maxlag: String(MAXLAG_S), ...params })}`;
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { headers: HEADERS });
+    // Depending on the version, maxlag comes as HTTP 200 or 503: read the body either way.
+    const data = await res.json().catch(() => null);
+    if (data?.error?.code !== 'maxlag') {
+      if (!res.ok || !data) throw new Error(`Miraheze respondió HTTP ${res.status}`);
+      return data;
+    }
+    if (attempt >= MAXLAG_RETRIES) throw new Error('Miraheze está saturado; se reintentará más tarde.');
+    const wait = Math.min(Number(res.headers.get('retry-after')) || MAXLAG_S, 30);
+    await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+  }
 }
 
 function parseTitle(title) {
