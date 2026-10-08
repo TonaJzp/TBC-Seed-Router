@@ -1,6 +1,4 @@
-'use strict';
-
-const { keyOf, BANNER, MULTI_SIZE } = require('./simulator');
+import { keyOf, BANNER, MULTI_SIZE } from './simulator.js';
 
 const COST = {
   single: 150,
@@ -520,7 +518,7 @@ function optimizeRoutes(ctx) {
   return routes;
 }
 
-module.exports = {
+export {
   optimizeRoutes,
   prepareContext,
   findRoute,

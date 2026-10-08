@@ -1,24 +1,27 @@
 {
-  "name": "battlecats-seed-router",
-  "version": "1.0.0",
-  "description": "Router local de semillas de Battle Cats sobre bc.godfat.org (Express + Playwright)",
-  "main": "server.js",
+  "name": "tbc-seed-router",
+  "version": "2.0.0",
+  "description": "Planificador de tiradas para The Battle Cats con los datos abiertos de Battle Cats Rolls (godfat). Web estática, todo se calcula en el navegador.",
   "scripts": {
-    "start": "node server.js",
-    "app": "node server.js --open",
-    "test": "node --test \"test/*.test.js\"",
-    "test:live": "node scripts/validate.js",
-    "update-fixtures": "node scripts/update-fixtures.js",
-    "postinstall": "playwright install chromium"
+    "start": "node scripts/start.js",
+    "serve": "node scripts/serve.js",
+    "build": "node scripts/build.js",
+    "verify": "node scripts/verify-godfat.js",
+    "test": "node --test \"test/*.test.js\""
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^5.2.1",
-    "playwright": "^1.64.0"
-  },
+  "author": "TonaJzp",
+  "license": "AGPL-3.0-only",
   "private": true,
   "devDependencies": {
-    "js-yaml": "^5.4.3"
+    "js-yaml": "^5.4.3",
+    "linkedom": "^0.18.13"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TonaJzp/TBC-Seed-Router.git"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

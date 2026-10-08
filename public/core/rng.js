@@ -1,5 +1,3 @@
-'use strict';
-
 // Battle Cats uses a 32-bit xorshift RNG. godfat's tracker lays the seed
 // sequence out on two interleaved tracks:
 //   seq[0] = seed from the URL, seq[i + 1] = xorshift(seq[i])
@@ -24,4 +22,4 @@ function buildSequence(seed, maxN) {
 const raritySeed = (seq, n, track) => (track === 'A' ? seq[2 * n - 1] : seq[2 * n]);
 const slotSeed = (seq, n, track) => (track === 'A' ? seq[2 * n] : seq[2 * n + 1]);
 
-module.exports = { xorshift32, buildSequence, raritySeed, slotSeed };
+export { xorshift32, buildSequence, raritySeed, slotSeed };

@@ -316,6 +316,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
   font-size: 13px;
 }
 .notice.error { border-color: var(--bad); background: var(--bad-soft); max-width: 720px; }
+.notice.warn { max-width: 720px; }
 .notice p { margin: 2px 0; }
 
 /* Diagnostics: why the plan can't get every cat */
@@ -449,7 +450,7 @@ td .dot { margin-right: 6px; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
 .site-footer nav a[hidden] { display: none; }
 
-/* Legal page --------------------------------------------------------------- */
+/* Credits page -------------------------------------------------------------- */
 body.doc { display: block; }
 .doc-head {
   display: flex;
@@ -472,9 +473,6 @@ body.doc { display: block; }
 .doc-body p, .doc-body ul { margin: 8px 0; }
 .doc-body ul { padding-left: 20px; }
 .doc-body li { margin: 6px 0; }
-.owner { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 12px 0 0; }
-.owner dt { color: var(--ink-2); }
-.owner dd { margin: 0; }
 
 @media (max-width: 1280px) {
   :root { --sidebar: 360px; }

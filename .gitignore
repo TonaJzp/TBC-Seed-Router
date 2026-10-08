@@ -8,4 +8,5 @@ Thumbs.db
 .vscode/
 .claude/
 .cache/
-!.env.example
+public/data/
+public/icons/

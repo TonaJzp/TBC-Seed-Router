@@ -1,0 +1,97 @@
+# Every day (and on every push to main): tests, fresh data from godfat's open
+# repository, a full check against bc.godfat.org, publication on GitHub Pages
+# and a GitHub issue to the owner if anything needs attention.
+name: Datos, comprobación y web
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 5 * * *' # 05:23 UTC every day
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: web
+  cancel-in-progress: false
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tests
+        id: tests
+        run: npm test
+
+      - name: Iconos en caché
+        uses: actions/cache@v4
+        with:
+          path: .cache/icons
+          key: icons-${{ github.run_id }}
+          restore-keys: icons-
+
+      - name: Datos de godfat
+        id: build
+        run: node scripts/build.js
+
+      # Independent of the publication: it runs even if Pages is not set up.
+      - name: Comprobación contra bc.godfat.org
+        id: verify
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          node scripts/verify-godfat.js --previous "https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/data/status.json"
+
+      - name: Configurar GitHub Pages
+        id: pages
+        if: steps.build.outcome == 'success'
+        uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.build.outcome == 'success'
+        with:
+          path: public
+
+      - name: Publicar
+        id: deploy
+        if: steps.build.outcome == 'success'
+        uses: actions/deploy-pages@v4
+
+      - name: Avisar
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+        run: node scripts/notify.js
+
+      # GitHub pauses scheduled workflows after 60 days without activity in the
+      # repository; re-enabling it every day keeps the daily check running.
+      - name: Mantener activa la comprobación diaria
+        if: always() && github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/web.yml/enable"

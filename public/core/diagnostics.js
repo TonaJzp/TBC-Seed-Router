@@ -1,12 +1,10 @@
-'use strict';
-
 // Explains, target by target, why the plan can't get every cat: which cells of
 // the seed block the way, which protection causes it, which targets exclude
 // each other... Every explanation names concrete cells and banners and links
 // to them on godfat, so the user can check it on their own seed.
 
-const { keyOf, parseKey } = require('./simulator');
-const { rollSlot, performAction, actionsFor, findRoute, countsAsTarget } = require('./optimizer');
+import { keyOf, parseKey } from './simulator.js';
+import { rollSlot, performAction, actionsFor, findRoute, countsAsTarget } from './optimizer.js';
 
 const COLOR_NAME = { legend: 'morada', legend_fest: 'lila' };
 const MAX_STATES = 400_000;
@@ -229,21 +227,7 @@ class Diagnoser {
   // --- No path at all, even without protection ------------------------------
   structural(target) {
     const name = target.names.join(' / ');
-    const occ = this.occurrences(target);
-    const usable = occ.filter((s) => actionsFor(this.events.get(s.eventId)).length > 0);
-
-    if (occ.length && !usable.length) {
-      const banners = [...new Set(occ.map((s) => s.eventId))].map((id) => this.eventLabel(id));
-      return {
-        target: name,
-        headline: `${name} solo sale en banners que el plan no puede usar.`,
-        details: [
-          `Aparece en ${list(banners)}, pero ese banner tiene un tipo de tirada garantizada que no reconocemos, así que se excluye para no proponer rutas erróneas.`,
-        ],
-        fix: 'Si conoces cómo funciona ese banner, puedes planificarlo a mano en godfat.',
-        links: this.spotLinks(occ),
-      };
-    }
+    const usable = this.occurrences(target);
 
     // Reachable if time didn't matter? Then the dates are the problem.
     if (this.spotsIn(this.reach(this.ctx.protect, { ignoreTime: true }), target).length) {
@@ -343,4 +327,4 @@ function diagnose(ctx, routes, meta) {
   return new Diagnoser(ctx, routes, meta).run();
 }
 
-module.exports = { diagnose, explore, formatDate };
+export { diagnose, explore, formatDate };

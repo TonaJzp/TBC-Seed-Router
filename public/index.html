@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="icon" href="data:,">
   <title>Seed Router · planificador no oficial de The Battle Cats</title>
   <script src="theme-init.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -25,8 +28,8 @@
       <section class="group">
         <h2>Semilla</h2>
         <label class="field">
-          <span>URL de godfat</span>
-          <input type="url" name="url" required placeholder="https://bc.godfat.org/?seed=…">
+          <span>URL de tu semilla en godfat o número de semilla</span>
+          <input type="text" name="url" required inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://bc.godfat.org/?seed=…">
         </label>
       </section>
 
@@ -95,22 +98,23 @@
     </form>
 
     <footer class="site-footer">
-      <p>Herramienta gratuita y no oficial, sin relación con PONOS. Usa las tablas de
-        <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a> (godfat) y la lista de gatos de la
-        <a href="https://battlecats.miraheze.org/" target="_blank" rel="noopener">Battle Cats Wiki</a>
-        (<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener">CC BY-SA 4.0</a>).
+      <p><b>TBC Seed Router</b>, creado por
+        <a href="https://github.com/TonaJzp" target="_blank" rel="noopener">TonaJzp</a>.
+        Código abierto en <a href="https://github.com/TonaJzp/TBC-Seed-Router" target="_blank" rel="noopener">GitHub</a>.</p>
+      <p>Herramienta gratuita y no oficial, sin relación con PONOS. Calcula las tiradas con los datos abiertos de
+        <a href="https://bc.godfat.org/" target="_blank" rel="noopener">Battle Cats Rolls</a> (godfat, Apache 2.0) e iconos de la
+        <a href="https://battlecats.miraheze.org/" target="_blank" rel="noopener">Battle Cats Wiki</a>.
         The Battle Cats © PONOS Corporation.</p>
+      <p id="data-info"></p>
       <nav>
-        <a href="/legal#aviso">Aviso legal</a>
-        <a href="/legal#privacidad">Privacidad</a>
-        <a href="/legal#creditos">Créditos</a>
-        <a href="/legal#apoyo" id="support-link" hidden>Apoyar el proyecto</a>
+        <a href="credits.html">Créditos, licencias y privacidad</a>
       </nav>
       <button type="button" class="link-button" id="forget-data">Borrar los datos guardados en este navegador</button>
     </footer>
   </aside>
 
   <main class="content">
+    <section id="data-notice" class="notice warn" hidden></section>
     <section id="empty" class="empty">
       <h2>Sin resultados todavía</h2>
       <p>Pega la URL actual de tu semilla, indica los gatos que quieres y pulsa <b>Calcular rutas</b>.</p>
@@ -131,7 +135,6 @@
     <section id="results" hidden></section>
   </main>
 
-  <script src="picker.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
