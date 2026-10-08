@@ -7,3 +7,5 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .claude/
+.cache/
+!.env.example

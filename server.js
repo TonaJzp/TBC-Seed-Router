@@ -2,14 +2,22 @@
 
 const path = require('path');
 const express = require('express');
-const { scrapeSeed, scrapeEvents, DEFAULT_ROLLS, MAX_ROLLS } = require('./src/scraper');
+const { scrapeSeed, scrapeEvents, parseSeedUrl, DEFAULT_ROLLS, MAX_ROLLS } = require('./src/scraper');
 const { diagnose } = require('./src/diagnostics');
 const { describeUnavailable } = require('./src/unavailable');
 const { Simulator } = require('./src/simulator');
 const { optimizeRoutes, legendColorOf } = require('./src/optimizer');
 const { getCatalog } = require('./src/catalog');
+const { site: defaultSite, siteProblems } = require('./src/site');
+const { JobQueue, createRateLimiter } = require('./src/limits');
+const { iconHandler, localIconPath } = require('./src/icons');
+const { renderLegal } = require('./src/legal');
 
 const PORT = Number(process.env.PORT) || 3000;
+const envInt = (name, fallback) => {
+  const n = Number(process.env[name]);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+};
 const MIN_ROLLS = 20;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -169,91 +177,41 @@ function detectDoubleLegend(events, doubleLegendEvents, sim) {
   return [...found.values()].map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end }));
 }
 
-async function handleRoutes(req, res) {
+/**
+ * POST /api/routes. Validates the request, then waits for a free slot in the
+ * queue (and within the visitor's quota) before reading godfat, so the public
+ * app never puts more than a bounded load on it.
+ */
+async function handleRoutes(req, res, { site, queue, rateLimit }) {
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
-  const send = (obj) => res.write(JSON.stringify(obj) + '\n');
+  const send = (obj) => {
+    if (!res.writableEnded && !res.destroyed) res.write(JSON.stringify(obj) + '\n');
+  };
+  const closed = new AbortController();
+  res.on('close', () => closed.abort());
   try {
+    if (!site.godfatEnabled) {
+      throw new Error('La lectura de bc.godfat.org está desactivada temporalmente, así que no se pueden calcular rutas. Vuelve a probar más adelante.');
+    }
     const input = parseRequest(req.body || {});
-    const scraped = await scrapeSeed(input.url, {
-      from: input.from,
-      to: input.to,
-      rolls: input.rolls,
-      onProgress: (message) => send({ type: 'progress', message }),
-    });
-    const { seedInfo, events } = scraped;
-
-    const sim = new Simulator(seedInfo.seed, events, input.rolls);
-    const notes = [...scraped.skipped];
-    for (const ev of events) {
-      if (ev.kind === 'unsupported') {
-        notes.push({ name: ev.name, reason: 'tipo de garantizado no reconocido: banner excluido para no dar rutas erróneas' });
-      }
-      if (!ev.rerollReliable) {
-        notes.push({ name: ev.name, reason: 'pool con gatos repetidos: solo se usan cruces por duplicado que godfat muestra' });
-      }
+    parseSeedUrl(input.url); // a bad URL must not use up the visitor's quota
+    const quota = rateLimit ? rateLimit(req.ip) : { ok: true };
+    if (!quota.ok) {
+      const minutes = Math.max(1, Math.ceil(quota.retryAfterMs / 60_000));
+      throw new Error(
+        `Has hecho muchas búsquedas seguidas. Para no sobrecargar bc.godfat.org hay un límite por persona: espera ${minutes} min y vuelve a intentarlo.`
+      );
     }
-
-    const { cats: catalog } = await getCatalog();
-    const queries = withAliases(input.targets, catalog);
-    const { resolved, unavailable } = resolveTargets(queries, events, sim.obtainableIds());
-    const progress = (message) => send({ type: 'progress', message });
-    const unavailableItems = await describeUnavailable(unavailable, {
-      seed: seedInfo.seed,
-      input,
-      events,
-      upcoming: scraped.upcoming || [],
-      matchIds,
-      scrapeEvents: (list, rolls) => scrapeEvents(input.url, list, { rolls, onProgress: progress }),
-      onProgress: progress,
-    });
-
-    const doubleLegend = detectDoubleLegend(events, scraped.doubleLegendEvents, sim);
-    const protect = {
-      avoidLegend: input.protect.avoidLegend,
-      avoidLegendFest: input.protect.avoidLegendFest && doubleLegend.length > 0,
-    };
-
-    const ctx = {
-      sim,
-      events,
-      targets: resolved,
-      inventory: { tickets: input.tickets, food: input.food, lastCat: seedInfo.last },
-      discounts: input.discounts,
-      protect,
-      doubleLegend: doubleLegend.length > 0,
-      from: input.from,
-      to: input.to,
-    };
-    let routes = [];
-    let diagnostics = unavailableItems;
-    if (resolved.length) {
-      progress(`Calculando rutas óptimas para ${resolved.length} gatos objetivo...`);
-      routes = optimizeRoutes(ctx);
-      if (routes.some((r) => r.recommended && (!r.found || !r.complete || r.exhausted))) {
-        progress('Analizando por qué no se pueden conseguir todos los gatos...');
-        diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed: seedInfo.seed, rolls: input.rolls })];
-      }
-    }
-
-    send({
-      type: 'result',
-      seed: seedInfo.seed,
-      rolls: input.rolls,
-      inventory: { tickets: input.tickets, food: input.food },
-      events: events.map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, kind: e.kind })),
-      skipped: notes,
-      targets: resolved.map((t) => ({ query: t.query, names: t.names })),
-      // Chosen cats that couldn't enter the plan at all (explained in diagnostics).
-      unplanned: unavailable.map((u) => u.query),
-      diagnostics,
-      protection: {
-        legend: protect.avoidLegend,
-        legendFest: protect.avoidLegendFest,
-        legendFestRequested: input.protect.avoidLegendFest,
-        doubleLegendEvents: doubleLegend,
-      },
-      legendCells: legendCellsOf(sim, doubleLegend.length > 0),
-      routes,
+    await queue.run(() => analyse(input, send), {
+      signal: closed.signal,
+      onWait: (ahead) =>
+        send({
+          type: 'progress',
+          message:
+            ahead === 1
+              ? 'Hay otra búsqueda en marcha: la tuya empieza en cuanto termine.'
+              : `Hay ${ahead} búsquedas por delante de la tuya: espera un momento.`,
+        }),
     });
   } catch (err) {
     send({ type: 'error', message: err.message || String(err) });
@@ -262,14 +220,135 @@ async function handleRoutes(req, res) {
   }
 }
 
-function createApp() {
+async function analyse(input, send) {
+  const scraped = await scrapeSeed(input.url, {
+    from: input.from,
+    to: input.to,
+    rolls: input.rolls,
+    onProgress: (message) => send({ type: 'progress', message }),
+  });
+  const { seedInfo, events } = scraped;
+
+  const sim = new Simulator(seedInfo.seed, events, input.rolls);
+  const notes = [...scraped.skipped];
+  for (const ev of events) {
+    if (ev.kind === 'unsupported') {
+      notes.push({ name: ev.name, reason: 'tipo de garantizado no reconocido: banner excluido para no dar rutas erróneas' });
+    }
+    if (!ev.rerollReliable) {
+      notes.push({ name: ev.name, reason: 'pool con gatos repetidos: solo se usan cruces por duplicado que godfat muestra' });
+    }
+  }
+
+  const { cats: catalog } = await getCatalog();
+  const queries = withAliases(input.targets, catalog);
+  const { resolved, unavailable } = resolveTargets(queries, events, sim.obtainableIds());
+  const progress = (message) => send({ type: 'progress', message });
+  const unavailableItems = await describeUnavailable(unavailable, {
+    seed: seedInfo.seed,
+    input,
+    events,
+    upcoming: scraped.upcoming || [],
+    matchIds,
+    scrapeEvents: (list, rolls) => scrapeEvents(input.url, list, { rolls, onProgress: progress }),
+    onProgress: progress,
+  });
+
+  const doubleLegend = detectDoubleLegend(events, scraped.doubleLegendEvents, sim);
+  const protect = {
+    avoidLegend: input.protect.avoidLegend,
+    avoidLegendFest: input.protect.avoidLegendFest && doubleLegend.length > 0,
+  };
+
+  const ctx = {
+    sim,
+    events,
+    targets: resolved,
+    inventory: { tickets: input.tickets, food: input.food, lastCat: seedInfo.last },
+    discounts: input.discounts,
+    protect,
+    doubleLegend: doubleLegend.length > 0,
+    from: input.from,
+    to: input.to,
+  };
+  let routes = [];
+  let diagnostics = unavailableItems;
+  if (resolved.length) {
+    progress(`Calculando rutas óptimas para ${resolved.length} gatos objetivo...`);
+    routes = optimizeRoutes(ctx);
+    if (routes.some((r) => r.recommended && (!r.found || !r.complete || r.exhausted))) {
+      progress('Analizando por qué no se pueden conseguir todos los gatos...');
+      diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed: seedInfo.seed, rolls: input.rolls })];
+    }
+  }
+
+  send({
+    type: 'result',
+    seed: seedInfo.seed,
+    rolls: input.rolls,
+    inventory: { tickets: input.tickets, food: input.food },
+    events: events.map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, kind: e.kind })),
+    skipped: notes,
+    targets: resolved.map((t) => ({ query: t.query, names: t.names })),
+    // Chosen cats that couldn't enter the plan at all (explained in diagnostics).
+    unplanned: unavailable.map((u) => u.query),
+    diagnostics,
+    protection: {
+      legend: protect.avoidLegend,
+      legendFest: protect.avoidLegendFest,
+      legendFestRequested: input.protect.avoidLegendFest,
+      doubleLegendEvents: doubleLegend,
+    },
+    legendCells: legendCellsOf(sim, doubleLegend.length > 0),
+    routes,
+  });
+}
+
+// Everything the pages load comes from this server: no inline scripts, no
+// third-party resources, no framing.
+function securityHeaders(site) {
+  const headers = {
+    'Content-Security-Policy':
+      "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'same-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  };
+  if (site.production) headers['Strict-Transport-Security'] = 'max-age=31536000';
+  return (req, res, next) => {
+    res.set(headers);
+    next();
+  };
+}
+
+function createApp({
+  site = defaultSite,
+  queue = new JobQueue({ concurrency: envInt('MAX_JOBS', 2), maxWaiting: envInt('MAX_QUEUE', 20) }),
+  // Per-visitor quota only on the public server: locally there is one user.
+  rateLimit = site.production
+    ? createRateLimiter({ max: envInt('RATE_LIMIT', 10), windowMs: envInt('RATE_WINDOW_MIN', 10) * 60_000 })
+    : null,
+  cacheDir = process.env.CACHE_DIR || path.join(__dirname, '.cache'),
+} = {}) {
   const app = express();
+  app.disable('x-powered-by');
+  // Behind the hosting proxy, req.ip must be the visitor's address, not the proxy's.
+  if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
+  app.use(securityHeaders(site));
   app.use(express.json({ limit: '100kb' }));
   app.use(express.static(path.join(__dirname, 'public')));
-  app.post('/api/routes', handleRoutes);
+  app.get('/healthz', (req, res) => res.type('text').send('ok'));
+  app.get('/legal', (req, res) => res.type('html').send(renderLegal(site)));
+  app.get('/api/site', (req, res) =>
+    res.json({ name: site.name, donations: site.donationsEnabled, godfatEnabled: site.godfatEnabled })
+  );
+  app.use('/icons', iconHandler({ cacheDir: path.join(cacheDir, 'icons') }));
+  app.post('/api/routes', (req, res) => handleRoutes(req, res, { site, queue, rateLimit }));
   app.get('/api/cats', async (req, res) => {
     const { updatedAt, cats } = await getCatalog();
-    res.json({ updatedAt, cats });
+    // Icons go through /icons so visitors' browsers never contact the wiki.
+    res.json({ updatedAt, cats: cats.map((c) => ({ ...c, image: localIconPath(c.image) })) });
   });
   return app;
 }
@@ -282,6 +361,13 @@ function openBrowser(url) {
 }
 
 if (require.main === module) {
+  const { errors, warnings } = siteProblems(defaultSite);
+  for (const w of warnings) console.warn(`Aviso de configuración: ${w}`);
+  if (errors.length) {
+    for (const e of errors) console.error(`Error de configuración: ${e}`);
+    console.error('La web pública no arranca sin estos datos: los necesitan el aviso legal y la identificación ante godfat y la wiki. Consulta «Publicar la app» en el README.');
+    process.exit(1);
+  }
   const url = `http://localhost:${PORT}`;
   const open = process.argv.includes('--open');
   // Express 5 also calls this callback on errors; those go to the handler below.

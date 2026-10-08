@@ -3,16 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Seed Router · Battle Cats</title>
-  <script>
-    // Apply the saved (or system) theme before the first paint: no white flash.
-    (function () {
-      var t = null;
-      try { t = localStorage.getItem('bc-seed-router-theme'); } catch (e) {}
-      if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      document.documentElement.dataset.theme = t;
-    })();
-  </script>
+  <title>Seed Router · planificador no oficial de The Battle Cats</title>
+  <script src="theme-init.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,7 +12,7 @@
     <header class="brand">
       <div>
         <h1>Seed Router</h1>
-        <p>Planificador de tiros para <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a></p>
+        <p>Planificador no oficial de tiros para <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a></p>
       </div>
       <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" title="Cambiar entre modo claro y oscuro">
         <svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M6.2 1.1a.6.6 0 0 1 .6.8 5.6 5.6 0 0 0 7.3 7.3.6.6 0 0 1 .8.6A7 7 0 1 1 6.2 1.1z"/></svg>
@@ -101,6 +93,21 @@
         <button type="submit" id="submit" class="primary">Calcular rutas</button>
       </div>
     </form>
+
+    <footer class="site-footer">
+      <p>Herramienta gratuita y no oficial, sin relación con PONOS. Usa las tablas de
+        <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a> (godfat) y la lista de gatos de la
+        <a href="https://battlecats.miraheze.org/" target="_blank" rel="noopener">Battle Cats Wiki</a>
+        (<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener">CC BY-SA 4.0</a>).
+        The Battle Cats © PONOS Corporation.</p>
+      <nav>
+        <a href="/legal#aviso">Aviso legal</a>
+        <a href="/legal#privacidad">Privacidad</a>
+        <a href="/legal#creditos">Créditos</a>
+        <a href="/legal#apoyo" id="support-link" hidden>Apoyar el proyecto</a>
+      </nav>
+      <button type="button" class="link-button" id="forget-data">Borrar los datos guardados en este navegador</button>
+    </footer>
   </aside>
 
   <main class="content">

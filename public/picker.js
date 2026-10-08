@@ -82,7 +82,7 @@ class TargetPicker {
         for (const a of c.aliases) if (!this.byKey.has(TargetPicker.norm(a))) this.byKey.set(TargetPicker.norm(a), c);
       }
       const date = updatedAt ? new Date(updatedAt).toLocaleDateString('es-ES') : '—';
-      this.statusText = `${cats.length} gatos · lista de Miraheze del ${date}`;
+      this.statusText = `${cats.length} gatos · lista de la Battle Cats Wiki (CC BY-SA 4.0) del ${date}`;
     } catch {
       this.statusText = 'No se pudo cargar la lista de gatos.';
     }
