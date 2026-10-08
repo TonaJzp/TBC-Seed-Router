@@ -1,21 +1,14 @@
-'use strict';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { makeSim, loadEvents, loadVariant, godfatEvents, variants } from './helpers.js';
+import { parseKey } from '../public/core/simulator.js';
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { makeSim, loadEvents, loadVariant } = require('./helpers');
-const { parseKey } = require('../src/simulator');
-
-test('local re-roll and guaranteed math match every cell godfat rendered', () => {
+test('banner kinds come from the banner data', () => {
   const sim = makeSim();
-  for (const ev of sim.events) {
-    const v = ev.validation;
-    assert.ok(v.rerollChecked > 0, `${ev.name}: has duplicate cells to check`);
-    assert.equal(v.rerollOk, v.rerollChecked, `${ev.name}: re-rolls`);
-    assert.equal(v.guaranteedOk, v.guaranteedChecked, `${ev.name}: guaranteed`);
-    assert.equal(ev.kind, ev.hasGuaranteed ? 'guaranteed' : 'standard');
-  }
+  for (const ev of sim.events) assert.equal(ev.kind, ev.guaranteedSize === 11 ? 'guaranteed' : 'standard', ev.name);
+  assert.ok(sim.events.some((e) => e.kind === 'guaranteed') && sim.events.some((e) => e.kind === 'standard'));
+  assert.throws(() => makeSim([{ ...loadEvents()[0], guaranteedSize: 7 }]), /no soportado/);
 });
-
 test('a normal single stays on the track and advances one row', () => {
   const sim = makeSim();
   const ev = sim.events[0];
@@ -63,35 +56,21 @@ test('duplicates are detected across banners, including ones godfat does not dra
   assert.ok(checked > 10, `exercised ${checked} hidden cross-banner switches`);
 });
 
-test('computed re-rolls are refused when the banner math is not verified', () => {
-  const events = loadEvents();
-  const sim = makeSim(events);
-  const ev = sim.events[0];
-  ev.rerollReliable = false;
-  const scrapedKey = Object.keys(ev.alt)[0];
-  const scraped = parseKey(scrapedKey);
-  assert.ok(sim.single(ev, scraped.n, scraped.track, ev.raw[scrapedKey].id), 'godfat-rendered alt still usable');
-  const other = Object.entries(ev.raw).find(([k, c]) => ev.rarityOf.get(c.id) === 'rare' && !ev.alt[k]);
-  const p = parseKey(other[0]);
-  assert.equal(sim.single(ev, p.n, p.track, other[1].id), null);
-});
-
-test('a guaranteed draw yields 10 cats + 1 uber and swaps track', () => {
+test('a guaranteed draw yields 10 cats + 1 uber and swaps track, as godfat shows', () => {
   const sim = makeSim();
-  const ev = sim.events.find((e) => e.hasGuaranteed);
+  const godfat = godfatEvents().find((e) => e.hasGuaranteed);
+  const ev = sim.events.find((e) => e.id === godfat.id);
   const g = sim.guaranteed(ev, 1, 'A', 0);
   assert.equal(g.cats.length, 10);
   assert.equal(g.uber.rarity, 'uber');
-  assert.equal(`${g.next.n}${g.next.track}`, ev.guaranteed['1A'].dest);
-  assert.equal(g.uber.id, ev.guaranteed['1A'].id);
+  assert.equal(`${g.next.n}${g.next.track}`, godfat.guaranteed['1A'].dest);
+  assert.equal(g.uber.id, godfat.guaranteed['1A'].id);
 });
-
 test('banners without guaranteed draws cannot do them', () => {
   const sim = makeSim();
-  const ev = sim.events.find((e) => !e.hasGuaranteed);
+  const ev = sim.events.find((e) => !e.guaranteedSize);
   assert.equal(sim.guaranteed(ev, 1, 'A', 0), null);
 });
-
 test('purple cells are protected by position across all banners', () => {
   const sim = makeSim();
   const [key] = [...sim.legendColors.keys()];
@@ -101,30 +80,24 @@ test('purple cells are protected by position across all banners', () => {
   assert.equal(sim.isProtected(n, track, { avoidLegend: false, avoidLegendFest: false }), false);
 });
 
-test('obtainable ids include raw, re-rolled and guaranteed results', () => {
+test('obtainable ids include every raw, re-rolled and guaranteed result godfat shows', () => {
   const sim = makeSim();
   const ids = sim.obtainableIds();
-  for (const ev of sim.events) {
+  for (const ev of godfatEvents()) {
     for (const c of Object.values(ev.raw)) assert.ok(ids.has(c.id));
     for (const c of Object.values(ev.alt)) assert.ok(ids.has(c.id));
     for (const c of Object.values(ev.guaranteed)) assert.ok(ids.has(c.id));
   }
 });
-
-test('banner kinds are detected from godfat, not from the event name', () => {
+test('a step-up banner draws 14 cats + 1 uber, as godfat shows for a step-up', () => {
   const stepup = loadVariant(15);
-  const seven = loadVariant(7);
-  const sim = makeSim([stepup, seven]);
+  const sim = makeSim([stepup]);
   assert.equal(stepup.kind, 'stepup');
-  assert.equal(stepup.guaranteedSize, 15);
-  assert.equal(stepup.validation.guaranteedOk, stepup.validation.guaranteedChecked);
-  assert.equal(seven.kind, 'unsupported', 'an unknown guaranteed kind is not guessed');
   const g = sim.guaranteed(stepup, 1, 'A', 0);
   assert.equal(g.cats.length, 14);
-  assert.equal(`${g.next.n}${g.next.track}`, stepup.guaranteed['1A'].dest);
-  assert.equal(sim.guaranteed(seven, 1, 'A', 0), null);
+  assert.equal(g.uber.id, variants[15].guaranteed['1A'].id);
+  assert.equal(`${g.next.n}${g.next.track}`, variants[15].guaranteed['1A'].dest);
 });
-
 test('a plain 11-draw is exactly 11 consecutive singles', () => {
   const sim = makeSim();
   const ev = sim.events.find((e) => e.kind === 'standard');

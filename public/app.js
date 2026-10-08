@@ -1,9 +1,15 @@
-'use strict';
+import { plan, catalogOf, UserError } from './core/planner.js';
+import { TargetPicker } from './picker.js';
 
 const $ = (sel) => document.querySelector(sel);
 const form = $('#route-form');
 const STORAGE_KEY = 'bc-seed-router-form';
 const picker = new TargetPicker($('#picker'));
+const DAY_MS = 86_400_000;
+const STALE_DATA_DAYS = 3; // the data is rebuilt every day
+const UNVERIFIED_DAYS = 4; // and checked against godfat every day
+
+let gachaData = null; // banner data (data/gacha.json), loaded at start
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -17,7 +23,6 @@ const KIND_LABEL = {
   standard: 'Simples y 11-draw',
   guaranteed: 'Garantizado 11',
   stepup: 'Step-up 3+5+7',
-  unsupported: 'No soportado',
 };
 const ACTION_LABEL = {
   single: (s) => (s.count > 1 ? `${s.count} tiros simples` : 'Tiro simple'),
@@ -104,6 +109,7 @@ function showError(message) {
 
 async function submit(event) {
   event.preventDefault();
+  if (!gachaData) return;
   if (!validateForm()) {
     showError(dateProblem() || (picker.value().length ? 'Revisa los campos marcados en rojo.' : 'Elige al menos un gato objetivo.'));
     return;
@@ -111,43 +117,24 @@ async function submit(event) {
   const body = readForm();
   $('#submit').disabled = true;
   $('#error').hidden = true;
-  $('#progress').innerHTML = '';
+  $('#progress').innerHTML = '<li>Calculando las tiradas de tu semilla y las rutas óptimas...</li>';
   show('status');
+  // Let the page paint the progress before the (synchronous) calculation.
+  await new Promise((resolve) => setTimeout(resolve, 30));
   let gotResult = false;
   try {
-    const res = await fetch('/api/routes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let nl;
-      while ((nl = buffer.indexOf('\n')) >= 0) {
-        const line = buffer.slice(0, nl).trim();
-        buffer = buffer.slice(nl + 1);
-        if (!line) continue;
-        const msg = JSON.parse(line);
-        if (msg.type === 'progress') {
-          const li = document.createElement('li');
-          li.textContent = msg.message;
-          $('#progress').appendChild(li);
-        } else if (msg.type === 'error') {
-          showError(msg.message);
-        } else if (msg.type === 'result') {
-          gotResult = true;
-          current = { data: msg, selected: msg.routes.findIndex((r) => r.found) };
-          render();
-        }
-      }
-    }
+    const result = plan(body, gachaData);
+    gotResult = true;
+    current = { data: result, selected: result.routes.findIndex((r) => r.found) };
+    render();
   } catch (err) {
-    showError(`Error de conexión con el servidor: ${err.message}`);
+    if (err instanceof UserError) showError(err.message);
+    else {
+      console.error(err);
+      showError(
+        `Error inesperado al calcular: ${err.message}. Si se repite, avísalo en el repositorio del proyecto (enlace al pie de la página) indicando tu semilla y los gatos elegidos.`
+      );
+    }
   } finally {
     $('#submit').disabled = false;
     show(gotResult ? 'results' : 'empty');
@@ -293,10 +280,12 @@ function renderDiagnostics(data) {
 function renderNotices(data) {
   const lines = [];
   const p = data.protection;
+  const shortDate = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
   if (p.legendFestRequested && !p.legendFest) {
-    lines.push('Las casillas lilas no se protegen: no hay ningún evento de doble legend en Upcoming.');
+    lines.push('Las casillas lilas no se protegen: desde tu fecha «Desde» no hay ningún banner anunciado con más probabilidad de legendario (Royalfest, doble legend...).');
   } else if (p.legendFest) {
-    lines.push(`Casillas lilas protegidas por: ${p.doubleLegendEvents.map((e) => esc(e.name)).join(', ')}.`);
+    const banners = p.doubleLegendEvents.map((e) => `${esc(e.name)} (${shortDate(e.start)}–${shortDate(e.end)})`);
+    lines.push(`Casillas lilas protegidas: dan legendario en ${banners.join('; ')}.`);
   }
   return lines.length ? `<div class="notice">${lines.map((l) => `<p>${l}</p>`).join('')}</div>` : '';
 }
@@ -432,13 +421,6 @@ function renderStep(s, data) {
   </tr>`;
 }
 
-// Opened as a file (double-clicking public/index.html) there is no server:
-// nothing can work, so say how to start the app instead.
-if (location.protocol === 'file:') {
-  showError('Esta página no funciona abriendo el archivo HTML directamente. Arranca la app con «Iniciar Seed Router.bat» (o «npm start») y abre http://localhost:3000');
-  $('#submit').disabled = true;
-}
-
 // --- Theme ----------------------------------------------------------------
 // The initial theme is set by the inline script in <head> (no flash).
 const THEME_KEY = 'bc-seed-router-theme';
@@ -455,20 +437,66 @@ $('#theme-toggle').addEventListener('click', () => {
 });
 applyTheme(document.documentElement.dataset.theme || 'light');
 
-// --- Site -----------------------------------------------------------------
-// The support link only exists once the owner has configured it, and the
-// server can switch off reading godfat (e.g. if godfat asks to stop).
-async function loadSite() {
-  try {
-    const site = await (await fetch('/api/site')).json();
-    $('#support-link').hidden = !site.donations;
-    if (!site.godfatEnabled) {
-      showError('La lectura de bc.godfat.org está desactivada temporalmente, así que no se pueden calcular rutas. Vuelve a probar más adelante.');
-      $('#submit').disabled = true;
-    }
-  } catch {
-    /* the form still works; the server reports any problem on submit */
+// --- Data -----------------------------------------------------------------
+// The banners come from godfat's open data, rebuilt every day and checked
+// against bc.godfat.org (data/status.json). Visitors are told when the data is
+// old or did not match godfat in the last check.
+
+const showDate = (iso) => new Date(iso).toLocaleDateString('es-ES');
+
+function dataNotices(data, status, now = Date.now()) {
+  const notices = [];
+  if (status?.result === 'mismatch') {
+    notices.push(
+      `En la última comprobación (${showDate(status.checkedAt)}) algunos cálculos de la app no coincidían con bc.godfat.org. Ya se está revisando; mientras tanto, comprueba cada paso en godfat (cada paso tiene su enlace) antes de gastar nada.`
+    );
+  } else if (!status?.lastOk || now - Date.parse(status.lastOk) > UNVERIFIED_DAYS * DAY_MS) {
+    notices.push(
+      `No se ha podido comprobar la app contra bc.godfat.org ${status?.lastOk ? `desde el ${showDate(status.lastOk)}` : 'todavía'}. Comprueba los pasos en godfat antes de gastar.`
+    );
   }
+  if (now - Date.parse(data.generatedAt) > STALE_DATA_DAYS * DAY_MS) {
+    notices.push(`Los datos de los banners no se actualizan desde el ${showDate(data.generatedAt)}: puede que falten banners anunciados después.`);
+  }
+  return notices;
+}
+
+function renderDataInfo(data, status) {
+  const commit = data.source.commit === 'local' ? 'copia local' : data.source.commit.slice(0, 8);
+  const committed = data.source.committedAt ? ` del ${showDate(data.source.committedAt)}` : '';
+  const checked = status?.lastOk ? ` · comprobados con bc.godfat.org el ${showDate(status.lastOk)}` : '';
+  $('#data-info').textContent = `Banners: datos de godfat${committed} (${commit})${checked}.`;
+  const notices = dataNotices(data, status);
+  $('#data-notice').hidden = !notices.length;
+  $('#data-notice').innerHTML = notices.map((n) => `<p>${esc(n)}</p>`).join('');
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('data/gacha.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    gachaData = await res.json();
+  } catch (err) {
+    showError(
+      location.protocol === 'file:'
+        ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar Seed Router.bat».'
+        : `No se pudieron cargar los datos de los banners (${err.message}). Recarga la página; si se repite, avísalo en el repositorio del proyecto.`
+    );
+    $('#submit').disabled = true;
+    picker.fail();
+    return;
+  }
+  let status = null;
+  try {
+    const res = await fetch('data/status.json', { cache: 'no-cache' });
+    if (res.ok) status = await res.json();
+  } catch {
+    /* no check published yet: the notice says so */
+  }
+  const icons = new Set(gachaData.icons || []);
+  const cats = catalogOf(gachaData).map((c) => ({ ...c, image: icons.has(c.id) ? `icons/${c.id}.png` : null }));
+  picker.load(cats, gachaData.generatedAt);
+  renderDataInfo(gachaData, status);
 }
 
 $('#forget-data').addEventListener('click', () => {
@@ -478,8 +506,7 @@ $('#forget-data').addEventListener('click', () => {
 });
 
 restoreForm();
-picker.load();
-if (location.protocol !== 'file:') loadSite();
+loadData();
 form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);
 form.addEventListener('submit', submit);

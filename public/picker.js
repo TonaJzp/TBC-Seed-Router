@@ -1,12 +1,10 @@
-'use strict';
-
 /**
  * Multi-select combobox for target cats: type to filter (name or any other
  * form of the cat), arrows + Enter to pick, Backspace to remove the last one.
  * Pasting a comma/line separated list adds every name it recognises.
  * The selection is mirrored as a JSON array in a hidden form input.
  */
-class TargetPicker {
+export class TargetPicker {
   static MAX_OPTIONS = 60;
   static RARITY = { normal: 'Normal', special: 'Especial', rare: 'Rare', super: 'Super', uber: 'Uber', legendary: 'Legend' };
 
@@ -65,27 +63,22 @@ class TargetPicker {
     return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   }
 
-  async load() {
-    try {
-      const res = await fetch('/api/cats');
-      const { cats, updatedAt } = await res.json();
-      this.cats = cats;
-      const names = new Map();
-      for (const c of cats) names.set(c.name, (names.get(c.name) || 0) + 1);
-      for (const c of cats) {
-        c.label = names.get(c.name) > 1 ? `${c.name} (${TargetPicker.RARITY[c.rarity]})` : c.name;
-        this.byId.set(c.key, c);
-        this.byKey.set(TargetPicker.norm(c.key), c);
-        // Typed or pasted names: if two cats share a name, the gacha one wins.
-        const current = this.byKey.get(TargetPicker.norm(c.name));
-        if (!current || (current.gacha === false && c.gacha !== false)) this.byKey.set(TargetPicker.norm(c.name), c);
-        for (const a of c.aliases) if (!this.byKey.has(TargetPicker.norm(a))) this.byKey.set(TargetPicker.norm(a), c);
-      }
-      const date = updatedAt ? new Date(updatedAt).toLocaleDateString('es-ES') : '—';
-      this.statusText = `${cats.length} gatos · lista de la Battle Cats Wiki (CC BY-SA 4.0) del ${date}`;
-    } catch {
-      this.statusText = 'No se pudo cargar la lista de gatos.';
+  /** Fills the list with the catalogue (see catalogOf) and restores the saved selection. */
+  load(cats, updatedAt) {
+    this.cats = cats;
+    const names = new Map();
+    for (const c of cats) names.set(c.name, (names.get(c.name) || 0) + 1);
+    for (const c of cats) {
+      c.label = names.get(c.name) > 1 ? `${c.name} (${TargetPicker.RARITY[c.rarity]})` : c.name;
+      this.byId.set(c.key, c);
+      this.byKey.set(TargetPicker.norm(c.key), c);
+      // Typed or pasted names: if two cats share a name, the gacha one wins.
+      const current = this.byKey.get(TargetPicker.norm(c.name));
+      if (!current || (current.gacha === false && c.gacha !== false)) this.byKey.set(TargetPicker.norm(c.name), c);
+      for (const a of c.aliases) if (!this.byKey.has(TargetPicker.norm(a))) this.byKey.set(TargetPicker.norm(a), c);
     }
+    const date = updatedAt ? new Date(updatedAt).toLocaleDateString('es-ES') : '—';
+    this.statusText = `${cats.length} gatos · datos del juego del ${date}`;
     // Restore the selection saved in the form (older versions stored plain text).
     let saved = [];
     try {
@@ -101,8 +94,15 @@ class TargetPicker {
     this.sync();
   }
 
+  fail() {
+    this.statusText = 'No se pudo cargar la lista de gatos.';
+    this.sync();
+  }
+
   find(text) {
-    return this.byKey.get(TargetPicker.norm(text)) || null;
+    // Earlier versions saved wiki page titles, e.g. "Fuma Kotaro (Uber Rare Cat)".
+    const legacy = String(text).replace(/s*([^)]*Cat)s*$/, '');
+    return this.byKey.get(TargetPicker.norm(text)) || this.byKey.get(TargetPicker.norm(legacy)) || null;
   }
 
   /** Adds a cat by name (e.g. a legendary suggested by the results). */
@@ -119,7 +119,7 @@ class TargetPicker {
     return !!cat && this.selected.includes(cat.key);
   }
 
-  /** Unique catalogue keys (wiki page titles) of the chosen cats. */
+  /** Catalogue keys (cat ids) of the chosen cats. */
   value() {
     return [...this.selected];
   }

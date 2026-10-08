@@ -1,251 +1,244 @@
-# BattleCats Seed Router
+# TBC Seed Router
 
-Aplicación web local que lee tu semilla en [bc.godfat.org](https://bc.godfat.org/) y calcula
-las rutas óptimas de tiros (alternando banners) para conseguir una lista de gatos objetivo.
+Planificador de tiradas para **The Battle Cats**. A partir de tu semilla calcula la forma más barata
+de conseguir los gatos que quieres, combinando los banners de las próximas fechas: tiros simples,
+11-draws, garantizados y cambios de pista por rare duplicado.
 
-## Cómo abrirla
+**Úsala aquí: https://tonajzp.github.io/TBC-Seed-Router/**
 
-La app tiene un pequeño servidor local (busca en godfat y calcula las rutas), así que **no basta
-con abrir `public/index.html`**: sin el servidor no carga la lista de gatos ni puede calcular nada.
+Funciona en el navegador, también en el móvil. Es gratuita, no tiene anuncios y no necesita cuenta.
+Todo se calcula en tu dispositivo: lo que escribes no se envía a ningún sitio.
 
-**En Windows:** doble clic en **`Iniciar Seed Router.bat`**. La primera vez instala lo necesario
-(un par de minutos). Después arranca el servidor y abre el navegador en http://localhost:3000.
-Deja abierta la ventana negra mientras uses la app; para cerrarla, ciérrala o pulsa Ctrl+C.
+Herramienta de fans no oficial, sin relación con PONOS. Se apoya en los datos abiertos de
+[Battle Cats Rolls](https://bc.godfat.org/) (godfat); ver [Créditos y licencia](#créditos-y-licencia).
 
-**Desde la terminal:**
+---
 
-```bash
-npm install        # solo la primera vez: Express, Playwright y Chromium
-npm run app        # arranca y abre el navegador (npm start: solo arranca)
-```
+## Cómo usarla, paso a paso
 
-Requiere [Node.js](https://nodejs.org) 22 o superior. `PORT=4000 npm start` cambia el puerto. Si
-la app ya estaba abierta, volver a iniciarla solo abre el navegador.
+### 1. Consigue la URL de tu semilla
 
-## Uso
+Si ya usas [bc.godfat.org](https://bc.godfat.org/), copia la dirección de tu semilla tal como la
+tienes abierta, por ejemplo `https://bc.godfat.org/?seed=123456789&last=50`. Si la dirección
+incluye `last=…` (el último gato que sacaste), se tiene en cuenta.
 
-1. Pega la URL de tu semilla de godfat (`https://bc.godfat.org/?seed=...`). Si incluye `last=<id>`
-   se usa como último gato obtenido (afecta a si 1A es un rare duplicado).
-2. Elige los gatos objetivo en el buscador: escribe parte del nombre (o de otra de sus formas) y
-   elígelo con el ratón o con flechas + Enter. Retroceso quita el último. También puedes pegar una
-   lista separada por comas; se añaden los nombres reconocidos y se avisa de los demás. No hay
-   límite de objetivos.
-3. Elige el rango de fechas: solo se analizan los banners **Upcoming** que se solapan con él. La
-   fecha inicial nunca puede ser anterior a hoy, tomando la fecha del ordenador del usuario.
-4. Elige cuántos tiros hacia delante revisar, es decir, hasta qué fila de godfat se lee en cada
-   banner (recomendado 200, máximo 1000). Más tiros solo alargan el análisis: la app no usa IA, así
-   que el resultado no pierde precisión.
-5. Indica tus Rare Tickets y Cat Food, marca los descuentos que tengas disponibles en tu cuenta y
-   elige las protecciones. El plan decide si le conviene usar cada descuento; en cada ruta se indica
-   en qué paso se usa o por qué no.
+También vale escribir solo el número de semilla.
 
-El resultado es la **ruta recomendada** (menor gasto total de recursos) más tres alternativas:
+> ¿No sabes tu semilla? Se averigua en bc.godfat.org con el buscador de semillas («Seed seeker»)
+> introduciendo tus últimas tiradas. Sigue la [ayuda de godfat](https://bc.godfat.org/help).
 
-| Ruta | Criterio (en orden de prioridad) |
-|------|----------------------------------|
+### 2. Elige los gatos que quieres
+
+Escribe parte del nombre en «Gatos que quieres conseguir» y elige con el ratón (o con las flechas y
+Enter). Busca también por el nombre de las otras formas del gato. Puedes pegar una lista separada
+por comas. No hay límite.
+
+### 3. Elige las fechas
+
+Solo se usan los banners que estén activos entre «Desde» y «Hasta». «Desde» no puede ser anterior a
+hoy (según la fecha de tu dispositivo).
+
+### 4. Cuántos tiros revisar
+
+Hasta qué fila de tu semilla se busca (200 por defecto, máximo 1000). Más filas solo alargan un poco
+el cálculo.
+
+### 5. Inventario, descuentos y protecciones
+
+Pon tus Rare Tickets y tu Cat Food, marca los descuentos que tengas activos y elige si quieres
+proteger las casillas de legendario (ver más abajo).
+
+### 6. Pulsa «Calcular rutas»
+
+Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso tiene un enlace a godfat
+para que lo compruebes antes de gastar nada.
+
+| Ruta | Criterio (por orden de prioridad) |
+|------|-----------------------------------|
 | **Recomendada** | menor coste total (Cat Food + 150 × tickets) → menos Cat Food → menos tiros |
 | Máximo ahorro de Cat Food | menos Cat Food → menos tickets → menos tiros |
 | Máximo ahorro de Rare Tickets | menos tickets → menos Cat Food → menos tiros |
-| Menos tiros | menos tiros (avanza lo mínimo en la semilla) → menor coste total |
+| Menos tiros | menos tiros → menor coste total |
 
-El último criterio de desempate en todas es hacer menos cambios de banner. Para el coste total,
-1 Rare Ticket = 150 Cat Food, como en el juego. Con esa equivalencia, 11 tiros simples con ticket
-(1650) cuestan más que un 11-draw (1500), así que la recomendada a veces conserva tickets. Si
-prefieres gastar tickets antes que Cat Food, usa la alternativa «Máximo ahorro de Cat Food».
+En caso de empate, gana la ruta con menos cambios de banner. Para el coste total, 1 Rare Ticket =
+150 Cat Food, como en el juego. Si ninguna ruta cabe en tu Cat Food, se muestra igualmente la mejor
+y cuánto falta. Si no se pueden conseguir todos los gatos, se da la ruta que consigue más y se
+explica por qué faltan los demás.
 
-Los tickets se gastan en orden: cada tiro simple usa un Rare Ticket mientras te queden. Al
-agotarse, el siguiente cuesta 50 Cat Food si tienes el descuento y los demás 150.
+---
 
-Si una alternativa coincide con otra ruta, o cuesta lo mismo, se indica. Si ninguna ruta cabe en tu
-Cat Food actual, se muestra igualmente la mejor y cuánta Cat Food falta. Si no existe ninguna ruta
-que consiga todos los objetivos, se devuelve la que consigue el máximo posible y se marca qué gatos
-faltan.
+## Qué tiene en cuenta
 
-## Reglas de tiempo
+### Tiempo
 
-Un evento «S ~ E» está activo desde el cambio de eventos del día S hasta el del día E. Un evento que
-acaba el día D y otro que empieza ese mismo día nunca están activos a la vez. La ruta solo avanza en
-el tiempo: puedes alternar entre eventos que se solapan, pero una vez que tiras en un evento que
+Un banner «S ~ E» está activo desde el cambio de eventos del día S hasta el del día E. La ruta solo
+avanza en el tiempo: puedes alternar entre banners que coinciden, pero en cuanto tiras en uno que
 empieza más tarde, los que ya han terminado dejan de estar disponibles.
 
-## Casillas de legendario y protecciones
+### Tipos de banner y costes
 
-- **Moradas**: casillas de legendario. En un banner con legendarios dan un legendario; en uno sin
-  legendarios, un uber.
-- **Lilas**: casillas que solo son de legendario en Royalfest o en eventos de doble probabilidad de
-  legend. Solo cuentan si hay un evento así en Upcoming. Se detecta por el nombre del evento y,
-  cuando hay datos, porque una casilla lila da un legendario en ese evento.
+| Tipo | Acciones |
+|------|----------|
+| Normal | tiro simple; 11-draw (11 tiros) por 1500 Cat Food |
+| Garantizado | tiro simple; 11-draw garantizado (10 tiros + uber) por 1500 Cat Food |
+| Step-up 3+5+7 | solo el step-up completo: 14 tiros + uber por 2100 Cat Food |
+| Platinum / Legend | se excluyen: se pagan con otros tickets |
 
-**Proteger** una casilla no impide pasar por ella: las rutas pueden tirar en casillas protegidas.
-Lo que hace la protección es que un gato objetivo que salga ahí **no cuente** como conseguido,
-salvo que sea el propio legendario. Así el plan busca ese gato en otra casilla y no gasta la
-oportunidad de legendario.
+- **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (50 con el descuento
+  de primer tiro, una vez).
+- **Descuento 11-Draw** (750 Cat Food, una vez): vale para el 11-draw normal o el garantizado.
+- El uber garantizado se elige con media tirada, así que siempre cambia de pista.
 
-Con o sin protección, cada ruta lista las casillas de legendario por las que pasa, en qué paso, qué
-consigues ahí y qué legendario podrías conseguir en su lugar, solo según los banners de tus fechas
-que de verdad dan legendario en esa casilla. La lista completa de casillas de legendario de los
-tiros revisados está en «Casillas de legendario en tus próximos N tiros». Junto a cada legendario
-hay un botón «Añadir a objetivos y recalcular» que lo añade a tus gatos y repite el cálculo, para
-conseguirlo junto con los demás.
+### Casillas de legendario
 
-## Por qué no se consigue todo
+- **Moradas**: dan legendario en los banners que tienen legendarios (en los demás, un uber).
+- **Lilas**: solo dan legendario en banners con más probabilidad de legend (Royalfest, doble
+  legend…). Se detectan por las probabilidades de cada banner.
 
-Si la ruta recomendada no consigue todos los gatos, o no hay ninguna ruta posible, la sección
-«Por qué no se puede conseguir todo» explica el motivo de cada gato. Indica las casillas y los
-banners concretos de tu semilla, enlaza a godfat para comprobarlo y dice qué puedes cambiar.
+**Proteger** una casilla no impide pasar por ella: un gato objetivo que salga ahí no cuenta (salvo
+que sea el propio legendario), y el plan lo busca en otra casilla para no gastar la oportunidad de
+legendario. Cada ruta indica por qué casillas de legendario pasa y qué legendario podrías sacar en
+su lugar, con un botón para añadirlo a tus objetivos.
+
+### Por qué no se consigue todo
+
+Si falta algún gato, se explica el motivo con las casillas y banners concretos de tu semilla:
 
 | Motivo | Qué se indica |
 |--------|---------------|
 | No sale en el gacha | Es un gato Normal o Especial |
-| No está en los banners de tus fechas | En qué otro banner próximo sale y a qué fecha ampliar «Hasta» (o si solo está en Platinum/Legend) |
-| No sale en los tiros revisados | La fila en la que aparece por primera vez (busca hasta 1000) y cuántos tiros poner |
-| Solo sale en casillas protegidas | Qué protección (moradas o lilas) y las casillas exactas donde sale |
-| Las fechas lo impiden | Que para llegar hace falta un banner que empieza cuando el suyo ya ha terminado, y los rare duplicados que obligan a cambiar de pista |
-| Ninguna combinación de tiros llega | Las casillas donde sale y los cambios de pista obligatorios |
-| Choca con otro objetivo | Con qué gato choca y dónde sale cada uno: conseguir uno obliga a dejar atrás al otro |
+| No está en los banners de tus fechas | En qué otro banner próximo sale y a qué fecha ampliar «Hasta» |
+| No sale en los tiros revisados | La primera fila donde aparece (busca hasta 1000) y cuántos tiros poner |
+| Solo sale en casillas protegidas | Qué protección lo impide y en qué casillas sale |
+| Las fechas lo impiden | Qué banner hace falta y por qué ya no está activo |
+| Ninguna combinación de tiros llega | Dónde sale y qué cambios de pista lo impiden |
+| Choca con otro objetivo | Con qué gato choca: conseguir uno obliga a dejar atrás al otro |
 
-Para averiguarlo se exploran todas las posiciones de la semilla alcanzables con tus restricciones,
-y se repite sin protecciones, con cada protección por separado y sin límite de fechas. Si varios
-gatos tienen la misma causa, se explica una sola vez.
+---
 
-Los errores de conexión también se explican: sin internet, godfat lento, falta el navegador interno,
-URL incorrecta o fechas sin banners (en ese caso se listan los próximos banners).
+## De dónde salen los datos y cómo se vigilan
 
-## Tipos de banner y reglas de coste
+- **Banners, gatos y probabilidades**: del archivo abierto `build/bc-en.yaml` del
+  [repositorio de godfat](https://gitlab.com/godfat/battle-cats-rolls), el mismo con el que se genera
+  bc.godfat.org. La app no lee la web de godfat: calcula las tablas con su mismo algoritmo.
+- **Iconos**: de la [Battle Cats Wiki](https://battlecats.miraheze.org). Se descargan una vez al
+  publicar la web, no en cada visita.
 
-El tipo de cada banner se detecta comprobando qué mecánica reproduce exactamente lo que dibuja godfat,
-no por su nombre:
+Una tarea automática de GitHub hace esto **cada día**:
 
-| Tipo | Acciones |
-|------|----------|
-| Normal (sin garantizado) | tiro simple; 11-draw normal (11 tiros) por 1500 Cat Food |
-| Garantizado | tiro simple; 11-draw garantizado (10 tiros + uber) por 1500 Cat Food |
-| Step-up 3+5+7 | solo el step-up completo: 14 tiros + uber por 2100 Cat Food (300 + 750 + 1050) |
-| No reconocido | se excluye y se avisa, para no dar rutas erróneas |
+1. Ejecuta todos los tests.
+2. Descarga la última versión de los datos de godfat y comprueba cada campo. Si aparece algo que la
+   app no conoce (un campo nuevo, una probabilidad imposible, un gato que falta…), lo avisa en vez
+   de suponerlo.
+3. **Compara la app con bc.godfat.org** con una semilla aleatoria: la lista de banners y sus fechas
+   y, en cada banner, los 300 primeros tiros de las dos pistas. Mira qué gato sale en cada casilla,
+   los colores de legendario, las repeticiones de rare y los garantizados, y adónde lleva cada uno.
+   Con los banners habituales son más de 10.000 casillas al día.
+4. Publica la web con los datos nuevos.
+5. Si algo falla o no coincide, **abre una incidencia en el repositorio** (GitHub avisa por email al
+   dueño) y la web muestra un aviso a los usuarios hasta que se resuelva. Cuando todo vuelve a
+   coincidir, la incidencia se cierra sola.
 
-- **Tiro simple**: consume 1 Rare Ticket si tienes; si no, 150 Cat Food
-  (50 con el descuento Single-Draw, una vez, solo con 0 tickets).
-- **Descuento 11-Draw** (750, una vez): vale para el 11-draw normal o el garantizado.
-- El uber garantizado se elige con medio tiro, así que siempre cambia de pista.
-- Los banners Platinum/Legend (se pagan con otros tickets) se excluyen.
-- El step-up se modela como los tres pasos seguidos; no se modelan pasos sueltos.
+Si un día no se puede publicar, la web sigue funcionando con los datos del día anterior y avisa si
+tienen más de 3 días.
 
-## Lista de gatos (Miraheze)
+---
 
-El buscador incluye **todos** los gatos del juego (Normal, Especial, Rare, Super Rare, Uber Rare y
-Legend Rare) de la [Battle Cats Wiki en Miraheze](https://battlecats.miraheze.org). Se obtienen con la API de
-MediaWiki, igual que en el proyecto «App Battle cats»: `Category:Cat_Units`, las redirecciones
-como nombres de las otras formas y sin los exclusivos de Japón.
+## Usarla en tu ordenador (opcional)
 
-- Se guarda una copia en `data/cats.json`, así la app arranca al instante y funciona sin conexión.
-- Se actualiza sola en segundo plano si la copia tiene más de 12 h. Si Miraheze no responde, se
-  mantiene la copia anterior.
-- Cada gato se empareja con godfat por **ID**: el icono de la wiki se llama `<unidad>_<forma>.png`,
-  y el ID de godfat es ese número + 1. Si un gato no tiene ese icono, se empareja por nombre exacto y
-  después por el nombre de sus otras formas.
-- godfat se lee siempre en inglés, aunque tu URL lleve otro `lang`.
-- Cada gato se identifica por el título de su página en la wiki, que es único aunque dos gatos se
-  llamen igual (hay dos «Cat Bros», uno Rare y otro Especial).
+No hace falta: la web publicada es la forma normal de usarla. Esto sirve para usarla en local o
+para modificarla.
 
-Si eliges un gato que no se puede conseguir, el análisis lo indica con el motivo:
-- No sale en el gacha (gatos Normal o Especial).
-- No está en ningún banner de las fechas elegidas.
-- Está en algún banner, pero no sale en los tiros revisados.
+**Windows, sin usar la terminal:**
 
-## Cómo funciona
+1. Instala [Node.js](https://nodejs.org) (versión «LTS»; siguiente, siguiente, finalizar).
+2. En esta página, pulsa el botón verde **Code → Download ZIP** y descomprímelo.
+3. Haz doble clic en **`Iniciar TBC Seed Router.bat`**. La primera vez instala lo necesario y
+   descarga los datos (unos minutos, sobre todo por los iconos).
+4. Se abre el navegador en http://localhost:3000. Deja la ventana negra abierta mientras la uses.
 
-```
-public/            Frontend (HTML + JS sin dependencias; picker.js es el buscador de gatos)
-data/cats.json     Copia local de la lista de gatos de Miraheze (CC BY-SA 4.0, ver data/LICENSE.md)
-server.js          API Express: POST /api/routes (NDJSON con progreso), GET /api/cats, /legal, /icons
-src/catalog.js     Lista de gatos de Miraheze, con copia local y actualización automática
-src/site.js        Datos públicos del sitio (titular, contacto, hosting, apoyo) desde variables de entorno
-src/limits.js      Cola de búsquedas y límite por visitante para no sobrecargar godfat
-src/icons.js       Iconos de la wiki servidos desde el propio servidor, con caché en disco
-src/legal.js       Página /legal: aviso legal, privacidad, créditos y apoyo
-src/scraper.js     Playwright: lista de eventos Upcoming + N tiros por banner
-src/rng.js         xorshift32 y disposición de semillas en las pistas A/B
-src/simulator.js   Mecánica de tiros: duplicados, re-roll, garantizados, casillas protegidas
-src/optimizer.js   Dijkstra multi-objetivo, reglas de tiempo y formato de las rutas
-src/diagnostics.js Por qué una ruta no consigue un gato (protecciones, fechas, choques…)
-src/unavailable.js Gatos que no entran en el plan: busca en otros banners y más adelante
-scripts/validate.js         Comprueba la mecánica local contra godfat en vivo
-scripts/update-fixtures.js  Regenera los datos de test desde godfat
-test/                       Suite de tests (node:test) con datos reales guardados
-```
-
-**Scraping.** Por cada banner se carga `?seed=…&event=…&count=N` (godfat muestra como máximo 300 filas
-por página; para más se piden páginas sucesivas con la semilla de la fila 301, 601…) y se leen las celdas
-`td.position.cat` (las celdas `score` se ignoran): resultado normal (`1A`), garantizado (`1AG`),
-alternativo por duplicado (`1AR`) y alternativo garantizado (`1ARG`), además del pool del banner.
-
-**Duplicados entre banners.** godfat solo dibuja el resultado alternativo cuando el duplicado viene
-de la casilla anterior *del mismo banner*. Al alternar banners el duplicado puede venir de otro,
-así que el re-roll se calcula localmente con la semilla:
-
-- Pista A, posición N: rareza = `seq[2N-1]`, slot = `seq[2N]`; pista B: `seq[2N]`, `seq[2N+1]`.
-- Re-roll: se quita el gato duplicado del pool rare y se elige `pool[xorshift(slot) % (tamaño-1)]`;
-  se salta de `NA` a `(N+1)B` o de `NB` a `(N+2)A`.
-- Garantizado: el uber sale de `uber[semillaRareza(Q) % tamaño]`, siendo Q la casilla tras los
-  10 tiros normales.
-
-Las reglas coinciden con la [ayuda de godfat](https://bc.godfat.org/help) («Consecutive duplicated rare
-cats», «Hidden track switches between events», «Switching track is the effect of making a half roll»).
-Al arrancar cada búsqueda se comparan estos cálculos con todo lo que godfat dibuja para cada banner.
-Si en un banner no coinciden (pools con gatos repetidos, tipos de garantizado desconocidos), ese
-cálculo se desactiva en lugar de adivinarlo, y se avisa en la interfaz.
-
-**Optimización.** Cada estado es (posición, último gato, objetivos conseguidos, tickets
-restantes, descuentos pendientes, momento). Las acciones son tiro simple o garantizado en cualquier
-banner activo. Se ejecuta un Dijkstra por criterio, con dos podas exactas: el «último gato» solo se
-distingue si puede duplicarse en la casilla siguiente, y un estado con más objetivos conseguidos y
-coste menor o igual descarta al otro. Con 20 objetivos la búsqueda completa tarda unos segundos por ruta.
-
-## Publicar la app
-
-La web pública se despliega con el `Dockerfile` (imagen de Playwright con Chromium). Se configura con
-variables de entorno; `.env.example` las lista todas. Sin `CONTACT_EMAIL` y `SITE_URL` el servidor no
-arranca en producción, porque los necesitan el aviso legal y la identificación ante godfat y la wiki.
-
-| Variable | Para qué |
-|---|---|
-| `NODE_ENV=production` | Activa las comprobaciones, HSTS y el límite por visitante |
-| `SITE_URL`, `CONTACT_EMAIL`, `OWNER_NAME` | Aviso legal, privacidad y User-Agent |
-| `HOSTING_PROVIDER` | Quién aloja la web (política de privacidad) |
-| `TRUST_PROXY=1` | Leer la IP real del visitante detrás del proxy del hosting |
-| `MAX_JOBS`, `MAX_QUEUE` | Búsquedas simultáneas (2) y en cola (20) |
-| `RATE_LIMIT`, `RATE_WINDOW_MIN` | Búsquedas por visitante (10 cada 10 min) |
-| `GODFAT_ENABLED=false` | Deja de leer godfat sin apagar la web |
-| `DONATE_URL`, `DONATE_PLATFORM`, `OWNER_NIF`, `OWNER_ADDRESS` | Apoyo voluntario; el enlace solo aparece con las cuatro |
-
-**Cumplimiento.** Lo que hace la app para respetar a sus fuentes y a sus usuarios:
-
-- **godfat:** se identifica con un User-Agent que incluye la web y el email de contacto, solo pide el
-  documento HTML (sin imágenes ni scripts), guarda en caché cada consulta 30 min, limita las búsquedas
-  simultáneas y por visitante, y enlaza a godfat en cada paso. `GODFAT_ENABLED=false` lo desactiva al momento.
-- **Battle Cats Wiki:** atribución y licencia CC BY-SA 4.0 en el pie y en `/legal`. La lista adaptada se
-  publica con la misma licencia en `/api/cats`. Las consultas a la API llevan User-Agent con contacto y
-  `maxlag`. Los iconos se piden una sola vez y se sirven desde aquí.
-- **PONOS:** aviso de herramienta no oficial y de titularidad de marcas e imágenes; no se vende nada.
-- **Visitantes:** sin cookies, analítica ni recursos de terceros (CSP `default-src 'self'`). La IP solo se
-  usa en memoria para el límite, y el formulario se guarda solo en su navegador, con un botón para borrarlo.
-  `/legal` contiene el aviso legal (LSSI-CE) y la política de privacidad (RGPD).
-
-## Tests
+**Con la terminal** (Windows, macOS o Linux, Node.js 20 o superior):
 
 ```bash
-npm test                  # suite offline (rng, simulador, optimizador, scraper, validación)
-npm run test:live -- "<url>" 2026-10-08 2026-10-18   # compara con godfat en vivo
-npm run update-fixtures -- 2026-10-16 2026-10-20     # regenera los datos de test
+npm install
+npm start          # actualiza los datos si tienen más de 12 h y abre la app
 ```
 
-El test central rehace cada ruta tirada a tirada con el simulador y comprueba posiciones, gatos,
-costes, orden de fechas, casillas protegidas y objetivos.
+Sin internet usa los últimos datos descargados.
 
-## Limitaciones
+---
 
-- Solo se miran los N tiros elegidos por pista (200 por defecto).
-- En los step-up solo se usa el step-up completo (3+5+7). Los tests usan un banner que godfat simula
-  como step-up, porque ahora mismo no hay ninguno real.
-- godfat no publica la hora exacta de los eventos: se asume un único cambio diario.
-- Los resultados del scraping se cachean 30 minutos por semilla, fechas y número de tiros.
+## Para desarrolladores
+
+```
+public/                 La web (estática): todo lo que se publica
+  index.html, app.js    Interfaz
+  picker.js             Buscador de gatos
+  credits.html          Créditos, licencias y privacidad
+  core/                 El cálculo, sin dependencias (navegador y Node)
+    gacha.js            Tablas de cada banner para una semilla (algoritmo de godfat)
+    simulator.js        Tiradas: duplicados entre banners, garantizados, casillas protegidas
+    optimizer.js        Dijkstra multiobjetivo, reglas de tiempo y rutas
+    diagnostics.js      Por qué una ruta no consigue un gato
+    unavailable.js      Gatos que no entran en el plan
+    planner.js          Análisis completo a partir del formulario
+  data/, icons/         Generados por scripts/build.js (no están en el repositorio)
+scripts/
+  build.js              Descarga y valida los datos de godfat, iconos de la wiki
+  verify-godfat.js      Compara la app con bc.godfat.org
+  notify.js             Incidencias automáticas en GitHub
+  start.js, serve.js    Uso en local
+  lib/                  Lectura de los datos y de las páginas de godfat, iconos, comparación
+test/                   Tests (node:test). Las fixtures son tablas reales de bc.godfat.org
+.github/workflows/web.yml   La tarea diaria
+```
+
+| Comando | Qué hace |
+|---------|----------|
+| `npm test` | Todos los tests, sin conexión |
+| `npm run build` | Descarga los datos de godfat y los iconos → `public/data`, `public/icons` |
+| `npm run verify` | Compara la app con bc.godfat.org ahora mismo (`--seed N` para fijar la semilla) |
+| `npm run serve` | Sirve `public/` en http://localhost:3000 |
+
+Los tests comparan cada casilla calculada con las tablas reales de godfat guardadas en `test/fixtures`
+(normales, repeticiones de rare, garantizados de 7, 11 y 15 tiros) y comprueban que la vigilancia
+detecta cualquier error introducido a propósito. El test del optimizador rehace cada ruta tirada a
+tirada y comprueba posiciones, gatos, costes, fechas y objetivos.
+
+**Mecánica** (la de godfat):
+- Pista A, fila N: rareza con `seq[2N-1] % 10000`, gato con `seq[2N] % gatos de esa rareza`; pista B:
+  `seq[2N]` y `seq[2N+1]`.
+- Rare duplicado: se quita ese hueco y se vuelve a elegir con la siguiente semilla, tantas veces como
+  el gato esté repetido en el banner. La siguiente tirada salta una semilla por cada intento.
+- Garantizado: el uber sale de la semilla de rareza de la casilla tras los tiros normales.
+
+**Publicación:** el repositorio debe ser público y, en *Settings → Pages*, la fuente debe ser
+*GitHub Actions*. La tarea `web.yml` hace el resto cada día y en cada push a `main`.
+
+---
+
+## Créditos y licencia
+
+**TBC Seed Router**, creado por [TonaJzp](https://github.com/TonaJzp). Código abierto con licencia
+[AGPL-3.0](LICENSE) y una condición adicional: cualquier copia o versión modificada, también si se
+publica como web, debe mantener visible «Basado en TBC Seed Router, creado por TonaJzp» con el
+enlace a este repositorio, y no puede presentarse como el proyecto original. Detalles en
+[NOTICE.md](NOTICE.md).
+
+- **Battle Cats Rolls**, de Lin Jen-Shin (godfat), licencia Apache 2.0: datos de los banners y el
+  algoritmo de tiradas, adaptado a JavaScript ([LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+- **Battle Cats Wiki** (Miraheze): iconos de los gatos.
+- **The Battle Cats** y sus imágenes © PONOS Corporation. Proyecto no afiliado ni aprobado por PONOS.
+
+Errores y sugerencias: [incidencias del repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues).
+
+---
+
+### English
+
+TBC Seed Router is an unofficial, free route planner for The Battle Cats gacha: given your seed, it
+finds the cheapest sequence of rolls across upcoming banners to get the cats you want. It runs
+entirely in the browser at https://tonajzp.github.io/TBC-Seed-Router/, using the open data and roll
+algorithm of [Battle Cats Rolls](https://gitlab.com/godfat/battle-cats-rolls) (godfat, Apache 2.0),
+checked daily against bc.godfat.org. Licensed under AGPL-3.0 with an attribution requirement (see
+[NOTICE.md](NOTICE.md)). Not affiliated with PONOS.

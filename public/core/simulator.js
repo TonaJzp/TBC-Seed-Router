@@ -1,17 +1,16 @@
-'use strict';
+import { buildSequence, raritySeed, slotSeed } from './rng.js';
+import { rerollRare, afterReroll } from './gacha.js';
 
-const { xorshift32, buildSequence, raritySeed, slotSeed } = require('./rng');
-
-// Banner kinds, detected by checking which guaranteed size reproduces godfat:
+// Banner kinds, from the banner data (godfat GachaPool#guaranteed_rolls):
 //   standard   no guaranteed: singles and plain 11-draws
 //   guaranteed 11-draw whose 11th cat is a guaranteed uber
 //   stepup     3+5+7 step-up: 15 rolls whose 15th cat is a guaranteed uber
-//   unsupported a guaranteed that matches none of the above (banner is skipped)
-const BANNER = { standard: 'standard', guaranteed: 'guaranteed', stepup: 'stepup', unsupported: 'unsupported' };
+const BANNER = { standard: 'standard', guaranteed: 'guaranteed', stepup: 'stepup' };
 const GUARANTEED_SIZE = 11;
 const STEPUP_SIZE = 15;
 const MULTI_SIZE = 11;
 const LEGEND_COLORS = { legend: 'legend', legendFest: 'legend_fest' };
+const KIND_BY_SIZE = { 0: BANNER.standard, [GUARANTEED_SIZE]: BANNER.guaranteed, [STEPUP_SIZE]: BANNER.stepup };
 
 const keyOf = (n, track) => `${n}${track}`;
 
@@ -21,14 +20,10 @@ function parseKey(key) {
 }
 
 /**
- * Rolls on top of scraped godfat data. Raw results always come from the scrape;
- * the RNG is only used for the cases godfat does not render: a duplicate rare
- * caused by the previous cat of *another* banner, and guaranteed draws whose
- * 10 normal rolls cross tracks because of such duplicates.
- *
- * The local math is checked against godfat for every banner. Where it does not
- * reproduce godfat exactly (e.g. pools with repeated cats, unknown guaranteed
- * kinds), the unverifiable transitions are disabled instead of guessed.
+ * Rolls across the banners of one seed (tables from gacha.js), including what
+ * godfat cannot draw on a single banner page: a duplicate rare caused by the
+ * previous cat of *another* banner, and guaranteed draws whose normal rolls
+ * cross tracks because of such duplicates.
  */
 class Simulator {
   constructor(seed, events, maxN) {
@@ -51,25 +46,9 @@ class Simulator {
           this.legendColors.get(key).add(color);
         }
       }
-      ev.rerollReliable = true;
-      ev.validation = this.validate(ev, GUARANTEED_SIZE);
-      const v = ev.validation;
-      const rarePool = ev.pools.rare;
-      ev.rerollReliable = new Set(rarePool).size === rarePool.length && v.rerollOk === v.rerollChecked;
-      ev.kind = BANNER.standard;
-      ev.guaranteedSize = 0;
-      if (ev.hasGuaranteed) {
-        ev.kind = BANNER.unsupported;
-        for (const [kind, size] of [[BANNER.guaranteed, GUARANTEED_SIZE], [BANNER.stepup, STEPUP_SIZE]]) {
-          const check = size === GUARANTEED_SIZE ? v : this.validate(ev, size);
-          if (check.guaranteedChecked > 0 && check.guaranteedOk / check.guaranteedChecked >= 0.9) {
-            ev.kind = kind;
-            ev.guaranteedSize = size;
-            ev.validation = check;
-            break;
-          }
-        }
-      }
+      ev.guaranteedSize ||= 0;
+      ev.kind = KIND_BY_SIZE[ev.guaranteedSize];
+      if (!ev.kind) throw new Error(`Banner «${ev.name}»: garantizado de ${ev.guaranteedSize} tiros no soportado.`);
     }
   }
 
@@ -111,22 +90,10 @@ class Simulator {
     );
   }
 
-  /** Re-roll of a duplicated rare at (n, track); null if it cannot be trusted. */
+  /** Re-roll of a duplicated rare at (n, track): { id, next }, or null if the pool can't re-roll it. */
   rerollDuplicate(ev, n, track, rawId) {
-    const next = track === 'A' ? { n: n + 1, track: 'B' } : { n: n + 2, track: 'A' };
-    const scraped = ev.alt[keyOf(n, track)];
-    if (scraped && scraped.dest) return { id: scraped.id, next: parseKey(scraped.dest) || next };
-    if (!ev.rerollReliable) return null;
-    return { id: this.computeReroll(ev, n, track, rawId), next };
-  }
-
-  computeReroll(ev, n, track, rawId) {
-    const pool = ev.pools.rare;
-    const ss = slotSeed(this.seq, n, track);
-    let idx = ss % pool.length;
-    if (pool[idx] !== rawId) idx = pool.indexOf(rawId);
-    const reduced = pool.filter((_, i) => i !== idx);
-    return reduced[xorshift32(ss) % reduced.length];
+    const r = rerollRare(ev.pools.rare, slotSeed(this.seq, n, track), rawId);
+    return r && { id: r.id, next: afterReroll(n, track, r.steps) };
   }
 
   /** One single draw at (n, track); `last` is the id of the previously obtained cat. */
@@ -178,9 +145,8 @@ class Simulator {
     const { cats, landed } = body;
     const pos = body.next;
     if (pos.n > this.maxN || !this.cell(ev, pos.n, pos.track)) return null;
-    const pool = ev.pools.uber;
-    if (!pool.length) return null;
-    const uberId = pool[raritySeed(this.seq, pos.n, pos.track) % pool.length];
+    const uberId = this.guaranteedUber(ev, pos.n, pos.track);
+    if (uberId === null) return null;
     landed.push(pos);
     const next = pos.track === 'A' ? { n: pos.n, track: 'B' } : { n: pos.n + 1, track: 'A' };
     return { cats, uber: { ...this.catInfo(ev, uberId), guaranteed: true }, landed, uberAt: pos, next };
@@ -201,34 +167,20 @@ class Simulator {
           const r = this.rerollDuplicate(ev, n, track, c.id);
           if (r) ids.add(r.id);
         }
-        if (ev.guaranteedSize && ev.pools.uber.length) {
-          ids.add(ev.pools.uber[raritySeed(this.seq, n, track) % ev.pools.uber.length]);
+        if (ev.guaranteedSize) {
+          const uber = this.guaranteedUber(ev, n, track);
+          if (uber !== null) ids.add(uber);
         }
       }
     }
     return ids;
   }
 
-  /** Compares the local math with what godfat rendered for this banner. */
-  validate(ev, guaranteedSize) {
-    const stats = { rerollChecked: 0, rerollOk: 0, guaranteedChecked: 0, guaranteedOk: 0 };
-    for (const [key, alt] of Object.entries(ev.alt)) {
-      const { n, track } = parseKey(key);
-      const raw = this.cell(ev, n, track);
-      if (!raw || !alt.dest) continue;
-      const next = track === 'A' ? keyOf(n + 1, 'B') : keyOf(n + 2, 'A');
-      stats.rerollChecked++;
-      if (this.computeReroll(ev, n, track, raw.id) === alt.id && next === alt.dest) stats.rerollOk++;
-    }
-    for (const [key, g] of Object.entries(ev.guaranteed)) {
-      const { n, track } = parseKey(key);
-      const r = this.computeGuaranteed(ev, n, track, 0, guaranteedSize);
-      if (!r || !g.dest) continue;
-      stats.guaranteedChecked++;
-      if (r.uber.id === g.id && keyOf(r.next.n, r.next.track) === g.dest) stats.guaranteedOk++;
-    }
-    return stats;
+  /** Uber a guaranteed draw gives when its last roll falls on (n, track); null if the banner has none. */
+  guaranteedUber(ev, n, track) {
+    const pool = ev.pools.uber;
+    return pool.length ? pool[raritySeed(this.seq, n, track) % pool.length] : null;
   }
 }
 
-module.exports = { Simulator, keyOf, parseKey, BANNER, GUARANTEED_SIZE, STEPUP_SIZE, MULTI_SIZE };
+export { Simulator, keyOf, parseKey, BANNER, GUARANTEED_SIZE, STEPUP_SIZE, MULTI_SIZE };

@@ -1,12 +1,10 @@
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { plan, makeSim, loadEvents } = require('./helpers');
-const { diagnose, explore } = require('../src/diagnostics');
-const { optimizeRoutes, prepareContext } = require('../src/optimizer');
-const { describeUnavailable } = require('../src/unavailable');
-const { matchIds } = require('../server');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { plan, makeSim, loadEvents } from './helpers.js';
+import { diagnose, explore } from '../public/core/diagnostics.js';
+import { optimizeRoutes, prepareContext } from '../public/core/optimizer.js';
+import { describeUnavailable } from '../public/core/unavailable.js';
+import { matchIds } from '../public/core/planner.js';
 
 const META = { seed: 1234567, rolls: 200 };
 const someUbers = (n) => {
@@ -154,46 +152,45 @@ const ENV = (overrides = {}) => ({
   events: [],
   upcoming: [],
   matchIds,
-  onProgress: () => {},
-  scrapeEvents: async () => [],
+  tablesFor: () => [],
   ...overrides,
 });
 const FUMA = { query: 'Fuma Kotaro', reason: 'notInBanners', match: { name: 'Fuma Kotaro', godfatId: 851, aliases: [], inCatalog: true } };
 
-test('a cat outside the date range says which banner has it and how to change the dates', async () => {
+test('a cat outside the date range says which banner has it and how to change the dates', () => {
   const later = { id: 'later', name: 'Banner Futuro', start: '2026-10-20', end: '2026-10-24', names: { 851: 'Fuma Kotaro' }, raw: {} };
-  const [item] = await describeUnavailable([FUMA], ENV({ upcoming: [later], scrapeEvents: async () => [later] }));
+  const [item] = describeUnavailable([FUMA], ENV({ upcoming: [later], tablesFor: () => [later] }));
   assert.match(item.headline, /no está en ningún banner entre el 08\/10\/2026 y el 12\/10\/2026/);
   assert.match(text(item), /Sí sale en: «Banner Futuro» \(20\/10–24\/10\)/);
   assert.match(item.fix, /Pon «Hasta» en el 20\/10\/2026 o después/);
 });
 
-test('a cat only in Platinum/Legend banners is told apart', async () => {
-  const plat = { id: 'p', name: 'Get an Uber Rare Cat!! PLATINUM CAPSULES!', start: '2026-10-20', end: '2030-01-01', names: { 851: 'Fuma Kotaro' }, raw: {} };
-  const [item] = await describeUnavailable([FUMA], ENV({ upcoming: [plat], scrapeEvents: async () => [plat] }));
+test('a cat only in Platinum/Legend banners is told apart', () => {
+  const plat = { id: 'p', name: 'Get an Uber Rare Cat!! PLATINUM CAPSULES!', start: '2026-10-20', end: '2030-01-01', ticket: 'platinum', names: { 851: 'Fuma Kotaro' }, raw: {} };
+  const [item] = describeUnavailable([FUMA], ENV({ upcoming: [plat], tablesFor: () => [plat] }));
   assert.match(text(item), /tickets Platinum\/Legend/);
 });
 
-test('a cat in no upcoming banner at all says so', async () => {
+test('a cat in no upcoming banner at all says so', () => {
   const other = { id: 'o', name: 'Otro', start: '2026-10-20', end: '2026-10-24', names: { 1: 'Tin Cat' }, raw: {} };
-  const [item] = await describeUnavailable([FUMA], ENV({ upcoming: [other], scrapeEvents: async () => [other] }));
-  assert.match(text(item), /ningún banner Upcoming de godfat lo incluye/);
+  const [item] = describeUnavailable([FUMA], ENV({ upcoming: [other], tablesFor: () => [other] }));
+  assert.match(text(item), /ningún banner anunciado lo incluye/);
 });
 
-test('a cat beyond the analysed rolls says in which row it first appears', async () => {
+test('a cat beyond the analysed rolls says in which row it first appears', () => {
   const ev = { id: 'e', name: 'Banner', start: '2026-10-08', end: '2026-10-12', names: { 7: 'Gato Lejano' }, raw: {} };
   const deep = { ...ev, raw: { '450A': { id: 7 }, '312B': { id: 7 } } };
-  const [item] = await describeUnavailable(
+  const [item] = describeUnavailable(
     [{ query: 'Gato Lejano', reason: 'notInRolls', ids: [7] }],
-    ENV({ events: [ev], scrapeEvents: async () => [deep] })
+    ENV({ events: [ev], tablesFor: () => [deep] })
   );
   assert.match(item.headline, /aparece por primera vez en la fila 312/);
   assert.match(item.fix, /a 330 o más/);
   assert.match(item.links[0].url, /#N312B$/);
 });
 
-test('a non-gacha cat is explained', async () => {
-  const [item] = await describeUnavailable([{ query: 'Cat', reason: 'notGacha', rarity: 'normal' }], ENV());
+test('a non-gacha cat is explained', () => {
+  const [item] = describeUnavailable([{ query: 'Cat', reason: 'notGacha', rarity: 'normal' }], ENV());
   assert.match(item.headline, /Cat no sale en el gacha/);
   assert.match(text(item), /Es un gato Normal/);
 });

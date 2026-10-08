@@ -1,9 +1,7 @@
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { plan, replayRoute, makeSim, loadEvents, loadVariant } = require('./helpers');
-const { eventWindow, rollSlot, toDay, totalCost } = require('../src/optimizer');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { plan, replayRoute, makeSim, loadEvents, loadVariant } from './helpers.js';
+import { eventWindow, rollSlot, toDay, totalCost } from '../public/core/optimizer.js';
 
 // --- Time rules -------------------------------------------------------------
 

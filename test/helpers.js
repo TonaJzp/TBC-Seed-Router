@@ -1,19 +1,33 @@
-'use strict';
+import fs from 'fs';
+import { buildEvents } from '../public/core/gacha.js';
+import { Simulator } from '../public/core/simulator.js';
+import { optimizeRoutes, eventWindow, COST, countsAsTarget } from '../public/core/optimizer.js';
+import { resolveTargets } from '../public/core/planner.js';
 
-const fixture = require('./fixtures/events.json');
-const variants = require('./fixtures/variants.json');
-const { Simulator } = require('../src/simulator');
-const { optimizeRoutes, eventWindow, COST, countsAsTarget } = require('../src/optimizer');
-const { resolveTargets } = require('../server');
+const readJson = (name) => JSON.parse(fs.readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8'));
 
-/** Fresh copies: the simulator and optimizer annotate the event objects. */
+// What bc.godfat.org showed for seed 1234567 (the reference) and godfat's
+// open data of that day (what the app computes from).
+const fixture = readJson('events.json');
+const variants = readJson('variants.json');
+const gachaData = readJson('gacha-data.json');
+
+const dataEvent = (id) => gachaData.events.find((e) => e.id === id);
+
+/** Banners of the fixture as the app computes them (fresh copies: the simulator annotates them). */
 function loadEvents() {
+  return buildEvents(gachaData, fixture.events.map((e) => dataEvent(e.id)), fixture.seed, fixture.rolls);
+}
+
+/** What godfat rendered for the same banners. */
+function godfatEvents() {
   return JSON.parse(JSON.stringify(fixture.events));
 }
 
-/** A banner rendered by godfat as a step-up (15) or 7-guaranteed one. */
+/** The Metal Maiden banner computed as a step-up (15), like godfat's forced step-up variant. */
 function loadVariant(size, overrides = {}) {
-  return { ...JSON.parse(JSON.stringify(variants[size])), id: `variant-${size}`, ...overrides };
+  const [ev] = buildEvents(gachaData, [{ ...dataEvent(variants[size].id), guaranteed: size }], fixture.seed, fixture.rolls);
+  return { ...ev, id: `variant-${size}`, ...overrides };
 }
 
 function makeSim(events = loadEvents()) {
@@ -131,4 +145,4 @@ function replayRoute(assert, ctx, route) {
   assert.equal(route.complete, route.targets.every((t) => t.obtained), 'complete flag');
 }
 
-module.exports = { fixture, loadEvents, loadVariant, makeSim, plan, replayRoute };
+export { fixture, variants, gachaData, loadEvents, godfatEvents, loadVariant, makeSim, plan, replayRoute };

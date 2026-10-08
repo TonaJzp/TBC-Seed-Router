@@ -1,8 +1,6 @@
-'use strict';
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { xorshift32, buildSequence, raritySeed, slotSeed } = require('../src/rng');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { xorshift32, buildSequence, raritySeed, slotSeed } from '../public/core/rng.js';
 
 // Seeds taken from the "seed=" links godfat renders for seed 1234567.
 const GODFAT_LINKS = { '1A': 2225988032, '1B': 3327196554, '2A': 828166522, '2B': 1225934019, '3A': 327754758 };

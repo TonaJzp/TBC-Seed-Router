@@ -1,15 +1,11 @@
-'use strict';
-
 // Explains the targets that can't even enter the plan (not a gacha cat, not in
 // the banners of the chosen dates, not within the analysed rolls). Where it
 // helps, it looks further: other upcoming banners, or deeper into the seed, so
 // the user knows exactly what to change.
 
-const { MAX_ROLLS } = require('./scraper');
+import { MAX_ROLLS } from './config.js';
 
 const RARITY_LABEL = { normal: 'Normal', special: 'Especial' };
-const TICKET_ONLY_BANNER = /platinum capsule|legend capsule/i;
-const LOOKUP_ROLLS = 20; // enough to read a banner's pool
 
 const formatDate = (iso) => iso.split('-').reverse().join('/');
 const shortDate = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
@@ -33,43 +29,26 @@ function firstOccurrence(ev, ids) {
 
 /**
  * @param problems  unavailable targets from resolveTargets
- * @param env       { seed, input, events, upcoming, matchIds, scrapeEvents(list, rolls), onProgress }
+ * @param env       { seed, input, events, upcoming, matchIds, tablesFor(list, rolls) }
  */
-async function describeUnavailable(problems, env) {
+function describeUnavailable(problems, env) {
   const { input } = env;
   const items = [];
 
-  // Other upcoming banners (outside the dates), read only when needed.
+  // Other upcoming banners (outside the dates): their pools say where a cat is.
   let outside = null;
-  let outsideFailed = false;
   if (problems.some((p) => p.reason === 'notInBanners')) {
     const inRange = new Set(env.events.map((e) => e.id));
-    const others = env.upcoming.filter((e) => !inRange.has(e.id));
-    if (others.length) {
-      env.onProgress('Buscando en qué otros banners salen los gatos que faltan...');
-      try {
-        outside = await env.scrapeEvents(others, LOOKUP_ROLLS);
-      } catch {
-        outsideFailed = true;
-      }
-    }
+    outside = env.tablesFor(env.upcoming.filter((e) => !inRange.has(e.id)), 1);
   }
 
   // Deeper into the seed for cats that are in the pools but not in the rolls.
   const deepNeeded = problems.filter((p) => p.reason === 'notInRolls');
   let deep = null;
-  let deepFailed = false;
   if (deepNeeded.length && input.rolls < MAX_ROLLS) {
     const ids = deepNeeded.flatMap((p) => p.ids);
     const list = env.events.filter((e) => poolHas(e, ids));
-    if (list.length) {
-      env.onProgress(`Buscando más adelante en la semilla (hasta ${MAX_ROLLS} tiros) dónde salen los gatos que faltan...`);
-      try {
-        deep = await env.scrapeEvents(list, MAX_ROLLS);
-      } catch {
-        deepFailed = true;
-      }
-    }
+    if (list.length) deep = env.tablesFor(list, MAX_ROLLS);
   }
 
   for (const p of problems) {
@@ -88,26 +67,26 @@ async function describeUnavailable(problems, env) {
       items.push({
         target: name,
         headline: `«${name}» no coincide con ningún gato conocido.`,
-        details: ['No está en la lista de gatos de la wiki ni en los banners de tus fechas.'],
+        details: ['No está en la lista de gatos del juego ni en los banners de tus fechas.'],
         fix: 'Búscalo en el selector de gatos escribiendo parte de su nombre.',
         links: [],
       });
     } else if (p.reason === 'notInBanners') {
-      items.push(notInBanners(p, env, outside, outsideFailed));
+      items.push(notInBanners(p, env, outside));
     } else {
-      items.push(notInRolls(p, env, deep, deepFailed));
+      items.push(notInRolls(p, env, deep));
     }
   }
   return items;
 }
 
-function notInBanners(p, env, outside, failed) {
+function notInBanners(p, env, outside) {
   const { input } = env;
   const name = p.query;
   const range = `entre el ${formatDate(input.from)} y el ${formatDate(input.to)}`;
   const found = (outside || []).filter((e) => env.matchIds(p.match, new Map(Object.entries(e.names).map(([id, n]) => [Number(id), n]))).length);
-  const plannable = found.filter((e) => !TICKET_ONLY_BANNER.test(e.name));
-  const ticketOnly = found.filter((e) => TICKET_ONLY_BANNER.test(e.name));
+  const plannable = found.filter((e) => !e.ticket);
+  const ticketOnly = found.filter((e) => e.ticket);
   const details = [`Ningún banner ${range} lo incluye, así que en esas fechas no es posible conseguirlo.`];
   let fix;
   if (plannable.length) {
@@ -120,17 +99,14 @@ function notInBanners(p, env, outside, failed) {
   } else if (ticketOnly.length) {
     details.push(`Solo sale en ${ticketOnly.map(banner).join('; ')}, que se paga con tickets Platinum/Legend y no se planifica con Cat Food ni Rare Tickets.`);
     fix = 'Quítalo de los objetivos o consíguelo con tickets Platinum/Legend.';
-  } else if (failed) {
-    details.push('No se pudo comprobar si sale en otros banners próximos (godfat no respondió).');
-    fix = 'Prueba a ampliar las fechas o vuelve a intentarlo más tarde.';
   } else {
-    details.push('Ahora mismo ningún banner Upcoming de godfat lo incluye, ni dentro ni fuera de tus fechas.');
-    fix = 'Habrá que esperar a que godfat anuncie un banner con este gato.';
+    details.push('Ahora mismo ningún banner anunciado lo incluye, ni dentro ni fuera de tus fechas.');
+    fix = 'Habrá que esperar a que se anuncie un banner con este gato.';
   }
   return { target: name, headline: `${name} no está en ningún banner ${range}.`, details, fix, links: [] };
 }
 
-function notInRolls(p, env, deep, failed) {
+function notInRolls(p, env, deep) {
   const { input } = env;
   const name = p.query;
   const banners = env.events.filter((e) => poolHas(e, p.ids));
@@ -163,18 +139,14 @@ function notInRolls(p, env, deep, failed) {
       links: [godfatLink(env.seed, e, key, Math.min(MAX_ROLLS, row + 20))],
     };
   }
-  details.push(
-    failed
-      ? 'No se pudo mirar más adelante en la semilla (godfat no respondió).'
-      : `Tampoco sale en las primeras ${MAX_ROLLS} filas de esos banners.`
-  );
+  details.push(`Tampoco sale en las primeras ${MAX_ROLLS} filas de esos banners.`);
   return {
     target: name,
     headline: `${name} no sale en los próximos ${input.rolls} tiros.`,
     details,
-    fix: failed ? 'Vuelve a intentarlo más tarde.' : 'No es realista conseguirlo con tiros en estas fechas.',
+    fix: 'No es realista conseguirlo con tiros en estas fechas.',
     links: [],
   };
 }
 
-module.exports = { describeUnavailable };
+export { describeUnavailable };
