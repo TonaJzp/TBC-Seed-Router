@@ -106,8 +106,9 @@ empieza más tarde, los que ya han terminado dejan de estar disponibles.
 
 **Proteger** una casilla no impide pasar por ella: un gato objetivo que salga ahí no cuenta (salvo
 que sea el propio legendario), y el plan lo busca en otra casilla para no gastar la oportunidad de
-legendario. Cada ruta indica por qué casillas de legendario pasa y qué legendario podrías sacar en
-su lugar, con un botón para añadirlo a tus objetivos.
+legendario. Cada ruta indica por qué casillas de legendario pasa, qué sacas en cada una y todos los
+legendarios que podrías sacar ahí con los banners activos en ese momento de la ruta, cada uno con un
+botón para añadirlo a tus objetivos y recalcular.
 
 ### Por qué no se consigue todo
 
