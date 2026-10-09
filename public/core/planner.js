@@ -226,7 +226,7 @@ function selectEvents(data, { from, to, today }) {
   for (const e of data.events) {
     if (e.end < today || e.end < from || e.start > to) continue;
     const skip = (reason) => skipped.push({ id: e.id, name: e.name, start: e.start, end: e.end, reason });
-    if (e.end === today) skip('termina hoy: en el juego puede haber terminado ya');
+    if (e.end === today) skip('termina hoy: el juego cambia los banners por la mañana (a las 11:00 en España) y puede haber terminado ya');
     else if (e.ticket) skip('se paga con tickets Platinum/Legend');
     else selected.push(e);
   }
