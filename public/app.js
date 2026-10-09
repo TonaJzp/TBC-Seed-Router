@@ -191,22 +191,15 @@ function renderContext(data) {
 const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
 
 /** Legendaries a legend cell can give, each with a button to add it as a target. */
-function legendOptions(cell, none = 'ningún banner de tus fechas da legendario aquí (sale un uber)') {
-  if (!cell.legends.length) return `<span class="muted">${none}</span>`;
+function legendOptions(cell) {
+  if (!cell.legends.length) return '<span class="muted">ningún banner de tus fechas da legendario aquí (sale un uber)</span>';
   const byName = new Map();
   for (const l of cell.legends) byName.set(l.name, [...(byName.get(l.name) || []), l]);
   return [...byName]
     .map(([name, options]) => {
-      // In a route, say whether it is just that roll in another banner.
-      const same = options.filter((l) => l.sameRoute);
-      const how = !('inDraw' in cell)
-        ? `<span class="muted">en ${options.map((l) => esc(l.eventName)).join(', ')}</span>`
-        : same.length
-          ? `<span class="fit">sin desviarte de la ruta:</span> <span class="muted">haz el tiro de la ${esc(cell.key)} en ${same.map((l) => `«${esc(l.eventName)}»`).join(' o ')}; el resto de la ruta no cambia</span>`
-          : `<span class="muted">requiere cambiar la ruta: ${cell.inDraw ? 'esa casilla está dentro de un 11-draw' : 'cambiaría las tiradas siguientes'} (en ${options.map((l) => esc(l.eventName)).join(', ')})</span>`;
       return `<span class="legend-option">
-        <b>${esc(name)}</b> ${how}
-        ${picker.isSelected(name) ? '<span class="tag">ya es objetivo</span>' : `<button type="button" class="link-button" data-add-target="${esc(name)}">Añadir a objetivos y recalcular</button>`}
+        <b>${esc(name)}</b> <span class="muted">en ${options.map((l) => esc(l.eventName)).join(', ')}</span>
+        ${addTargetButton(name)}
       </span>`;
     })
     .join('');
@@ -224,34 +217,60 @@ function renderAllLegendCells(data) {
   </details>`;
 }
 
-function renderRouteLegendCells(r) {
+const FIT = {
+  same: ['Misma ruta', 'Tira esa casilla en este banner: mismo coste y el resto de la ruta no cambia.'],
+  draw: ['Cambia la ruta', 'Esa casilla va dentro de un 11-draw y su banner no se puede cambiar solo para esa tirada: añádelo a tus objetivos y la ruta se recalcula.'],
+  next: ['Cambia la ruta', 'Tirarla en este banner cambiaría las tiradas siguientes: añádelo a tus objetivos y la ruta se recalcula.'],
+};
+
+/** "Add to targets" button, or a tag if it already is one. */
+const addTargetButton = (name) =>
+  picker.isSelected(name)
+    ? '<span class="tag">ya es objetivo</span>'
+    : `<button type="button" class="link-button" data-add-target="${esc(name)}">Añadir a objetivos</button>`;
+
+/**
+ * Legend cells the selected route rolls: what it gets in each, and every
+ * other legendary that a banner open at that moment would give there, one
+ * row each, with whether it keeps the route.
+ */
+function renderRouteLegendCells(r, data) {
   if (!r.legendCells.length) {
     return '<h3 class="section-title">Casillas de legendario</h3><p class="muted">Esta ruta no pasa por ninguna casilla de legendario.</p>';
   }
-  const rows = r.legendCells
+  const evById = new Map(data.events.map((e) => [e.id, e]));
+  const groups = r.legendCells
     .map((c) => {
       const got =
         c.got.rarity === 'legendary'
-          ? `<b>${esc(c.got.name)}</b> <span class="tag">legendario</span>`
-          : `${esc(c.got.name)} <span class="muted">(${esc(c.eventName)})</span>`;
-      return `<tr>
-        <td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td>
-        <td class="num">${c.step}</td>
-        <td>${got}</td>
-        <td>${legendOptions(c, c.got.rarity === 'legendary' ? 'ningún otro: los demás banners activos en ese momento no dan otro legendario aquí' : 'ninguno: ningún banner activo en ese momento da legendario aquí')}</td>
-      </tr>`;
+          ? `<b>${esc(c.got.name)}</b><span class="tag">legendario</span>`
+          : `${esc(c.got.name)}<small class="clip" title="${esc(c.eventName)}">no legendario · ${esc(c.eventName)}</small>`;
+      const options = [...c.legends].sort((a, b) => Number(b.sameRoute) - Number(a.sameRoute));
+      const rows = options.length
+        ? options.map((l) => {
+            const ev = evById.get(l.eventId);
+            const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : 'next'];
+            return `<td><b>${esc(l.name)}</b></td>
+              <td class="ev" title="${esc(l.eventName)}"><span class="ev-name">${esc(l.eventName)}</span>${ev ? `<small>hasta el ${esc(shortWithHour(ev.end, ev.endTime))}</small>` : ''}</td>
+              <td><span class="fit ${l.sameRoute ? 'same' : 'change'}" title="${esc(why)}">${label}</span></td>
+              <td class="add">${addTargetButton(l.name)}</td>`;
+          })
+        : [`<td colspan="4" class="muted">${c.got.rarity === 'legendary' ? 'Ningún otro banner activo en ese momento da otro legendario aquí.' : 'Ningún banner activo en ese momento da legendario aquí.'}</td>`];
+      const lead = `<td rowspan="${rows.length}" class="cell"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}<small>paso ${c.step}</small></td>
+        <td rowspan="${rows.length}" class="got">${got}</td>`;
+      return rows.map((row, i) => `<tr class="${i === 0 ? 'first' : 'more'}">${i === 0 ? lead : ''}${row}</tr>`).join('');
     })
     .join('');
   const lost = r.legendCells.filter((c) => c.got.rarity !== 'legendary' && c.legends.length).length;
   const warn = lost
     ? `<p class="notice">Esta ruta gasta ${lost} casilla${lost > 1 ? 's' : ''} de legendario sin sacar el legendario. Si quieres alguno, añádelo como objetivo y se recalculará la ruta para conseguirlo junto a los demás.</p>`
     : '';
-  const how = '<p class="hint">Son los legendarios que darían en cada casilla los banners activos en ese momento de la ruta seleccionada (si eliges otra ruta, se muestran los de esa). «Sin desviarte de la ruta»: basta con hacer el tiro de esa casilla en el banner indicado, con el mismo coste y sin cambiar nada más. «Requiere cambiar la ruta»: añádelo a tus objetivos y la ruta se recalcula para conseguirlo junto a los demás.</p>';
   return `<h3 class="section-title">Casillas de legendario en esta ruta</h3>
-    ${warn}${how}
-    <div class="table-wrap"><table class="banners">
-      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th>Otros legendarios posibles ahí, en esta ruta</th></tr></thead>
-      <tbody>${rows}</tbody>
+    ${warn}
+    <p class="hint">Otros legendarios que darían los banners activos cuando esta ruta tira cada casilla. «Misma ruta»: tírala en ese banner y nada más cambia. «Cambia la ruta»: añádelo a tus objetivos y se recalcula.</p>
+    <div class="table-wrap"><table class="legend-cells">
+      <thead><tr><th>Casilla</th><th>Qué sacas ahí</th><th>Otro legendario posible</th><th>En el banner</th><th>En esta ruta</th><th></th></tr></thead>
+      <tbody>${groups}</tbody>
     </table></div>`;
 }
 
@@ -386,7 +405,7 @@ function renderDetail(data) {
     ${discountLines ? `<h3 class="section-title">Descuentos</h3><ul class="discounts">${discountLines}</ul>` : ''}
     <h3 class="section-title">Objetivos</h3>
     <ul class="targets">${targets}</ul>
-    ${renderRouteLegendCells(r)}
+    ${renderRouteLegendCells(r, data)}
     <h3 class="section-title">Pasos</h3>
     <p class="hint steps-hint">Haz cada paso en el banner que indica, el día indicado o después, mientras siga activo. Las horas son las de tu dispositivo, que son las que usa el juego para cambiar los banners. Pulsa el nombre del banner para abrir esa misma tabla en godfat y comprobar los gatos antes de tirar.</p>
     <div class="table-wrap"><table class="steps">

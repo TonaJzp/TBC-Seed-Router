@@ -416,7 +416,6 @@ td.r, th.r { text-align: right; }
 .steps .banner small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11.5px; }
 .steps .banner small b { color: var(--accent); font-weight: 600; }
 .steps .banner .active-range { display: block; margin-top: 3px; color: var(--ink-2); font-size: 12px; }
-.legend-option .fit { color: var(--ok); font-weight: 600; }
 .steps-hint { margin: 0 0 8px; font-size: 12.5px; }
 .steps .day { min-width: 92px; max-width: 150px; }
 .steps .day small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11.5px; line-height: 1.35; }
@@ -445,6 +444,21 @@ td.r, th.r { text-align: right; }
 .cat .mark { color: var(--accent); margin-left: 3px; }
 
 .legend-option { display: block; margin: 1px 0; }
+.legend-cells td { font-size: 13px; vertical-align: middle; }
+.legend-cells tr.more td { border-top: 0; }
+.legend-cells tr.first td { border-top: 1px solid var(--line-2); }
+.legend-cells td.cell { font-family: var(--mono); white-space: nowrap; }
+.legend-cells td small { display: block; margin-top: 1px; font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
+.legend-cells td.got .tag { margin-left: 0; margin-top: 3px; }
+.legend-cells td.got b { display: block; }
+.legend-cells td.got { max-width: 230px; }
+.legend-cells small.clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-cells td.ev { max-width: 300px; }
+.legend-cells .ev-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-cells td.add { text-align: right; white-space: nowrap; }
+.fit { display: inline-block; padding: 0 6px; font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap; border: 1px solid currentColor; border-radius: 3px; cursor: help; }
+.fit.same { color: var(--ok); }
+.fit.change { color: var(--ink-2); }
 .legend-option .link-button { margin-left: 6px; }
 .cat .dot { width: 7px; height: 7px; margin-right: 4px; }
 .cat.skipped { text-decoration: line-through; text-decoration-color: var(--ink-3); }
