@@ -24,9 +24,12 @@ export class TargetPicker {
     this.options = [];
     this.active = -1;
     this.statusText = '';
+    this.quiet = false; // true while focusing the box without opening the list
 
     this.input.addEventListener('input', () => this.open());
-    this.input.addEventListener('focus', () => this.open());
+    this.input.addEventListener('focus', () => {
+      if (!this.quiet) this.open();
+    });
     this.input.addEventListener('blur', () => setTimeout(() => this.close(), 120));
     this.input.addEventListener('keydown', (e) => this.onKey(e));
     this.input.addEventListener('paste', (e) => this.onPaste(e));
@@ -40,9 +43,15 @@ export class TargetPicker {
     });
     this.chips.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-name]');
-      if (btn) this.remove(btn.dataset.name);
+      if (!btn) return;
+      const i = this.selected.indexOf(btn.dataset.name);
+      this.remove(btn.dataset.name);
+      this.focusChip(i);
     });
-    root.querySelector('#picker-clear').addEventListener('click', () => this.clear());
+    root.querySelector('#picker-clear').addEventListener('click', () => {
+      this.clear();
+      this.focusQuietly();
+    });
   }
 
   static esc(s) {
@@ -244,7 +253,22 @@ export class TargetPicker {
   remove(key) {
     this.selected = this.selected.filter((k) => k !== key);
     this.sync();
+  }
+
+  // After removing with ×, focus stays in the list (next ×, else the previous one)
+  // so the dropdown does not pop open; with nothing left it returns to the box.
+  focusChip(i) {
+    const buttons = this.chips.querySelectorAll('button.remove');
+    const btn = buttons[Math.min(i, buttons.length - 1)];
+    if (btn) btn.focus();
+    else this.focusQuietly();
+  }
+
+  /** Focuses the search box without opening the dropdown. */
+  focusQuietly() {
+    this.quiet = true;
     this.input.focus();
+    this.quiet = false;
   }
 
   clear() {
