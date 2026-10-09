@@ -191,8 +191,8 @@ function renderContext(data) {
 const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
 
 /** Legendaries a legend cell can give, each with a button to add it as a target. */
-function legendOptions(cell) {
-  if (!cell.legends.length) return '<span class="muted">ningún banner de tus fechas da legendario aquí (sale un uber)</span>';
+function legendOptions(cell, none = 'ningún banner de tus fechas da legendario aquí (sale un uber)') {
+  if (!cell.legends.length) return `<span class="muted">${none}</span>`;
   const byName = new Map();
   for (const l of cell.legends) byName.set(l.name, [...(byName.get(l.name) || []), l.eventName]);
   return [...byName]
@@ -231,7 +231,7 @@ function renderRouteLegendCells(r) {
         <td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td>
         <td class="num">${c.step}</td>
         <td>${got}</td>
-        <td>${c.got.rarity === 'legendary' ? '<span class="muted">—</span>' : legendOptions(c)}</td>
+        <td>${legendOptions(c, c.got.rarity === 'legendary' ? 'ningún otro: los demás banners activos en ese momento no dan otro legendario aquí' : 'ninguno: ningún banner activo en ese momento da legendario aquí')}</td>
       </tr>`;
     })
     .join('');
@@ -239,10 +239,11 @@ function renderRouteLegendCells(r) {
   const warn = lost
     ? `<p class="notice">Esta ruta gasta ${lost} casilla${lost > 1 ? 's' : ''} de legendario sin sacar el legendario. Si quieres alguno, añádelo como objetivo y se recalculará la ruta para conseguirlo junto a los demás.</p>`
     : '';
+  const how = '<p class="hint">Para cada casilla se muestran los legendarios que darían los banners activos en ese momento de la ruta. Al añadir uno a tus objetivos, la ruta se recalcula para conseguirlo junto a los demás.</p>';
   return `<h3 class="section-title">Casillas de legendario en esta ruta</h3>
-    ${warn}
+    ${warn}${how}
     <div class="table-wrap"><table class="banners">
-      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th>Legendario que podrías conseguir</th></tr></thead>
+      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th title="Tirando esa casilla en otro banner activo en ese momento de la ruta">Otros legendarios posibles ahí</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`;
 }
@@ -492,6 +493,20 @@ function renderDataInfo(data, status) {
   $('#data-notice').innerHTML = notices.map((n) => `<p>${esc(n)}</p>`).join('');
 }
 
+// The game applies the banner hours in the player's local time, like the
+// plan: say which hour and which time zone, so nobody has to convert anything.
+function renderTimeNote(data) {
+  const hours = new Set(data.events.flatMap((e) => [e.startTime, e.endTime]).filter(Boolean));
+  const when = hours.size === 1 ? `a las ${[...hours][0]}` : 'a su hora (casi siempre las 11:00)';
+  let zone = '';
+  try {
+    zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  } catch {
+    // Without Intl the note just leaves the zone out.
+  }
+  $('#time-note').textContent = `Los banners abren y cierran ${when} en la hora de este dispositivo${zone ? ` (${zone})` : ''}, como en el juego.`;
+}
+
 async function loadData() {
   try {
     const res = await fetch('data/gacha.json', { cache: 'no-cache' });
@@ -518,6 +533,7 @@ async function loadData() {
   const cats = catalogOf(gachaData).map((c) => ({ ...c, image: icons.has(c.id) ? `icons/${c.id}.png` : null }));
   picker.load(cats, gachaData.generatedAt);
   renderDataInfo(gachaData, status);
+  renderTimeNote(gachaData);
 }
 
 $('#forget-data').addEventListener('click', () => {

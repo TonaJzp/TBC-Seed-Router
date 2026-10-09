@@ -342,3 +342,25 @@ test('before 11:00, a banner ending today is still planned, to be done before 11
   assert.equal(steps.find((s) => s.eventId === '2026-10-09_1043')?.opensAt, '11:00', 'Fuma Kotaro opens today at 11:00');
   assert.ok(steps.filter((s) => s.eventId === '2026-10-18_1043').every((s) => s.date === '2026-10-18' && s.opensAt === '11:00'));
 });
+
+test('a legend cell lists every legendary of the banners active at that moment of the route', () => {
+  // Seed 4102194373 rolls its purple 2A in Metal Maiden (Musashi Miyamoto).
+  // What else 2A gives depends on which banners are open when it is rolled.
+  const oda = String(catalogOf(gachaData).find((c) => c.name === 'Oda Nobunaga').key);
+  const body = (from) => ({
+    url: 'https://bc.godfat.org/?seed=4102194373&last=39', targets: [oda], from, to: '2026-10-15',
+    rolls: 200, tickets: 0, food: 100000, avoidLegend: true, avoidLegendFest: true,
+  });
+  const cellAt = (from, now) => {
+    const r = planner(body(from), gachaData, { now });
+    return r.routes[0].legendCells.find((c) => c.key === '2A');
+  };
+  const names = (cell) => cell.legends.map((l) => l.name).sort();
+  const early = cellAt('2026-10-09', new Date(2026, 9, 9, 3, 42));
+  assert.equal(early.got.name, 'Musashi Miyamoto');
+  assert.deepEqual(names(early), ['Daybreaker Izanagi', 'Wonder MOMOCO'], 'banners closing at 11:00 are still on');
+  assert.deepEqual(names(cellAt('2026-10-09', new Date(2026, 9, 9, 12, 0))), ['Emperor Cat'], 'after 11:00, the new ones');
+  const later = cellAt('2026-10-13', new Date(2026, 9, 13, 12, 0));
+  assert.deepEqual(names(later), ['Gaia the Creator', 'High Lord Babel']);
+  assert.ok(later.legends.every((l) => l.id !== later.got.id), 'the legendary already obtained is not offered again');
+});

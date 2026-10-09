@@ -333,7 +333,7 @@ function describeRoute(ctx, result) {
       const firstTime = hits.filter((ti) => !obtainedAt.has(ti));
       firstTime.forEach((ti) => obtainedAt.set(ti, i));
       const color = legendColorOf(sim, cell, ctx.doubleLegend);
-      if (color) crossings.push({ action: i, key: keyOf(cell.n, cell.track), color, eventName: ev.name, got: c });
+      if (color) crossings.push({ action: i, slot: node.slot, key: keyOf(cell.n, cell.track), color, eventName: ev.name, got: c });
       return {
         ...c,
         cell: keyOf(cell.n, cell.track),
@@ -381,14 +381,20 @@ function describeRoute(ctx, result) {
   };
   const multiStep = discountStep(['multi', 'guaranteed']);
   const singleStep = discountStep(['single']);
-  const legendCells = crossings.map((x) => ({
-    key: x.key,
-    color: x.color,
-    step: stepOfAction.get(x.action),
-    eventName: x.eventName,
-    got: { name: x.got.name, rarity: x.got.rarity },
-    legends: sim.legendsAt(parseInt(x.key, 10), x.key.at(-1)),
-  }));
+  // What each legend cell gives in every banner that can be rolled at that
+  // moment of the route: the legendaries the route could take there instead.
+  const activeAt = (slot) => new Set(events.filter((e) => e.firstSlot <= slot && slot <= e.lastSlot).map((e) => e.id));
+  const legendCells = crossings.map((x) => {
+    const active = activeAt(x.slot);
+    return {
+      key: x.key,
+      color: x.color,
+      step: stepOfAction.get(x.action),
+      eventName: x.eventName,
+      got: { id: x.got.id, name: x.got.name, rarity: x.got.rarity },
+      legends: sim.legendsAt(parseInt(x.key, 10), x.key.at(-1)).filter((l) => active.has(l.eventId) && l.id !== x.got.id),
+    };
+  });
   return {
     complete: !!result.complete,
     legendCells,
