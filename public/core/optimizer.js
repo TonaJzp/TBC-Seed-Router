@@ -36,28 +36,31 @@ const totalCost = (c) => c.food + c.tickets * TICKET_VALUE;
 
 // Each objective is a lexicographic order of costs. The first one is the main
 // result; the others are alternatives that push one resource to the extreme.
+// Ties go to the route with fewer banner changes, then to the one that can be
+// done sooner (`switches` and `slot` are always the last two, see dominates).
 const OBJECTIVES = {
   optimal: {
     label: 'Ruta recomendada',
     description: 'Menor gasto total de recursos (1 Rare Ticket = 150 Cat Food). A igual coste, gasta menos Cat Food.',
-    priority: (c) => [totalCost(c), c.food, c.pulls, c.switches],
+    priority: (c) => [totalCost(c), c.food, c.pulls, c.switches, c.slot],
   },
   saveFood: {
     label: 'Máximo ahorro de Cat Food',
     description: 'Gasta la mínima Cat Food posible, aunque use más Rare Tickets o más tiros.',
-    priority: (c) => [c.food, c.tickets, c.pulls, c.switches],
+    priority: (c) => [c.food, c.tickets, c.pulls, c.switches, c.slot],
   },
   saveTickets: {
     label: 'Máximo ahorro de Rare Tickets',
     description: 'Conserva el máximo de Rare Tickets pagando con Cat Food (11-draws y garantizados).',
-    priority: (c) => [c.tickets, c.food, c.pulls, c.switches],
+    priority: (c) => [c.tickets, c.food, c.pulls, c.switches, c.slot],
   },
   fastest: {
     label: 'Menos tiros',
     description: 'Avanza lo mínimo en la semilla (deja más tiros futuros intactos), cueste lo que cueste.',
-    priority: (c) => [c.pulls, totalCost(c), c.switches],
+    priority: (c) => [c.pulls, totalCost(c), c.switches, c.slot],
   },
 };
+const SWITCHES_FROM_END = 2; // position of `switches` in every priority, from the end
 
 function compare(a, b) {
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i];
@@ -120,6 +123,20 @@ function popcount(mask) {
 // dominance instead (see push in findRoute).
 const baseKey = (s) => `${s.n}${s.track}|${s.last}|${s.tl}|${+s.d11}${+s.d1}|${s.slot}`;
 const isSubset = (a, b) => (a & b) === a;
+
+/**
+ * True if state `a` (priority `pa`) is at least as good as `b` (priority `pb`)
+ * for every continuation, both at the same base state. The banner each one is
+ * in is not part of that state: from another banner, `a` may need one banner
+ * change more than `b` to continue the same way, so it only wins counting it.
+ */
+function dominates(a, pa, b, pb) {
+  if (!isSubset(b.mask, a.mask)) return false;
+  if (a.ev === b.ev) return compare(pa, pb) <= 0;
+  const worst = [...pa];
+  worst[worst.length - SWITCHES_FROM_END]++;
+  return compare(worst, pb) <= 0;
+}
 
 /**
  * Protected cells (purple, or lilac during double-legend events) are kept for
@@ -220,22 +237,22 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   const canonicalLast = (node) => (sim.rawIdsAt(node.n, node.track).has(node.last) ? node.last : 0);
 
   // A state is dominated by another at the same base state that already has a
-  // superset of the targets for a lower or equal cost: every continuation costs
-  // the same from both, so the dominated one can never be strictly better.
+  // superset of the targets for a lower or equal cost, counting the banner
+  // change it may still need: the dominated one can never be strictly better.
   const push = (node) => {
     node.last = canonicalLast(node);
     const key = baseKey(node);
     const pr = priorityOf(node);
     let list = labels.get(key);
     if (!list) labels.set(key, (list = []));
-    for (const l of list) if (compare(l.pr, pr) <= 0 && isSubset(node.mask, l.mask)) return;
+    for (const l of list) if (dominates(l, l.pr, node, pr)) return;
     const kept = [];
     for (const l of list) {
-      if (compare(pr, l.pr) <= 0 && isSubset(l.mask, node.mask)) nodes[l.idx].dead = true;
+      if (dominates(node, pr, l, l.pr)) nodes[l.idx].dead = true;
       else kept.push(l);
     }
     nodes.push(node);
-    kept.push({ mask: node.mask, pr, idx: nodes.length - 1 });
+    kept.push({ mask: node.mask, ev: node.ev, pr, idx: nodes.length - 1 });
     labels.set(key, kept);
     heap.push(pr, nodes.length - 1);
   };

@@ -36,7 +36,8 @@ por comas. No hay límite.
 ### 3. Elige las fechas
 
 Solo se usan los banners que estén activos entre «Desde» y «Hasta». «Desde» no puede ser anterior a
-hoy (según la fecha de tu dispositivo).
+hoy (según la fecha de tu dispositivo). Los banners que terminan hoy no se usan: los datos no dicen a
+qué hora cambia el juego los eventos, y puede que ya hayan terminado.
 
 ### 4. Cuántos tiros revisar
 
@@ -50,8 +51,11 @@ proteger las casillas de legendario (ver más abajo).
 
 ### 6. Pulsa «Calcular rutas»
 
-Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso tiene un enlace a godfat
-para que lo compruebes antes de gastar nada.
+Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso indica el día, el banner
+(con sus fechas, y si cambia respecto al paso anterior) y las casillas. El nombre del banner abre esa
+misma tabla en godfat, en la casilla donde empieza el paso, para que lo compruebes antes de gastar
+nada. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa
+casilla, que allí aparece como 1A.
 
 | Ruta | Criterio (por orden de prioridad) |
 |------|-----------------------------------|
@@ -60,7 +64,8 @@ para que lo compruebes antes de gastar nada.
 | Máximo ahorro de Rare Tickets | menos tickets → menos Cat Food → menos tiros |
 | Menos tiros | menos tiros → menor coste total |
 
-En caso de empate, gana la ruta con menos cambios de banner. Para el coste total, 1 Rare Ticket =
+En caso de empate, gana la ruta con menos cambios de banner y, después, la que se puede hacer antes.
+Para el coste total, 1 Rare Ticket =
 150 Cat Food, como en el juego. Si ninguna ruta cabe en tu Cat Food, se muestra igualmente la mejor
 y cuánto falta. Si no se pueden conseguir todos los gatos, se da la ruta que consigue más y se
 explica por qué faltan los demás.

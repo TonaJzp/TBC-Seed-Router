@@ -5,8 +5,9 @@ import { diagnose, explore } from '../public/core/diagnostics.js';
 import { optimizeRoutes, prepareContext } from '../public/core/optimizer.js';
 import { describeUnavailable } from '../public/core/unavailable.js';
 import { matchIds } from '../public/core/planner.js';
+import { buildSequence } from '../public/core/rng.js';
 
-const META = { seed: 1234567, rolls: 200 };
+const META = { seed: 1234567 };
 const someUbers = (n) => {
   const names = new Set();
   for (const ev of makeSim().events) for (const id of ev.pools.uber) names.add(ev.names[id]);
@@ -186,7 +187,11 @@ test('a cat beyond the analysed rolls says in which row it first appears', () =>
   );
   assert.match(item.headline, /aparece por primera vez en la fila 312/);
   assert.match(item.fix, /a 330 o más/);
-  assert.match(item.links[0].url, /#N312B$/);
+  // godfat shows 300 rows at most: the link starts the table at 312B, shown there as 1A.
+  const url = new URL(item.links[0].url);
+  assert.equal(url.searchParams.get('seed'), String(buildSequence(1, 312)[2 * 312 - 1]));
+  assert.equal(url.hash, '#N1A');
+  assert.match(item.links[0].label, /^312B \(1A en godfat\)/);
 });
 
 test('a non-gacha cat is explained', () => {

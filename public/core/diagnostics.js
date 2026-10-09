@@ -4,6 +4,7 @@
 // to them on godfat, so the user can check it on their own seed.
 
 import { keyOf, parseKey } from './simulator.js';
+import { godfatLink } from './godfat-link.js';
 import { rollSlot, performAction, actionsFor, findRoute, countsAsTarget } from './optimizer.js';
 
 const COLOR_NAME = { legend: 'morada', legend_fest: 'lila' };
@@ -71,11 +72,10 @@ function explore(ctx, protect, { ignoreTime = false } = {}) {
 }
 
 class Diagnoser {
-  constructor(ctx, routes, { seed, rolls }) {
+  constructor(ctx, routes, { seed }) {
     this.ctx = ctx;
     this.routes = routes;
     this.seed = seed;
-    this.rolls = rolls;
     this.events = new Map(ctx.events.map((e) => [e.id, e]));
     this.cache = new Map();
   }
@@ -88,10 +88,8 @@ class Diagnoser {
 
   link(eventId, key) {
     const ev = this.events.get(eventId) || this.ctx.events[0];
-    return {
-      label: `${key} · ${ev.name}`,
-      url: `https://bc.godfat.org/?seed=${this.seed}&event=${encodeURIComponent(ev.id)}&count=${this.rolls}#N${key}`,
-    };
+    const { url, shifted } = godfatLink({ seed: this.seed, eventId: ev.id, key });
+    return { label: `${key}${shifted ? ' (1A en godfat)' : ''} · ${ev.name}`, url };
   }
 
   eventLabel(eventId) {

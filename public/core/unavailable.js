@@ -4,16 +4,17 @@
 // the user knows exactly what to change.
 
 import { MAX_ROLLS } from './config.js';
+import { godfatLink as linkTo } from './godfat-link.js';
 
 const RARITY_LABEL = { normal: 'Normal', special: 'Especial' };
 
 const formatDate = (iso) => iso.split('-').reverse().join('/');
 const shortDate = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
 const banner = (e) => `«${e.name}» (${shortDate(e.start)}–${shortDate(e.end)})`;
-const godfatLink = (seed, ev, key, count) => ({
-  label: `${key} · ${ev.name}`,
-  url: `https://bc.godfat.org/?seed=${seed}&event=${encodeURIComponent(ev.id)}&count=${count}#N${key}`,
-});
+const godfatLink = (seed, ev, key) => {
+  const { url, shifted } = linkTo({ seed, eventId: ev.id, key });
+  return { label: `${key}${shifted ? ' (1A en godfat)' : ''} · ${ev.name}`, url };
+};
 
 function poolHas(ev, ids) {
   return ids.some((id) => Object.prototype.hasOwnProperty.call(ev.names, id));
@@ -136,7 +137,7 @@ function notInRolls(p, env, deep) {
       headline: `${name} no sale en los próximos ${input.rolls} tiros: aparece por primera vez en la fila ${row}.`,
       details,
       fix: `Sube «¿Cuántos tiros hacia delante revisar?» a ${needed} o más y vuelve a calcular (ten en cuenta que llegar hasta ahí cuesta muchos tiros).`,
-      links: [godfatLink(env.seed, e, key, Math.min(MAX_ROLLS, row + 20))],
+      links: [godfatLink(env.seed, e, key)],
     };
   }
   details.push(`Tampoco sale en las primeras ${MAX_ROLLS} filas de esos banners.`);
