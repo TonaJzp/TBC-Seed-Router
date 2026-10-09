@@ -9,7 +9,7 @@ import path from 'path';
 import { parseHTML } from 'linkedom';
 import { parseEventList, parseTable, organize } from '../scripts/lib/godfat-html.js';
 import { transform } from '../scripts/lib/godfat-data.js';
-import { buildIcons, missingIcons, fileTitle, idOfTitle } from '../scripts/lib/wiki-icons.js';
+import { buildIcons, missingIcons, iconUrls } from '../scripts/lib/wiki-icons.js';
 import { findProblems } from '../scripts/notify.js';
 
 const fixtureHtml = fs.readFileSync(new URL('./fixtures/godfat-table.html', import.meta.url), 'utf8');
@@ -121,12 +121,17 @@ test('anything unexpected in the data file is reported, never guessed', () => {
 
 // --- Wiki icons ----------------------------------------------------------------------
 
-test('wiki icon names follow the unit number (godfat id - 1)', () => {
-  assert.equal(fileTitle(851), 'File:850_1.png');
-  assert.equal(fileTitle(80), 'File:079_1.png');
-  assert.equal(idOfTitle('File:850 1.png'), 851);
-  assert.equal(idOfTitle('File:M_000.png'), null);
+test('wiki icons are read from its file server, at the MD5 path of "<unit>_1.png" (unit = godfat id - 1)', () => {
+  // Real URLs given by the wiki's API.
+  assert.deepEqual(iconUrls(1), {
+    thumb: 'https://static.wikitide.net/battlecatswiki/thumb/9/94/000_1.png/64px-000_1.png',
+    original: 'https://static.wikitide.net/battlecatswiki/9/94/000_1.png',
+  });
+  assert.equal(iconUrls(730).original, 'https://static.wikitide.net/battlecatswiki/2/24/729_1.png');
 });
+
+const png = () => new Response(Buffer.from('PNG'), { headers: { 'content-type': 'image/png' } });
+const html = (status) => new Response('<html>', { status, headers: { 'content-type': 'text/html' } });
 
 test('icons are downloaded once, cached, and the cache is used if the wiki is down', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icons-'));
@@ -135,24 +140,23 @@ test('icons are downloaded once, cached, and the cache is used if the wiki is do
   const calls = [];
   const wiki = async (url) => {
     calls.push(url);
-    if (url.includes('api.php')) {
-      return new Response(JSON.stringify({
-        query: { pages: { 1: { title: 'File:850 1.png', imageinfo: [{ thumburl: 'https://img/850.png' }] }, '-1': { title: 'File:999 1.png', missing: '' } } },
-      }), { headers: { 'content-type': 'application/json' } });
-    }
-    return new Response(Buffer.from('PNG'), { headers: { 'content-type': 'image/png' } });
+    if (url === iconUrls(851).thumb) return png();
+    if (url === iconUrls(730).thumb) return html(400); // small image: no thumbnail
+    if (url === iconUrls(730).original) return png();
+    return html(404); // 1000: no such file
   };
   try {
-    const first = await buildIcons([851, 1000], { cacheDir, outDir, userAgent: 'test', fetchImpl: wiki });
-    assert.deepEqual(first.icons, [851]);
-    assert.deepEqual(first.warnings, []);
-    assert.ok(fs.existsSync(path.join(outDir, '851.png')));
+    const first = await buildIcons([730, 851, 1000], { cacheDir, outDir, userAgent: 'test', fetchImpl: wiki });
+    assert.deepEqual(first.icons, [730, 851]);
+    assert.deepEqual(first.warnings, ['La wiki no tiene el icono de 1 gatos (1000).']);
+    assert.equal(first.wikiError, null, 'a file the wiki does not have is not a failure');
+    assert.ok(fs.existsSync(path.join(outDir, '851.png')) && fs.existsSync(path.join(outDir, '730.png')));
     const before = calls.length;
     const down = async () => {
       throw new Error('sin conexión');
     };
-    const second = await buildIcons([851, 1000], { cacheDir, outDir, userAgent: 'test', fetchImpl: down });
-    assert.deepEqual(second.icons, [851], 'cached icon still published');
+    const second = await buildIcons([730, 851, 1000], { cacheDir, outDir, userAgent: 'test', fetchImpl: down });
+    assert.deepEqual(second.icons, [730, 851], 'cached icons still published');
     assert.match(second.warnings.join(), /se publican los que ya había/);
     assert.equal(second.wikiError, 'sin conexión');
     assert.equal(calls.length, before);
@@ -170,18 +174,17 @@ test('icons already published are reused, and the wiki is only asked for the res
   const fetchImpl = async (url) => {
     url = String(url);
     if (url === `${site}data/gacha.json`) return Response.json({ icons: [851, 852, 853] });
-    if (url === `${site}icons/851.png` || url === `${site}icons/852.png`) return new Response(Buffer.from('PNG'), { headers: { 'content-type': 'image/png' } });
-    if (url === `${site}icons/853.png`) return new Response('<html>', { status: 404, headers: { 'content-type': 'text/html' } });
+    if (url === `${site}icons/851.png` || url === `${site}icons/852.png`) return png();
+    if (url === `${site}icons/853.png`) return html(404);
     asked.push(url);
-    return new Response('blocked', { status: 403 }); // the wiki refuses the build server
+    return html(403); // the wiki refuses the build server
   };
   try {
     const r = await buildIcons([851, 852, 853, 854], { cacheDir, outDir, userAgent: 'test', siteUrl: site, fetchImpl });
     assert.deepEqual(r.icons, [851, 852], 'published icons kept even though the wiki refuses');
-    assert.match(r.wikiError, /HTTP 403/);
+    assert.match(r.wikiError, /^HTTP 403/);
     assert.match(r.warnings.join(), /1 iconos de la web publicada no se pudieron copiar/);
-    assert.equal(asked.length, 1, 'one request to the wiki, for the two icons still missing');
-    assert.match(decodeURIComponent(asked[0]), /File:852_1\.png\|File:853_1\.png$/);
+    assert.deepEqual(asked, [iconUrls(853).thumb], 'a refusing wiki is asked once, not once per icon');
     assert.ok(fs.existsSync(path.join(cacheDir, '852.png')), 'published icons go to the cache too');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

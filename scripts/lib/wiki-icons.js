@@ -3,57 +3,49 @@
 // the wiki serves each icon once instead of once per visitor.
 //
 // The wiki names each unit's first-form icon "<unit>_1.png", where the unit
-// number is godfat's cat id - 1 (zero-padded to three digits).
+// number is godfat's cat id - 1 (zero-padded to three digits). The files are
+// read from the wiki's file server, at the path MediaWiki derives from the MD5
+// of the name: the wiki's own pages and API refuse GitHub's servers (HTTP 403)
+// but its file server does not.
 //
 // Icons already published with the site are taken from there first: the wiki
 // is only asked for new cats, and the site keeps its icons even if the build
 // cache is lost or the wiki refuses the build server.
 
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-const API = 'https://battlecats.miraheze.org/w/api.php';
-const BATCH = 50; // titles per API request (MediaWiki limit)
-const MAXLAG_S = 5;
+const FILES = 'https://static.wikitide.net/battlecatswiki';
 const MAX_BYTES = 256 * 1024;
 const PUBLISHED_PARALLEL = 8; // our own site: a few downloads at a time
 
-const fileTitle = (id) => `File:${String(id - 1).padStart(3, '0')}_1.png`;
-const idOfTitle = (title) => {
-  const m = /^File:(\d+)[ _]1\.png$/.exec(title || '');
-  return m ? Number(m[1]) + 1 : null;
-};
+const fileName = (id) => `${String(id - 1).padStart(3, '0')}_1.png`;
 
-async function apiJson(params, { userAgent, fetchImpl }) {
-  const url = `${API}?${new URLSearchParams({ format: 'json', maxlag: String(MAXLAG_S), ...params })}`;
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const res = await fetchImpl(url, { headers: { 'User-Agent': userAgent } });
-    const data = await res.json().catch(() => null);
-    // With maxlag the wiki asks clients to wait while it is busy.
-    if (data?.error?.code === 'maxlag') {
-      const wait = Math.min(Number(res.headers.get('retry-after')) || MAXLAG_S, 30);
-      await new Promise((resolve) => setTimeout(resolve, wait * 1000));
-      continue;
-    }
-    if (!res.ok || !data) throw new Error(`la wiki respondió HTTP ${res.status}`);
-    return data;
-  }
-  throw new Error('la wiki está saturada (maxlag)');
+/**
+ * Where the wiki keeps a cat's icon: the 64 px thumbnail, and the original
+ * (thumbnails of images that are already that small do not exist).
+ */
+function iconUrls(id) {
+  const name = fileName(id);
+  const md5 = crypto.createHash('md5').update(name).digest('hex');
+  const dir = `${md5[0]}/${md5.slice(0, 2)}/${name}`;
+  return { thumb: `${FILES}/thumb/${dir}/64px-${name}`, original: `${FILES}/${dir}` };
 }
 
-/** Thumbnail URL (64 px) of every id that has an icon on the wiki. */
-async function iconUrls(ids, opts) {
-  const urls = new Map();
-  for (let i = 0; i < ids.length; i += BATCH) {
-    const titles = ids.slice(i, i + BATCH).map(fileTitle).join('|');
-    const data = await apiJson({ action: 'query', prop: 'imageinfo', iiprop: 'url', iiurlwidth: '64', titles }, opts);
-    for (const page of Object.values(data.query?.pages || {})) {
-      const id = idOfTitle(page.title);
-      const url = page.imageinfo?.[0]?.thumburl;
-      if (id && url) urls.set(id, url);
-    }
+/**
+ * The icon of one cat from the wiki, or null if the wiki has no such file.
+ * Throws if the wiki does not answer as expected (refused, down...).
+ */
+async function wikiIcon(id, opts) {
+  const { thumb, original } = iconUrls(id);
+  for (const url of [thumb, original]) {
+    const { body, status, error } = await downloadPng(url, opts);
+    if (body) return body;
+    // 400: no thumbnail for small images; 404: no such file.
+    if (status !== 400 && status !== 404) throw new Error(error);
   }
-  return urls;
+  return null;
 }
 
 /** The PNG at `url`, or the reason it can't be used. */
@@ -62,7 +54,7 @@ async function downloadPng(url, { userAgent, fetchImpl }) {
   const type = res.headers.get('content-type') || '';
   const body = Buffer.from(await res.arrayBuffer());
   if (!res.ok || !type.startsWith('image/png') || body.length > MAX_BYTES) {
-    return { error: `descarga no válida (HTTP ${res.status}, ${type})` };
+    return { status: res.status, error: `HTTP ${res.status} (${type || 'sin tipo'}, ${body.length} bytes)` };
   }
   return { body };
 }
@@ -115,19 +107,20 @@ async function buildIcons(ids, { cacheDir, outDir, userAgent, siteUrl = null, fe
     }
   }
 
-  if (missing().length) {
+  // One icon at a time: the wiki is a volunteer project.
+  const notOnWiki = [];
+  for (const id of missing()) {
     try {
-      const urls = await iconUrls(missing(), opts);
-      for (const [id, url] of urls) {
-        const { body, error } = await downloadPng(url, opts);
-        if (body) fs.writeFileSync(cached(id), body);
-        else warnings.push(`Icono ${id}: ${error}.`);
-      }
+      const body = await wikiIcon(id, opts);
+      if (body) fs.writeFileSync(cached(id), body);
+      else notOnWiki.push(id);
     } catch (err) {
       wikiError = err.message;
       warnings.push(`No se pudieron descargar iconos nuevos de la wiki (${err.message}); se publican los que ya había.`);
+      break;
     }
   }
+  if (notOnWiki.length) warnings.push(`La wiki no tiene el icono de ${notOnWiki.length} gatos (${notOnWiki.join(', ')}).`);
 
   const icons = [];
   for (const id of ids) {
@@ -160,4 +153,4 @@ function missingIcons(data, today, wikiError) {
   return [...missing.values()].sort((a, b) => a.id - b.id);
 }
 
-export { buildIcons, missingIcons, fileTitle, idOfTitle };
+export { buildIcons, missingIcons, iconUrls };
