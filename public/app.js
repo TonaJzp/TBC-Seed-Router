@@ -1,5 +1,6 @@
 import { plan, catalogOf, UserError } from './core/planner.js';
 import { TargetPicker } from './picker.js';
+import { godfatLink } from './core/godfat-link.js';
 
 const $ = (sel) => document.querySelector(sel);
 const form = $('#route-form');
@@ -377,9 +378,10 @@ function renderDetail(data) {
     <ul class="targets">${targets}</ul>
     ${renderRouteLegendCells(r)}
     <h3 class="section-title">Pasos</h3>
+    <p class="hint steps-hint">Haz cada paso en el banner que indica, el día indicado o después (mientras siga activo). Pulsa el nombre del banner para abrir esa misma tabla en godfat y comprobar los gatos antes de tirar.</p>
     <div class="table-wrap"><table class="steps">
-      <thead><tr><th>#</th><th>Fecha</th><th>Banner</th><th>Acción</th><th>Posición</th><th class="r">Pago</th><th>Gatos</th></tr></thead>
-      <tbody>${r.steps.map((s) => renderStep(s, data)).join('')}</tbody>
+      <thead><tr><th>#</th><th title="Día en el que puedes hacer este paso">Día</th><th>Banner</th><th>Acción</th><th>Posición</th><th class="r">Pago</th><th>Gatos</th></tr></thead>
+      <tbody>${r.steps.map((s, i) => renderStep(s, data, r.steps[i - 1])).join('')}</tbody>
     </table></div>
     <div class="legend-row">
       <span><span class="cat">Rare</span></span>
@@ -394,8 +396,15 @@ function renderDetail(data) {
   </section>`;
 }
 
-function renderStep(s, data) {
-  const link = `https://bc.godfat.org/?seed=${data.seed}&event=${encodeURIComponent(s.eventId)}&count=${data.rolls}#N${s.from}`;
+const shortDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+
+function renderStep(s, data, prev) {
+  // The table as godfat draws it after the cat rolled just before this step.
+  const last = prev ? prev.cats[prev.cats.length - 1].id : data.last;
+  const untilRow = Math.max(Number.parseInt(s.from, 10), Number.parseInt(s.to, 10));
+  const { url: link, shifted } = godfatLink({ seed: data.seed, eventId: s.eventId, key: s.from, untilRow, last });
+  const ev = data.events.find((e) => e.id === s.eventId);
+  const change = prev && prev.eventId !== s.eventId ? ' · <b>cambio de banner</b>' : '';
   const pay = [s.ticketsSpent && `${s.ticketsSpent} ticket${s.ticketsSpent > 1 ? 's' : ''}`, s.foodSpent && `${fmt(s.foodSpent)} CF`]
     .filter(Boolean)
     .join(' + ');
@@ -412,8 +421,9 @@ function renderStep(s, data) {
     .join('');
   return `<tr class="${s.cats.some((c) => c.newTarget) ? 'hit' : ''}">
     <td class="idx num">${s.index}</td>
-    <td class="num nowrap">${esc(s.date.slice(5))}</td>
-    <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${esc(s.eventName)}">${esc(s.eventName)}</a></td>
+    <td class="num nowrap">${esc(shortDate(s.date))}</td>
+    <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${shifted ? `Ver en godfat: allí la casilla ${esc(s.from)} aparece como 1A` : 'Ver esta tabla en godfat'}">${esc(s.eventName)}</a>
+      <small>${ev ? `${esc(shortDate(ev.start))} – ${esc(shortDate(ev.end))}` : ''}${change}</small></td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>

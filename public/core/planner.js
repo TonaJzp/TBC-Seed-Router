@@ -213,21 +213,30 @@ function detectDoubleLegend(events, upcoming, sim, from) {
     .sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id));
 }
 
-/** Banners of the dates that can be planned, the ones skipped and every upcoming one. */
+/**
+ * Banners of the dates that can be planned, the ones skipped and every
+ * upcoming one that can still be rolled. The data has dates, not the hour of
+ * the game's daily event change: on its last day a banner may already be
+ * gone, so banners ending today are never planned nor suggested.
+ */
 function selectEvents(data, { from, to, today }) {
-  const upcoming = data.events.filter((e) => e.end >= today);
+  const upcoming = data.events.filter((e) => e.end > today);
   const selected = [];
   const skipped = [];
-  for (const e of upcoming) {
-    if (e.end < from || e.start > to) continue;
-    if (e.ticket) skipped.push({ id: e.id, name: e.name, start: e.start, end: e.end, reason: 'se paga con tickets Platinum/Legend' });
+  for (const e of data.events) {
+    if (e.end < today || e.end < from || e.start > to) continue;
+    const skip = (reason) => skipped.push({ id: e.id, name: e.name, start: e.start, end: e.end, reason });
+    if (e.end === today) skip('termina hoy: en el juego puede haber terminado ya');
+    else if (e.ticket) skip('se paga con tickets Platinum/Legend');
     else selected.push(e);
   }
   if (!selected.length) {
     const later = upcoming.filter((e) => e.end >= from && !e.ticket).slice(0, 6);
     throw new UserError(
       `Entre el ${formatDate(from)} y el ${formatDate(to)} no hay ningún banner que se pueda planificar` +
-        (skipped.length ? ' (solo hay banners Platinum/Legend, que se pagan con otros tickets)' : '') +
+        (skipped.length
+          ? ` (los que hay ${[...new Set(skipped.map((e) => (e.end === today ? 'terminan hoy y puede que ya no estén en el juego' : 'se pagan con tickets Platinum/Legend')))].join(' o ')})`
+          : '') +
         '.' +
         (later.length
           ? ` Próximos banners: ${later.map((e) => `«${e.name}» (${formatDate(e.start)} – ${formatDate(e.end)})`).join('; ')}. Ajusta las fechas para incluir alguno.`
@@ -275,12 +284,13 @@ function plan(body, data, { now = new Date() } = {}) {
   if (resolved.length) {
     routes = optimizeRoutes(ctx);
     if (routes.some((r) => r.recommended && (!r.found || !r.complete || r.exhausted))) {
-      diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed, rolls: input.rolls })];
+      diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed })];
     }
   }
 
   return {
     seed,
+    last,
     rolls: input.rolls,
     inventory: { tickets: input.tickets, food: input.food },
     events: events.map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, kind: e.kind })),

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { plan, replayRoute, makeSim, loadEvents, loadVariant } from './helpers.js';
+import { plan, replayRoute, makeSim, loadEvents, loadVariant, gachaData } from './helpers.js';
+import { plan as planner, catalogOf } from '../public/core/planner.js';
 import { eventWindow, rollSlot, toDay, totalCost } from '../public/core/optimizer.js';
 
 // --- Time rules -------------------------------------------------------------
@@ -280,4 +281,32 @@ test('when not every target is reachable the best partial route is returned and 
     assert.deepEqual(route.targets.map((t) => t.obtained), [false, true]);
     replayRoute(assert, ctx, route);
   }
+});
+
+// --- Ties ------------------------------------------------------------------
+
+test('at equal cost, one banner today beats switching banners later (real case, seed 1530415490)', () => {
+  // Raiden is at 30A of the Metal Maiden banner. Getting there in the same
+  // banner costs the same as through Vornado (13-16 Oct) first; the search used
+  // to drop the single-banner route as a duplicate of a state in another banner.
+  const raiden = String(catalogOf(gachaData).find((c) => c.name === 'Raiden').key);
+  const body = {
+    url: 'https://bc.godfat.org/?seed=1530415490&last=53', targets: [raiden], from: '2026-10-09', to: '2026-10-23',
+    rolls: 200, tickets: 100, food: 5000, avoidLegend: true, avoidLegendFest: true,
+  };
+  const result = planner(body, gachaData, { now: new Date('2026-10-09T12:00:00') });
+  for (const r of result.routes) {
+    assert.ok(r.complete, r.label);
+    assert.deepEqual([...new Set(r.steps.map((s) => s.eventId))], ['2026-10-09_1077'], `${r.label}: a single banner`);
+    assert.ok(r.steps.every((s) => s.date === '2026-10-09'), `${r.label}: today`);
+    assert.equal(r.totals.finalPosition, r.label === 'Máximo ahorro de Rare Tickets' ? '34A' : '31A');
+  }
+  const best = result.routes[0];
+  assert.deepEqual([best.totals.ticketsUsed, best.totals.foodUsed], [8, 3000]);
+  assert.equal(best.steps.at(-1).cats.at(-1).name, 'Raiden');
+  // Banners ending today may already be gone in the game: never planned.
+  const endingToday = result.skipped.filter((s) => s.end === '2026-10-09');
+  assert.deepEqual(endingToday.map((s) => s.id), ['2026-10-05_1061', '2026-10-05_1077', '2026-10-05_942']);
+  assert.ok(endingToday.every((s) => /termina hoy/.test(s.reason)));
+  assert.ok(result.events.every((e) => e.end > '2026-10-09'));
 });
