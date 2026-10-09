@@ -92,6 +92,8 @@ export class TargetPicker {
       if (cat) this.add(cat.key);
     }
     this.sync();
+    // Whatever was typed while the list was loading gets its results now.
+    if (document.activeElement === this.input && this.input.value.trim()) this.open();
   }
 
   fail() {

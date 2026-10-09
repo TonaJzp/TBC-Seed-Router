@@ -36,8 +36,9 @@ por comas. No hay límite.
 ### 3. Elige las fechas
 
 Solo se usan los banners que estén activos entre «Desde» y «Hasta». «Desde» no puede ser anterior a
-hoy (según la fecha de tu dispositivo). Los banners que terminan hoy no se usan: los datos no dicen a
-qué hora cambia el juego los eventos, y puede que ya hayan terminado.
+hoy (según la fecha de tu dispositivo). Los banners que terminan hoy no se usan: el juego cambia los
+banners por la mañana (a las 11:00 en España) y los datos no traen la hora, así que puede que ya hayan
+terminado.
 
 ### 4. Cuántos tiros revisar
 
@@ -76,7 +77,8 @@ explica por qué faltan los demás.
 
 ### Tiempo
 
-Un banner «S ~ E» está activo desde el cambio de eventos del día S hasta el del día E. La ruta solo
+Un banner «S ~ E» está activo desde el cambio de eventos del día S hasta el del día E (el cambio es por
+la mañana: a las 11:00 en España). La ruta solo
 avanza en el tiempo: puedes alternar entre banners que coinciden, pero en cuanto tiras en uno que
 empieza más tarde, los que ya han terminado dejan de estar disponibles.
 
