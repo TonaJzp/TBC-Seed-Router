@@ -4,6 +4,12 @@ import { plan, replayRoute, makeSim, loadEvents, loadVariant, gachaData } from '
 import { plan as planner, catalogOf } from '../public/core/planner.js';
 import { eventWindow, rollSlot, totalCost } from '../public/core/optimizer.js';
 import { localMinute, nextDayMinute } from '../public/core/time.js';
+import { buildEvents } from '../public/core/gacha.js';
+import { Simulator } from '../public/core/simulator.js';
+
+/** Simulator over the given banners of the fixture data. */
+const makeSimFor = (seed, ids, rolls) =>
+  new Simulator(seed, buildEvents(gachaData, ids.map((id) => gachaData.events.find((e) => e.id === id)), seed, rolls), rolls);
 
 // --- Time rules -------------------------------------------------------------
 // Banners open and close at 11:00 local time, as in the game data.
@@ -363,4 +369,43 @@ test('a legend cell lists every legendary of the banners active at that moment o
   const later = cellAt('2026-10-13', new Date(2026, 9, 13, 12, 0));
   assert.deepEqual(names(later), ['Gaia the Creator', 'High Lord Babel']);
   assert.ok(later.legends.every((l) => l.id !== later.got.id), 'the legendary already obtained is not offered again');
+});
+
+test('a legendary of another banner is "without leaving the route" only if the route really stays the same', () => {
+  const key = (name) => String(catalogOf(gachaData).find((c) => c.name === name).key);
+  const run = (seed, target, from, now) =>
+    planner({ url: `https://bc.godfat.org/?seed=${seed}&last=39`, targets: [key(target)], from, to: '2026-10-15', rolls: 200, tickets: 0, food: 100000 }, gachaData, { now });
+
+  // 2A is a single roll: doing it in Squire Luno or Conjurer instead changes nothing else.
+  const single = run(4102194373, 'Oda Nobunaga', '2026-10-09', new Date(2026, 9, 9, 3, 42));
+  const route = single.routes[0];
+  const cell = route.legendCells.find((c) => c.key === '2A');
+  assert.equal(cell.inDraw, false);
+  assert.ok(cell.legends.length === 2 && cell.legends.every((l) => l.sameRoute));
+  // Replay the whole route with that roll in the other banner: every other cat is the same.
+  const sim = makeSimFor(4102194373, single.events.map((e) => e.id), 200);
+  for (const alt of cell.legends) {
+    let pos = { n: 1, track: 'A' };
+    let last = 39;
+    const got = [];
+    for (const step of route.steps) {
+      for (const c of step.cats) {
+        const ev = sim.events.find((e) => e.id === (c.cell === '2A' ? alt.eventId : step.eventId));
+        const s = sim.single(ev, pos.n, pos.track, last);
+        got.push(s.cat.name);
+        last = s.cat.id;
+        pos = s.next;
+      }
+    }
+    const expected = route.steps.flatMap((s) => s.cats.map((c) => (c.cell === '2A' ? alt.name : c.name)));
+    assert.deepEqual(got, expected, `in ${alt.eventName}`);
+    assert.equal(`${pos.n}${pos.track}`, route.totals.finalPosition);
+  }
+
+  // 64B is inside an 11-draw: its banner can't change for that roll alone.
+  const draw = run(8085299, 'Hevijak the Wicked', '2026-10-09', new Date(2026, 9, 9, 12, 0));
+  const inDraw = draw.routes[0].legendCells.find((c) => c.key === '64B');
+  assert.equal(inDraw.inDraw, true);
+  assert.equal(inDraw.got.name, 'Megidora');
+  assert.deepEqual(inDraw.legends.map((l) => [l.name, l.sameRoute]), [['Lumina', false]]);
 });

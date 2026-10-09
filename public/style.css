@@ -415,6 +415,8 @@ td.r, th.r { text-align: right; }
 .steps .banner a { display: block; }
 .steps .banner small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11.5px; }
 .steps .banner small b { color: var(--accent); font-weight: 600; }
+.steps .banner .active-range { display: block; margin-top: 3px; color: var(--ink-2); font-size: 12px; }
+.legend-option .fit { color: var(--ok); font-weight: 600; }
 .steps-hint { margin: 0 0 8px; font-size: 12.5px; }
 .steps .day { min-width: 92px; max-width: 150px; }
 .steps .day small { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11.5px; line-height: 1.35; }

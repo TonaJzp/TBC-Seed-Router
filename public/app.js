@@ -194,14 +194,21 @@ const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
 function legendOptions(cell, none = 'ningún banner de tus fechas da legendario aquí (sale un uber)') {
   if (!cell.legends.length) return `<span class="muted">${none}</span>`;
   const byName = new Map();
-  for (const l of cell.legends) byName.set(l.name, [...(byName.get(l.name) || []), l.eventName]);
+  for (const l of cell.legends) byName.set(l.name, [...(byName.get(l.name) || []), l]);
   return [...byName]
-    .map(
-      ([name, banners]) => `<span class="legend-option">
-        <b>${esc(name)}</b> <span class="muted">en ${banners.map(esc).join(', ')}</span>
+    .map(([name, options]) => {
+      // In a route, say whether it is just that roll in another banner.
+      const same = options.filter((l) => l.sameRoute);
+      const how = !('inDraw' in cell)
+        ? `<span class="muted">en ${options.map((l) => esc(l.eventName)).join(', ')}</span>`
+        : same.length
+          ? `<span class="fit">sin desviarte de la ruta:</span> <span class="muted">haz el tiro de la ${esc(cell.key)} en ${same.map((l) => `«${esc(l.eventName)}»`).join(' o ')}; el resto de la ruta no cambia</span>`
+          : `<span class="muted">requiere cambiar la ruta: ${cell.inDraw ? 'esa casilla está dentro de un 11-draw' : 'cambiaría las tiradas siguientes'} (en ${options.map((l) => esc(l.eventName)).join(', ')})</span>`;
+      return `<span class="legend-option">
+        <b>${esc(name)}</b> ${how}
         ${picker.isSelected(name) ? '<span class="tag">ya es objetivo</span>' : `<button type="button" class="link-button" data-add-target="${esc(name)}">Añadir a objetivos y recalcular</button>`}
-      </span>`
-    )
+      </span>`;
+    })
     .join('');
 }
 
@@ -239,11 +246,11 @@ function renderRouteLegendCells(r) {
   const warn = lost
     ? `<p class="notice">Esta ruta gasta ${lost} casilla${lost > 1 ? 's' : ''} de legendario sin sacar el legendario. Si quieres alguno, añádelo como objetivo y se recalculará la ruta para conseguirlo junto a los demás.</p>`
     : '';
-  const how = '<p class="hint">Para cada casilla se muestran los legendarios que darían los banners activos en ese momento de la ruta. Al añadir uno a tus objetivos, la ruta se recalcula para conseguirlo junto a los demás.</p>';
+  const how = '<p class="hint">Son los legendarios que darían en cada casilla los banners activos en ese momento de la ruta seleccionada (si eliges otra ruta, se muestran los de esa). «Sin desviarte de la ruta»: basta con hacer el tiro de esa casilla en el banner indicado, con el mismo coste y sin cambiar nada más. «Requiere cambiar la ruta»: añádelo a tus objetivos y la ruta se recalcula para conseguirlo junto a los demás.</p>';
   return `<h3 class="section-title">Casillas de legendario en esta ruta</h3>
     ${warn}${how}
     <div class="table-wrap"><table class="banners">
-      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th title="Tirando esa casilla en otro banner activo en ese momento de la ruta">Otros legendarios posibles ahí</th></tr></thead>
+      <thead><tr><th>Casilla</th><th>Paso</th><th>Qué consigues ahí</th><th>Otros legendarios posibles ahí, en esta ruta</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`;
 }
@@ -435,7 +442,7 @@ function renderStep(s, data, prev) {
     <td class="idx num">${s.index}</td>
     <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${s.closesAt ? closingNote(s, ev) : ''}</td>
     <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${shifted ? `Ver en godfat: allí la casilla ${esc(s.from)} aparece como 1A` : 'Ver esta tabla en godfat'}">${esc(s.eventName)}</a>
-      <small>${ev ? `${esc(shortWithHour(ev.start, ev.startTime))} – ${esc(shortWithHour(ev.end, ev.endTime))}` : ''}${change}</small></td>
+      ${ev ? `<span class="active-range">Activo del ${esc(shortWithHour(ev.start, ev.startTime))} al ${esc(shortWithHour(ev.end, ev.endTime))}</span>` : ''}${change ? `<small>${change.replace(/^ · /, '')}</small>` : ''}</td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>
