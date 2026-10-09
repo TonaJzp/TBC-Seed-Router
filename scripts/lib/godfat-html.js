@@ -23,10 +23,28 @@ function parseEventList(document) {
   });
 }
 
+// Colours godfat paints over the score colour (View#highlight_*).
+const SPECIAL = new Set(['exclusive', 'owned', 'found']);
+
+/**
+ * The score colour of a cell (godfat Cat#score_rarity_label: rare, supa_fest,
+ * ..., legend_fest, legend). It is the major_ class, except for special cats:
+ * the default highlighting then hides it, and highlighting=advanced moves it
+ * to the minor_ class (the minor_ class of other cells is the cat's rarity).
+ * A special colour in both means the score colour is rare, or is hidden.
+ */
+function scoreLabel(td) {
+  const cls = (prefix) => [...td.classList].find((c) => c.startsWith(prefix))?.slice(prefix.length) || null;
+  const major = cls('major_');
+  const minor = cls('minor_');
+  return SPECIAL.has(major) && minor && !SPECIAL.has(minor) ? minor : major;
+}
+
 /**
  * Every rolled cell of a table: normal (1A), re-rolled (1AR), guaranteed (1AG)
- * and re-rolled guaranteed (1ARG), with the cell the next roll goes to and the
- * colour classes; plus the banner's cats per rarity from the "last cat" list.
+ * and re-rolled guaranteed (1ARG), with the cell the next roll goes to and its
+ * score colour; plus the banner's cats per rarity from the "last cat" list.
+ * Read pages with highlighting=advanced, or the score of special cats is lost.
  */
 function parseTable(document) {
   const cells = [];
@@ -39,7 +57,7 @@ function parseTable(document) {
     if (!nameLink || !catLink) continue;
     const text = td.textContent.replace(/\s+/g, ' ').trim();
     const dest = (text.match(/(?:->|<-)\s*(\d+[AB])/) || [])[1] || null;
-    const colors = [...td.classList].filter((c) => /^(minor|major)_/.test(c)).map((c) => c.replace(/^(minor|major)_/, ''));
+    const label = scoreLabel(td);
     cells.push({
       n: Number(m[1]),
       track: m[2],
@@ -48,7 +66,7 @@ function parseTable(document) {
       id: Number(catLink.getAttribute('href').match(/\/cats\/(\d+)/)[1]),
       name: nameLink.textContent.trim(),
       dest,
-      colors: [...new Set(colors)],
+      colors: label ? [label] : [],
     });
   }
   const pools = {};

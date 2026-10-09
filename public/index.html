@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="icon" href="data:,">
-  <title>Seed Router · planificador no oficial de The Battle Cats</title>
+  <title>TBC Seed Router · planificador no oficial de The Battle Cats</title>
   <script src="theme-init.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +14,7 @@
   <aside class="sidebar">
     <header class="brand">
       <div>
-        <h1>Seed Router</h1>
+        <h1>TBC Seed Router</h1>
         <p>Planificador no oficial de tiros para <a href="https://bc.godfat.org/" target="_blank" rel="noopener">bc.godfat.org</a></p>
       </div>
       <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" title="Cambiar entre modo claro y oscuro">
@@ -89,7 +89,7 @@
         <h2>Protección de casillas de legendario</h2>
         <p class="hint">Las rutas pueden pasar por estas casillas, pero si uno de tus gatos objetivo sale en una casilla protegida no cuenta: el plan lo buscará en otra para no gastar la oportunidad de legendario. Un legendario objetivo sí cuenta. Cada ruta indica igualmente por qué casillas de legendario pasa.</p>
         <label class="check"><input type="checkbox" name="avoidLegend" checked><span><i class="dot legend"></i>Proteger moradas (Legendary)</span></label>
-        <label class="check"><input type="checkbox" name="avoidLegendFest" checked><span><i class="dot legend-fest"></i>Proteger lilas (Legendary en Royalfest / doble legend) <em>solo si hay un evento así en Upcoming</em></span></label>
+        <label class="check"><input type="checkbox" name="avoidLegendFest" checked><span><i class="dot legend-fest"></i>Proteger lilas (Legendary en Royalfest / doble legend) <em>solo si hay un banner así a partir de «Desde»</em></span></label>
       </section>
 
       <div class="actions">
@@ -119,7 +119,7 @@
       <h2>Sin resultados todavía</h2>
       <p>Pega la URL actual de tu semilla, indica los gatos que quieres y pulsa <b>Calcular rutas</b>.</p>
       <ol>
-        <li>Se leen los banners <i>Upcoming</i> del rango de fechas y sus próximos tiros.</li>
+        <li>Se calculan los próximos tiros de tu semilla en cada banner del rango de fechas, igual que en godfat.</li>
         <li>Se buscan todas las combinaciones de banners, tiros simples, 11-draws y garantizados, incluidos los cambios de pista por rare duplicado entre banners.</li>
         <li>Se muestra la ruta de menor gasto total y alternativas que priorizan un solo recurso.</li>
       </ol>

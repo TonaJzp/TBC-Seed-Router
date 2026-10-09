@@ -4,6 +4,10 @@
 //
 // The wiki names each unit's first-form icon "<unit>_1.png", where the unit
 // number is godfat's cat id - 1 (zero-padded to three digits).
+//
+// Icons already published with the site are taken from there first: the wiki
+// is only asked for new cats, and the site keeps its icons even if the build
+// cache is lost or the wiki refuses the build server.
 
 import fs from 'fs';
 import path from 'path';
@@ -12,6 +16,7 @@ const API = 'https://battlecats.miraheze.org/w/api.php';
 const BATCH = 50; // titles per API request (MediaWiki limit)
 const MAXLAG_S = 5;
 const MAX_BYTES = 256 * 1024;
+const PUBLISHED_PARALLEL = 8; // our own site: a few downloads at a time
 
 const fileTitle = (id) => `File:${String(id - 1).padStart(3, '0')}_1.png`;
 const idOfTitle = (title) => {
@@ -51,33 +56,75 @@ async function iconUrls(ids, opts) {
   return urls;
 }
 
+/** The PNG at `url`, or the reason it can't be used. */
+async function downloadPng(url, { userAgent, fetchImpl }) {
+  const res = await fetchImpl(url, { headers: { 'User-Agent': userAgent } });
+  const type = res.headers.get('content-type') || '';
+  const body = Buffer.from(await res.arrayBuffer());
+  if (!res.ok || !type.startsWith('image/png') || body.length > MAX_BYTES) {
+    return { error: `descarga no válida (HTTP ${res.status}, ${type})` };
+  }
+  return { body };
+}
+
+/** Copies into the cache the icons the published site already has. */
+async function fromPublished(ids, siteUrl, cached, opts) {
+  const res = await opts.fetchImpl(new URL('data/gacha.json', siteUrl), { headers: { 'User-Agent': opts.userAgent } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const published = new Set((await res.json()).icons || []);
+  const queue = ids.filter((id) => published.has(id));
+  const failed = [];
+  const worker = async () => {
+    for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
+      try {
+        const { body } = await downloadPng(new URL(`icons/${id}.png`, siteUrl), opts);
+        if (body) fs.writeFileSync(cached(id), body);
+        else failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: PUBLISHED_PARALLEL }, worker));
+  return failed;
+}
+
 /**
- * Copies the icon of every id into `outDir` as <id>.png, downloading only the
- * ones missing from `cacheDir`. Returns { icons: ids with an icon, warnings }.
- * If the wiki is unreachable, the cached icons are still published.
+ * Copies the icon of every id into `outDir` as <id>.png. Icons missing from
+ * `cacheDir` are taken from the published site (`siteUrl`, if given) and then
+ * from the wiki. Returns { icons: ids with an icon, warnings, wikiError }:
+ * warnings are only logged; wikiError says the wiki could not be asked (the
+ * icons it would have given are missing).
  */
-async function buildIcons(ids, { cacheDir, outDir, userAgent, fetchImpl = fetch }) {
+async function buildIcons(ids, { cacheDir, outDir, userAgent, siteUrl = null, fetchImpl = fetch }) {
   const warnings = [];
+  let wikiError = null;
   fs.mkdirSync(cacheDir, { recursive: true });
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
   const cached = (id) => path.join(cacheDir, `${id}.png`);
-  const missing = ids.filter((id) => !fs.existsSync(cached(id)));
+  const missing = () => ids.filter((id) => !fs.existsSync(cached(id)));
+  const opts = { userAgent, fetchImpl };
 
-  if (missing.length) {
+  if (siteUrl && missing().length) {
     try {
-      const urls = await iconUrls(missing, { userAgent, fetchImpl });
+      const failed = await fromPublished(missing(), siteUrl, cached, opts);
+      if (failed.length) warnings.push(`${failed.length} iconos de la web publicada no se pudieron copiar; se piden a la wiki.`);
+    } catch (err) {
+      warnings.push(`No se pudieron copiar los iconos de la web publicada (${err.message}); se piden a la wiki.`);
+    }
+  }
+
+  if (missing().length) {
+    try {
+      const urls = await iconUrls(missing(), opts);
       for (const [id, url] of urls) {
-        const res = await fetchImpl(url, { headers: { 'User-Agent': userAgent } });
-        const type = res.headers.get('content-type') || '';
-        const body = Buffer.from(await res.arrayBuffer());
-        if (!res.ok || !type.startsWith('image/png') || body.length > MAX_BYTES) {
-          warnings.push(`Icono ${id}: descarga no válida (HTTP ${res.status}, ${type}).`);
-          continue;
-        }
-        fs.writeFileSync(cached(id), body);
+        const { body, error } = await downloadPng(url, opts);
+        if (body) fs.writeFileSync(cached(id), body);
+        else warnings.push(`Icono ${id}: ${error}.`);
       }
     } catch (err) {
+      wikiError = err.message;
       warnings.push(`No se pudieron descargar iconos nuevos de la wiki (${err.message}); se publican los que ya había.`);
     }
   }
@@ -88,7 +135,29 @@ async function buildIcons(ids, { cacheDir, outDir, userAgent, fetchImpl = fetch 
     fs.copyFileSync(cached(id), path.join(outDir, `${id}.png`));
     icons.push(id);
   }
-  return { icons, warnings };
+  return { icons, warnings, wikiError };
 }
 
-export { buildIcons, fileTitle, idOfTitle };
+/**
+ * Cats of the banners without an icon that need the owner: all of them if the
+ * wiki could not be asked; otherwise only those of a banner that has already
+ * started (for upcoming cats the wiki often adds the icon later).
+ * @param data  the site data (events, gacha, cats, icons)
+ * @param today YYYY-MM-DD
+ */
+function missingIcons(data, today, wikiError) {
+  const has = new Set(data.icons);
+  const started = new Set(data.events.filter((e) => e.start <= today).map((e) => String(e.gacha)));
+  const missing = new Map();
+  for (const [gacha, cats] of Object.entries(data.gacha)) {
+    if (!wikiError && !started.has(gacha)) continue;
+    for (const id of cats) {
+      if (has.has(id)) continue;
+      const reason = wikiError ? `la wiki no respondió (${wikiError})` : 'la wiki no tiene su icono';
+      missing.set(id, { id, name: data.cats[id]?.names[0] || `#${id}`, reason });
+    }
+  }
+  return [...missing.values()].sort((a, b) => a.id - b.id);
+}
+
+export { buildIcons, missingIcons, fileTitle, idOfTitle };

@@ -29,11 +29,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -43,31 +43,32 @@ jobs:
         run: npm test
 
       - name: Iconos en caché
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/icons
           key: icons-${{ github.run_id }}
           restore-keys: icons-
 
+      - name: Dirección de la web
+        run: echo "SITE_URL=https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_ENV"
+
       - name: Datos de godfat
         id: build
-        run: node scripts/build.js
+        run: node scripts/build.js --published "$SITE_URL"
 
       # Independent of the publication: it runs even if Pages is not set up.
       - name: Comprobación contra bc.godfat.org
         id: verify
         if: steps.build.outcome == 'success'
         continue-on-error: true
-        run: |
-          owner="${GITHUB_REPOSITORY_OWNER,,}"
-          node scripts/verify-godfat.js --previous "https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/data/status.json"
+        run: node scripts/verify-godfat.js --previous "${SITE_URL}data/status.json"
 
       - name: Configurar GitHub Pages
         id: pages
         if: steps.build.outcome == 'success'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: steps.build.outcome == 'success'
         with:
           path: public
@@ -75,7 +76,7 @@ jobs:
       - name: Publicar
         id: deploy
         if: steps.build.outcome == 'success'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Avisar
         if: always()

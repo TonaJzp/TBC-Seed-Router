@@ -125,7 +125,7 @@ class Diagnoser {
     return [...spots].sort((a, b) => byRow(a.key, b.key)).slice(0, MAX_LINKS).map((s) => this.link(s.eventId, s.key));
   }
 
-  /** Every cell of the scraped tables where the target appears (any path or not). */
+  /** Every cell of the computed tables where the target appears (any path or not). */
   occurrences(target) {
     const spots = [];
     for (const ev of this.ctx.events) {

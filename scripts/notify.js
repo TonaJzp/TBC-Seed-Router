@@ -16,6 +16,7 @@ const LABEL = 'vigilancia';
 const TITLE = 'Vigilancia: hay algo que revisar';
 // godfat being down for a while is not our problem; for longer it is.
 const UNVERIFIED_DAYS = 3;
+const MAX_LISTED = 10;
 
 const readJson = (file) => {
   try {
@@ -41,6 +42,15 @@ function findProblems(env, build, verify, now = new Date()) {
   }
   if (build?.warnings?.length) {
     problems.push('### Avisos en los datos\n' + build.warnings.map((w) => `- ${w}`).join('\n'));
+  }
+  if (build?.iconsMissing?.length) {
+    const list = build.iconsMissing.slice(0, MAX_LISTED).map((c) => `- ${c.name} (${c.id}): ${c.reason}`);
+    if (build.iconsMissing.length > MAX_LISTED) list.push(`- y ${build.iconsMissing.length - MAX_LISTED} más`);
+    problems.push(
+      `### Faltan iconos\n${build.iconsMissing.length} gatos de los banners salen en la web sin imagen. ` +
+        'El cálculo no se ve afectado.\n\n' +
+        list.join('\n')
+    );
   }
   if (env.DEPLOY_OUTCOME && env.DEPLOY_OUTCOME !== 'success' && env.BUILD_OUTCOME === 'success') {
     problems.push(

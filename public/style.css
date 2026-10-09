@@ -466,7 +466,6 @@ body.doc { display: block; }
 .doc-head nav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .doc-body { max-width: 760px; margin: 0 auto; padding: 28px 32px 72px; line-height: 1.55; }
 .doc-body h1 { font-size: 22px; letter-spacing: -0.01em; }
-.doc-body .updated { margin: 4px 0 0; color: var(--ink-3); font-size: 12.5px; }
 .doc-body section { padding-top: 28px; scroll-margin-top: 12px; }
 .doc-body h2 { font-size: 17px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 .doc-body h3 { font-size: 14px; margin: 18px 0 4px; }

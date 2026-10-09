@@ -9,7 +9,7 @@ import path from 'path';
 import { parseHTML } from 'linkedom';
 import { parseEventList, parseTable, organize } from '../scripts/lib/godfat-html.js';
 import { transform } from '../scripts/lib/godfat-data.js';
-import { buildIcons, fileTitle, idOfTitle } from '../scripts/lib/wiki-icons.js';
+import { buildIcons, missingIcons, fileTitle, idOfTitle } from '../scripts/lib/wiki-icons.js';
 import { findProblems } from '../scripts/notify.js';
 
 const fixtureHtml = fs.readFileSync(new URL('./fixtures/godfat-table.html', import.meta.url), 'utf8');
@@ -34,6 +34,27 @@ test('godfat pages are read without a browser: cells, re-rolls, guaranteed, pool
     start: '2026-07-24',
     end: '2026-10-16',
     name: 'Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!',
+  });
+});
+
+test('the score colour is read as godfat computes it, also under an exclusive cat', () => {
+  // Class pairs from a real page with highlighting=advanced.
+  const cell = (key, classes) =>
+    `<td class="position cat pick ${classes}" onclick="pick('${key}')"><span><a href="/?seed=1" title="x">Cat ${key}</a> <a href="/cats/${key.length}">i</a></span></td>`;
+  const { document } = parseHTML(`<table><tr>
+    ${cell('1A', 'minor_legend_fest major_exclusive')}
+    ${cell('2A', 'major_legend_fest minor_uber')}
+    ${cell('3A', 'major_uber_fest minor_uber')}
+    ${cell('4A', 'minor_exclusive major_exclusive')}
+    ${cell('5A', 'major_legend minor_legend')}
+  </tr></table>`);
+  const colors = Object.fromEntries(parseTable(document).cells.map((c) => [`${c.n}${c.track}`, c.colors]));
+  assert.deepEqual(colors, {
+    '1A': ['legend_fest'], // an exclusive cat on a lilac score: lilac, as the app says
+    '2A': ['legend_fest'], // the minor class is the cat's rarity, not a score colour
+    '3A': ['uber_fest'],
+    '4A': ['exclusive'], // score colour rare, or hidden (default highlighting): never a legend colour
+    '5A': ['legend'],
   });
 });
 
@@ -133,10 +154,56 @@ test('icons are downloaded once, cached, and the cache is used if the wiki is do
     const second = await buildIcons([851, 1000], { cacheDir, outDir, userAgent: 'test', fetchImpl: down });
     assert.deepEqual(second.icons, [851], 'cached icon still published');
     assert.match(second.warnings.join(), /se publican los que ya había/);
+    assert.equal(second.wikiError, 'sin conexión');
     assert.equal(calls.length, before);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('icons already published are reused, and the wiki is only asked for the rest', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icons-'));
+  const cacheDir = path.join(dir, 'cache');
+  const outDir = path.join(dir, 'out');
+  const site = 'https://owner.github.io/repo/';
+  const asked = [];
+  const fetchImpl = async (url) => {
+    url = String(url);
+    if (url === `${site}data/gacha.json`) return Response.json({ icons: [851, 852, 853] });
+    if (url === `${site}icons/851.png` || url === `${site}icons/852.png`) return new Response(Buffer.from('PNG'), { headers: { 'content-type': 'image/png' } });
+    if (url === `${site}icons/853.png`) return new Response('<html>', { status: 404, headers: { 'content-type': 'text/html' } });
+    asked.push(url);
+    return new Response('blocked', { status: 403 }); // the wiki refuses the build server
+  };
+  try {
+    const r = await buildIcons([851, 852, 853, 854], { cacheDir, outDir, userAgent: 'test', siteUrl: site, fetchImpl });
+    assert.deepEqual(r.icons, [851, 852], 'published icons kept even though the wiki refuses');
+    assert.match(r.wikiError, /HTTP 403/);
+    assert.match(r.warnings.join(), /1 iconos de la web publicada no se pudieron copiar/);
+    assert.equal(asked.length, 1, 'one request to the wiki, for the two icons still missing');
+    assert.match(decodeURIComponent(asked[0]), /File:852_1\.png\|File:853_1\.png$/);
+    assert.ok(fs.existsSync(path.join(cacheDir, '852.png')), 'published icons go to the cache too');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('missing icons need the owner if the wiki failed, or if their banner has started', () => {
+  const data = {
+    events: [
+      { id: 'now', gacha: 100, start: '2026-10-01' },
+      { id: 'later', gacha: 101, start: '2026-10-20' },
+    ],
+    gacha: { 100: [10, 11], 101: [11, 12] },
+    cats: { 10: { names: ['Ten'] }, 11: { names: ['Eleven'] }, 12: { names: ['Twelve'] } },
+    icons: [10],
+  };
+  assert.deepEqual(missingIcons(data, '2026-10-09', null).map((c) => c.id), [11], 'an upcoming cat may get its icon later');
+  assert.match(missingIcons(data, '2026-10-09', null)[0].reason, /la wiki no tiene su icono/);
+  const failed = missingIcons(data, '2026-10-09', 'HTTP 403');
+  assert.deepEqual(failed.map((c) => c.id), [11, 12]);
+  assert.match(failed[0].reason, /la wiki no respondió \(HTTP 403\)/);
+  assert.deepEqual(missingIcons({ ...data, icons: [10, 11, 12] }, '2026-10-09', 'HTTP 403'), []);
 });
 
 // --- Notifications ---------------------------------------------------------------------
@@ -162,6 +229,11 @@ test('every kind of problem is reported to the owner', () => {
 
   const deploy = findProblems({ ...ok, DEPLOY_OUTCOME: 'failure' }, { ok: true, warnings: [] }, { result: 'ok', lastOk: now.toISOString(), differences: [] }, now);
   assert.match(deploy.join(), /No se ha podido publicar/);
+
+  const iconsMissing = Array.from({ length: 12 }, (_, i) => ({ id: 900 + i, name: `Cat ${i}`, reason: 'la wiki no respondió (HTTP 403)' }));
+  const icons = findProblems(ok, { ok: true, warnings: [], iconsMissing }, { result: 'ok', lastOk: now.toISOString(), differences: [] }, now).join();
+  assert.match(icons, /Faltan iconos\n12 gatos.*Cat 0 \(900\): la wiki no respondió \(HTTP 403\).*y 2 más/s);
+  assert.doesNotMatch(icons, /Cat 10 /, 'long lists are cut');
 
   const tests = findProblems({ TESTS_OUTCOME: 'failure', BUILD_OUTCOME: 'skipped' }, null, null, now);
   assert.equal(tests.length, 1, 'a failing test explains the rest, without follow-up noise');

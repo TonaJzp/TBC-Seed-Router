@@ -5,7 +5,7 @@ cd /d "%~dp0"
 chcp 65001 >nul
 title TBC Seed Router
 
-where node >/dev/null 2>nul
+where node >nul 2>nul
 if errorlevel 1 (
   echo No se encuentra Node.js. Instalalo desde https://nodejs.org y vuelve a abrir este archivo.
   pause

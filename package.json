@@ -22,6 +22,6 @@
     "url": "https://github.com/TonaJzp/TBC-Seed-Router.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

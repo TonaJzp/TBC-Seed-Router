@@ -122,7 +122,8 @@ Si falta algún gato, se explica el motivo con las casillas y banners concretos 
   [repositorio de godfat](https://gitlab.com/godfat/battle-cats-rolls), el mismo con el que se genera
   bc.godfat.org. La app no lee la web de godfat: calcula las tablas con su mismo algoritmo.
 - **Iconos**: de la [Battle Cats Wiki](https://battlecats.miraheze.org). Se descargan una vez al
-  publicar la web, no en cada visita.
+  publicar la web, no en cada visita, y se reutilizan los que ya están publicados: a la wiki solo se
+  le piden los de gatos nuevos.
 
 Una tarea automática de GitHub hace esto **cada día**:
 
@@ -135,9 +136,10 @@ Una tarea automática de GitHub hace esto **cada día**:
    los colores de legendario, las repeticiones de rare y los garantizados, y adónde lleva cada uno.
    Con los banners habituales son más de 10.000 casillas al día.
 4. Publica la web con los datos nuevos.
-5. Si algo falla o no coincide, **abre una incidencia en el repositorio** (GitHub avisa por email al
-   dueño) y la web muestra un aviso a los usuarios hasta que se resuelva. Cuando todo vuelve a
-   coincidir, la incidencia se cierra sola.
+5. Si algo falla, no coincide o falta el icono de algún gato de los banners, **abre una incidencia en
+   el repositorio** (GitHub avisa por email al dueño). Si afecta a los cálculos, la web muestra
+   además un aviso a los usuarios hasta que se resuelva. Cuando todo vuelve a estar en orden, la
+   incidencia se cierra sola.
 
 Si un día no se puede publicar, la web sigue funcionando con los datos del día anterior y avisa si
 tienen más de 3 días.
@@ -157,7 +159,7 @@ para modificarla.
    descarga los datos (unos minutos, sobre todo por los iconos).
 4. Se abre el navegador en http://localhost:3000. Deja la ventana negra abierta mientras la uses.
 
-**Con la terminal** (Windows, macOS o Linux, Node.js 20 o superior):
+**Con la terminal** (Windows, macOS o Linux, Node.js 22 o superior):
 
 ```bash
 npm install

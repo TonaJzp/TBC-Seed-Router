@@ -56,7 +56,9 @@ async function main() {
     const sim = new Simulator(seed, events, rolls);
     for (const ev of events) {
       await sleep(PAUSE_MS);
-      const doc = await fetchDocument(pageUrl(seed, { event: ev.id, count: String(rolls) }), { userAgent: USER_AGENT });
+      // Advanced highlighting keeps the score colour of exclusive cats visible.
+      const page = pageUrl(seed, { event: ev.id, count: String(rolls), highlighting: 'advanced' });
+      const doc = await fetchDocument(page, { userAgent: USER_AGENT });
       const table = parseTable(doc);
       if (!table.cells.length) throw new Error(`godfat no mostró la tabla del banner «${ev.name}» (¿ha cambiado su diseño?)`);
       cells += compareBanner(diff, organize({ id: ev.id }, [{ offset: 0, table }]), ev, sim, rolls);
