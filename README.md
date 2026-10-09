@@ -91,7 +91,7 @@ empieza más tarde, los que ya han terminado dejan de estar disponibles.
 | Normal | tiro simple; 11-draw (11 tiros) por 1500 Cat Food |
 | Garantizado | tiro simple; 11-draw garantizado (10 tiros + uber) por 1500 Cat Food |
 | Step-up 3+5+7 | solo el step-up completo: 14 tiros + uber por 2100 Cat Food |
-| Platinum / Legend | se excluyen: se pagan con otros tickets |
+| Platinum / Legend | no se usan: se pagan con sus propios tickets (Platinum Ticket y Legend Ticket), no con Rare Tickets ni Cat Food |
 
 - **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (50 con el descuento
   de primer tiro, una vez).
