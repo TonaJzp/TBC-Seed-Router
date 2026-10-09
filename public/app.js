@@ -479,7 +479,7 @@ async function loadData() {
   } catch (err) {
     showError(
       location.protocol === 'file:'
-        ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar Seed Router.bat».'
+        ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar TBC Seed Router.bat».'
         : `No se pudieron cargar los datos de los banners (${err.message}). Recarga la página; si se repite, avísalo en el repositorio del proyecto.`
     );
     $('#submit').disabled = true;
