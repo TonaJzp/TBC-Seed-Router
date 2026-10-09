@@ -138,6 +138,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hint { display: block; margin: 0 0 8px; color: var(--ink-3); font-size: 11.5px; line-height: 1.4; }
 .pair + .hint { margin: 8px 0 0; }
 #time-note { margin: -4px 0 10px; }
+.hint + .hint { margin-top: 6px; }
 
 input[type="url"], input[type="number"], input[type="date"], input[type="search"], input[type="text"], textarea {
   width: 100%;
