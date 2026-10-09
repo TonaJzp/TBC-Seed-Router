@@ -80,7 +80,7 @@ function replayRoute(assert, ctx, route) {
     assert.equal(`${pos.n}${pos.track}`, step.from, `step ${step.index} starts where the previous ended`);
 
     // Time only moves forward and the banner must be active at that time.
-    const w = eventWindow(ev.start, ev.end);
+    const w = eventWindow(ev);
     slot = Math.max(slot, w.first);
     assert.ok(slot <= w.last && slot <= ctx.endSlot, `step ${step.index}: ${ev.name} is not active`);
 

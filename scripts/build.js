@@ -3,7 +3,8 @@
 // public/data/gacha.json. Run daily by GitHub Actions and by `npm start`.
 //
 //   node scripts/build.js                 latest data from GitLab
-//   node scripts/build.js --yaml <file>   a local copy of bc-en.yaml
+//   node scripts/build.js --yaml <file> [--tsv <file>]
+//                                         local copies of bc-en.yaml and of an event file
 //   node scripts/build.js --no-icons      skip the wiki icons
 //   node scripts/build.js --published <site URL>
 //                                         reuse the icons of the published site
@@ -17,7 +18,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GODFAT, parseYaml, transform } from './lib/godfat-data.js';
+import { GODFAT, parseYaml, transform, eventHours } from './lib/godfat-data.js';
 import { buildIcons, missingIcons } from './lib/wiki-icons.js';
 import { USER_AGENT } from './lib/identity.js';
 
@@ -39,13 +40,35 @@ async function getJson(url) {
   return res.json();
 }
 
+async function getRaw(commit, file) {
+  const res = await fetch(`${GODFAT.project}/-/raw/${commit}/${file}`, { headers: { 'User-Agent': USER_AGENT } });
+  if (!res.ok) throw new Error(`No se pudo descargar ${file} (HTTP ${res.status}).`);
+  return res.text();
+}
+
 /** The latest bc-en.yaml from godfat's repository, pinned to its commit. */
 async function downloadGodfat() {
   const [commit] = await getJson(`${GITLAB_API}/commits?${new URLSearchParams({ path: GODFAT.file, per_page: '1' })}`);
   if (!commit?.id) throw new Error('GitLab no devolvió el último commit de los datos de godfat.');
-  const res = await fetch(`${GODFAT.project}/-/raw/${commit.id}/${GODFAT.file}`, { headers: { 'User-Agent': USER_AGENT } });
-  if (!res.ok) throw new Error(`No se pudo descargar ${GODFAT.file} (HTTP ${res.status}).`);
-  return { text: await res.text(), source: { commit: commit.id, committedAt: commit.committed_date } };
+  return { text: await getRaw(commit.id, GODFAT.file), source: { commit: commit.id, committedAt: commit.committed_date } };
+}
+
+/**
+ * The game's newest event file at the same commit (data/en/events/YYYYMMDD.tsv,
+ * a full copy of the schedule): bc-en.yaml is built from these files but
+ * leaves out the hours. Returns its text and name.
+ */
+async function downloadEventFile(commit) {
+  const names = [];
+  for (let page = 1; page < 50; page++) {
+    const query = new URLSearchParams({ path: GODFAT.eventsDir, ref: commit, per_page: '100', page: String(page) });
+    const list = await getJson(`${GITLAB_API}/tree?${query}`);
+    names.push(...list.map((f) => f.name).filter((n) => /^\d{8}\.tsv$/.test(n)));
+    if (list.length < 100) break;
+  }
+  const newest = names.sort().at(-1);
+  if (!newest) throw new Error(`no hay archivos de eventos en ${GODFAT.eventsDir}`);
+  return { text: await getRaw(commit, `${GODFAT.eventsDir}/${newest}`), name: newest };
 }
 
 function writeReport(report) {
@@ -68,6 +91,19 @@ async function main() {
     process.exit(1);
   }
 
+  // Hours of the banners: a missing event file is reported, not fatal.
+  let hours = null;
+  try {
+    const tsvFile = arg('--tsv');
+    const events = yamlFile ? (tsvFile ? { text: fs.readFileSync(tsvFile, 'utf8'), name: tsvFile } : null) : await downloadEventFile(source.commit);
+    if (events) {
+      hours = eventHours(events.text);
+      source.eventFile = events.name;
+    }
+  } catch (err) {
+    console.error(`No se pudo leer el archivo de eventos: ${err.message}`);
+  }
+
   let raw;
   try {
     raw = parseYaml(text);
@@ -75,7 +111,7 @@ async function main() {
     raw = null;
     console.error(`El archivo de godfat no es YAML válido: ${err.message}`);
   }
-  const { data, errors, warnings } = raw ? transform(raw, { today, source }) : { data: null, errors: ['El archivo de godfat no es YAML válido.'], warnings: [] };
+  const { data, errors, warnings } = raw ? transform(raw, { today, source, hours }) : { data: null, errors: ['El archivo de godfat no es YAML válido.'], warnings: [] };
   if (errors.length) {
     writeReport({ ok: false, errors, warnings, source });
     for (const e of errors) console.error(`Error: ${e}`);

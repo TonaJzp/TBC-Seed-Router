@@ -96,6 +96,8 @@ function buildEvent(data, event, seq, rolls) {
     name: event.name,
     start: event.start,
     end: event.end,
+    startTime: event.startTime,
+    endTime: event.endTime,
     gacha: event.gacha,
     rates: { rare: event.rare, supa: event.supa, uber: event.uber },
     guaranteedSize: event.guaranteed,

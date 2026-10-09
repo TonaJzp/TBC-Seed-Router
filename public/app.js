@@ -161,11 +161,13 @@ function render() {
   }
 }
 
+const withHour = (iso, hour) => `${iso}${hour ? ` ${hour}` : ''}`;
+
 function renderContext(data) {
   const rows = data.events
     .map(
       (e) => `<tr>
-        <td class="num">${esc(e.start)} – ${esc(e.end)}</td>
+        <td class="num">${esc(withHour(e.start, e.startTime))} – ${esc(withHour(e.end, e.endTime))}</td>
         <td>${esc(e.name)}</td>
         <td class="kind">${esc(KIND_LABEL[e.kind] || e.kind)}</td>
       </tr>`
@@ -378,7 +380,7 @@ function renderDetail(data) {
     <ul class="targets">${targets}</ul>
     ${renderRouteLegendCells(r)}
     <h3 class="section-title">Pasos</h3>
-    <p class="hint steps-hint">Haz cada paso en el banner que indica, el día indicado o después (mientras siga activo). Pulsa el nombre del banner para abrir esa misma tabla en godfat y comprobar los gatos antes de tirar.</p>
+    <p class="hint steps-hint">Haz cada paso en el banner que indica, el día indicado o después, mientras siga activo. Las horas son las de tu dispositivo, que son las que usa el juego para cambiar los banners. Pulsa el nombre del banner para abrir esa misma tabla en godfat y comprobar los gatos antes de tirar.</p>
     <div class="table-wrap"><table class="steps">
       <thead><tr><th>#</th><th title="Día en el que puedes hacer este paso">Día</th><th>Banner</th><th>Acción</th><th>Posición</th><th class="r">Pago</th><th>Gatos</th></tr></thead>
       <tbody>${r.steps.map((s, i) => renderStep(s, data, r.steps[i - 1])).join('')}</tbody>
@@ -397,6 +399,15 @@ function renderDetail(data) {
 }
 
 const shortDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+// Banner hours are local: the game applies them in the player's time zone.
+const shortWithHour = (iso, hour) => `${shortDate(iso)}${hour ? ` ${hour}` : ''}`;
+
+/** "Before HH:MM", unless the same banner carries on after that hour. */
+function closingNote(s, ev) {
+  const next = ev?.continuedBy;
+  if (!next) return `<small class="deadline">antes de las ${esc(s.closesAt)}</small>`;
+  return `<small>antes de las ${esc(s.closesAt)}; luego sigue igual hasta el ${esc(shortWithHour(next.end, next.endTime))}</small>`;
+}
 
 function renderStep(s, data, prev) {
   // The table as godfat draws it after the cat rolled just before this step.
@@ -421,9 +432,9 @@ function renderStep(s, data, prev) {
     .join('');
   return `<tr class="${s.cats.some((c) => c.newTarget) ? 'hit' : ''}">
     <td class="idx num">${s.index}</td>
-    <td class="num nowrap">${esc(shortDate(s.date))}</td>
+    <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${s.closesAt ? closingNote(s, ev) : ''}</td>
     <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${shifted ? `Ver en godfat: allí la casilla ${esc(s.from)} aparece como 1A` : 'Ver esta tabla en godfat'}">${esc(s.eventName)}</a>
-      <small>${ev ? `${esc(shortDate(ev.start))} – ${esc(shortDate(ev.end))}` : ''}${change}</small></td>
+      <small>${ev ? `${esc(shortWithHour(ev.start, ev.startTime))} – ${esc(shortWithHour(ev.end, ev.endTime))}` : ''}${change}</small></td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>

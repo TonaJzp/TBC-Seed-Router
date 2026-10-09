@@ -163,12 +163,13 @@ test('plan() runs the whole analysis in the browser from the banner data', () =>
   assert.ok(r.routes.some((route) => route.recommended && route.found));
   assert.deepEqual(r.diagnostics.map((d) => d.target).slice(0, 2), ['Cat', 'Gato Inventado']);
   // Metal Maiden's raised legend rate turns lilac cells into legendaries, but
-  // its last run ends on the 16th: that day it may be gone, so it doesn't count.
+  // its last run ended on the 16th at 11:00: at 12:00 it no longer counts.
   assert.deepEqual(r.protection.doubleLegendEvents, []);
-  assert.ok(r.skipped.some((e) => e.id === '2026-10-09_1077' && /termina hoy/.test(e.reason)));
-  // The day before, only the run that is still on counts, not the one that ended on the 9th.
-  const before = plan({ ...body, from: '2026-10-15' }, gachaData, { now: new Date(2026, 9, 15, 12, 0) });
-  assert.deepEqual(before.protection.doubleLegendEvents.map((e) => e.id), ['2026-10-09_1077']);
+  assert.ok(r.skipped.some((e) => e.id === '2026-10-09_1077' && e.reason === 'terminó hoy a las 11:00'));
+  // That morning it is still on (and the run that ended on the 9th is not).
+  const morning = plan(body, gachaData, { now: new Date(2026, 9, 16, 8, 0) });
+  assert.deepEqual(morning.protection.doubleLegendEvents.map((e) => e.id), ['2026-10-09_1077']);
+  assert.ok(morning.events.some((e) => e.id === '2026-10-09_1077'));
 });
 
 test('plan() reports invalid input as UserError, never as a crash', () => {

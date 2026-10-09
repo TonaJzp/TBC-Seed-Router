@@ -8,7 +8,7 @@ import os from 'os';
 import path from 'path';
 import { parseHTML } from 'linkedom';
 import { parseEventList, parseTable, organize } from '../scripts/lib/godfat-html.js';
-import { transform } from '../scripts/lib/godfat-data.js';
+import { transform, eventHours } from '../scripts/lib/godfat-data.js';
 import { buildIcons, missingIcons, iconUrls } from '../scripts/lib/wiki-icons.js';
 import { findProblems } from '../scripts/notify.js';
 
@@ -89,13 +89,32 @@ const yamlLike = () => ({
   },
 });
 
+// The game's event file (gatya.tsv) for the same banners: date, hour, end
+// date, end hour, ..., type 1 (rare gacha), pool 1, then the 15 pool fields.
+const tsvRow = (start, startHour, end, endHour, id) =>
+  [start, startHour, end, endHour, 150600, 999999, 0, 0, 1, 1, id, 0, 0, 0, 0, 0, 6970, 0, 2500, 0, 500, 0, 30, 0, 'x'].join('\t');
+const tsvLike = () =>
+  ['[start]', tsvRow('20260901', '1100', '20260903', '1100', 100), tsvRow('20261001', '1100', '20261020', '1100', 100),
+    tsvRow('20261005', '1100', '20300101', '1100', 101), tsvRow('20261010', '1200', '20261025', '1100', 100),
+    // Other kinds of rows are ignored.
+    ['20261001', '1100', '20261030', '000', 150600, 999999, 0, 0, 4, 1, 55, 0].join('\t'), '[end]'].join('\r\n');
+
+test('the hours of the banners are read from the game\'s event file', () => {
+  const hours = eventHours(tsvLike());
+  assert.equal(hours.size, 4);
+  assert.deepEqual(hours.get('2026-10-10_100'), { start: '12:00', end: '11:00', endDate: '2026-10-25' });
+});
+
 test('the data file becomes compact banner data, with godfat\'s end dates', () => {
-  const { data, errors, warnings } = transform(yamlLike(), { today: '2026-10-08' });
+  const { data, errors, warnings } = transform(yamlLike(), { today: '2026-10-08', hours: eventHours(tsvLike()) });
   assert.deepEqual(errors, []);
   assert.deepEqual(warnings, []);
   assert.deepEqual(data.events.map((e) => e.id), ['2026-10-01_100', '2026-10-05_101', '2026-10-10_100'], 'past banners dropped');
   const first = data.events[0];
   assert.equal(first.end, '2026-10-10', 'a banner ends when the next one of its series starts');
+  assert.equal(first.endTime, '12:00', '...at the hour that one starts');
+  assert.deepEqual([data.events[2].startTime, data.events[2].endTime], ['12:00', '11:00']);
+  assert.deepEqual([data.events[1].startTime, data.events[1].endTime], ['11:00', '11:00']);
   assert.equal(data.events[1].ticket, 'platinum');
   assert.equal(data.events[2].guaranteed, 11);
   assert.ok(data.cats[1] && data.cats[30] && !data.cats[31], 'gacha cats never in an English gacha are left out');
@@ -105,7 +124,7 @@ test('anything unexpected in the data file is reported, never guessed', () => {
   const check = (mutate) => {
     const raw = yamlLike();
     mutate(raw);
-    return transform(raw, { today: '2026-10-08' });
+    return transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) });
   };
   assert.match(check((r) => (r.events['2026-10-01_100'].new_mechanic = 1)).warnings.join(), /campos nuevos.*new_mechanic/);
   assert.match(check((r) => (r.events['2026-10-01_100'].rare = 9000)).errors.join(), /probabilidades no válidas/);
@@ -115,7 +134,15 @@ test('anything unexpected in the data file is reported, never guessed', () => {
   assert.match(check((r) => (r.events['2026-10-01_100'].start_on = '2026-13-01')).errors.join(), /fechas no válidas/);
   assert.match(check((r) => (r.events['2026-10-05_101'].platinum = 'diamond')).warnings.join(), /ticket desconocido/);
   assert.match(check((r) => delete r.gacha).errors.join(), /no tiene las secciones/);
-  const stale = transform(yamlLike(), { today: '2026-10-24' });
+  // Hours: missing or not matching the event file is reported, with 11:00 meanwhile.
+  const noFile = transform(yamlLike(), { today: '2026-10-08', hours: null });
+  assert.match(noFile.warnings.join(), /No se ha podido leer la hora de los banners/);
+  assert.ok(noFile.data.events.every((e) => e.startTime === '11:00' && e.endTime === '11:00'));
+  const partial = eventHours(tsvLike());
+  partial.delete('2026-10-05_101');
+  assert.match(transform(yamlLike(), { today: '2026-10-08', hours: partial }).warnings.join(), /Banner 2026-10-05_101: no se encuentra su hora de inicio/);
+  assert.match(check((r) => (r.events['2026-10-10_100'].end_on = '2026-10-26')).warnings.join(), /2026-10-10_100: la fecha de fin no coincide/);
+  const stale = transform(yamlLike(), { today: '2026-10-24', hours: eventHours(tsvLike()) });
   assert.match(stale.warnings.join(), /No hay banners anunciados/);
 });
 

@@ -1,4 +1,5 @@
 import { keyOf, BANNER, MULTI_SIZE } from './simulator.js';
+import { localMinute, localParts, nextDayMinute, startsAt, endsAt } from './time.js';
 
 const COST = {
   single: 150,
@@ -10,19 +11,14 @@ const COST = {
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
 const MAX_EXPANSIONS = 2_000_000;
-const DAY_MS = 86_400_000;
 
-const toDay = (iso) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / DAY_MS);
-const fromDay = (day) => new Date(day * DAY_MS).toISOString().slice(0, 10);
-
-// Time is measured in half-day slots: 2d = day d before the daily event
-// rollover, 2d + 1 = after it. An event "S ~ E" is active from the second half
-// of S to the first half of E, so an event ending on day D and one starting on
-// day D are never active together: once the new one is rolled, the old one is
-// gone. The current slot never goes back.
-function eventWindow(start, end) {
-  const first = 2 * toDay(start) + 1;
-  return { first, last: Math.max(2 * toDay(end), first) };
+// Time is measured in local minutes (time.js). A banner can be rolled from
+// the minute it opens to the one before it is gone, so a banner ending at the
+// hour another one starts is never active together with it: once the new one
+// is rolled, the old one is gone. The current time of a route never goes back.
+function eventWindow(ev) {
+  const first = startsAt(ev);
+  return { first, last: Math.max(endsAt(ev) - 1, first) };
 }
 
 /** Slot at which `ev` can be rolled when the route is at `slot`, or null. */
@@ -349,9 +345,14 @@ function describeRoute(ctx, result) {
     });
     const from = keyOf(prev.n, prev.track);
     const to = keyOf(node.n, node.track);
+    // When the step can be done: from its time on, while the banner lasts.
+    const at = localParts(node.slot);
+    const gone = localParts(ev.lastSlot + 1);
     const step = {
       action: i,
-      date: fromDay(Math.floor(node.slot / 2)),
+      date: at.date,
+      opensAt: node.slot === ev.firstSlot && node.slot > ctx.startSlot ? at.time : null,
+      closesAt: gone.date === at.date ? gone.time : null,
       eventId: ev.id,
       eventName: ev.name,
       type: node.step.type,
@@ -471,12 +472,15 @@ function sameOutcome(a, b) {
   );
 }
 
-/** Time limits of the plan and of every banner, in half-day slots. */
+/**
+ * Time limits of the plan and of every banner, in local minutes: from the
+ * start of "from" (or now, if later: `ctx.now`) to the end of "to".
+ */
 function prepareContext(ctx) {
-  ctx.startSlot = 2 * toDay(ctx.from);
-  ctx.endSlot = 2 * toDay(ctx.to) + 1;
+  ctx.startSlot = Math.max(localMinute(ctx.from), ctx.now ?? -Infinity);
+  ctx.endSlot = nextDayMinute(ctx.to) - 1;
   for (const ev of ctx.events) {
-    const w = eventWindow(ev.start, ev.end);
+    const w = eventWindow(ev);
     ev.firstSlot = w.first;
     ev.lastSlot = w.last;
   }
@@ -545,7 +549,6 @@ export {
   legendColorOf,
   eventWindow,
   rollSlot,
-  toDay,
   totalCost,
   COST,
   OBJECTIVES,
