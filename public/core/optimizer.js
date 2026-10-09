@@ -333,7 +333,7 @@ function describeRoute(ctx, result) {
       const firstTime = hits.filter((ti) => !obtainedAt.has(ti));
       firstTime.forEach((ti) => obtainedAt.set(ti, i));
       const color = legendColorOf(sim, cell, ctx.doubleLegend);
-      if (color) crossings.push({ action: i, slot: node.slot, key: keyOf(cell.n, cell.track), color, eventName: ev.name, got: c });
+      if (color) crossings.push({ action: i, single: node.step.type === 'single', slot: node.slot, key: keyOf(cell.n, cell.track), color, eventName: ev.name, got: c });
       return {
         ...c,
         cell: keyOf(cell.n, cell.track),
@@ -384,6 +384,23 @@ function describeRoute(ctx, result) {
   // What each legend cell gives in every banner that can be rolled at that
   // moment of the route: the legendaries the route could take there instead.
   const activeAt = (slot) => new Set(events.filter((e) => e.firstSlot <= slot && slot <= e.lastSlot).map((e) => e.id));
+  const byId = new Map(events.map((e) => [e.id, e]));
+  const sameIds = (a, b) => a.cats.map((c) => c.id).join() === b.cats.map((c) => c.id).join() && a.next.n === b.next.n && a.next.track === b.next.track;
+  // True if single action i can be rolled in banner `alt` instead, with the
+  // rest of the route exactly as it is: same cell after it, and the next
+  // action gives the same cats to the same cell (simulated, not assumed).
+  const keepsRoute = (i, alt) => {
+    const node = chain[i];
+    const before = i === 0 ? result.nodes[0] : chain[i - 1];
+    const s = sim.single(alt, before.n, before.track, before.last);
+    if (!s || s.next.n !== node.n || s.next.track !== node.track) return false;
+    const after = chain[i + 1];
+    if (!after) return true;
+    const evAfter = events[after.step.ei];
+    const original = performAction(sim, evAfter, after.step.type, node);
+    const changed = performAction(sim, evAfter, after.step.type, { ...node, last: s.cat.id });
+    return !!(original && changed && sameIds(original, changed));
+  };
   const legendCells = crossings.map((x) => {
     const active = activeAt(x.slot);
     return {
@@ -391,8 +408,12 @@ function describeRoute(ctx, result) {
       color: x.color,
       step: stepOfAction.get(x.action),
       eventName: x.eventName,
+      inDraw: !x.single,
       got: { id: x.got.id, name: x.got.name, rarity: x.got.rarity },
-      legends: sim.legendsAt(parseInt(x.key, 10), x.key.at(-1)).filter((l) => active.has(l.eventId) && l.id !== x.got.id),
+      legends: sim
+        .legendsAt(parseInt(x.key, 10), x.key.at(-1))
+        .filter((l) => active.has(l.eventId) && l.id !== x.got.id)
+        .map((l) => ({ ...l, sameRoute: x.single && keepsRoute(x.action, byId.get(l.eventId)) })),
     };
   });
   return {
