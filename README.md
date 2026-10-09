@@ -36,9 +36,8 @@ por comas. No hay límite.
 ### 3. Elige las fechas
 
 Solo se usan los banners que estén activos entre «Desde» y «Hasta». «Desde» no puede ser anterior a
-hoy (según la fecha de tu dispositivo). Los banners que terminan hoy no se usan: el juego cambia los
-banners por la mañana (a las 11:00 en España) y los datos no traen la hora, así que puede que ya hayan
-terminado.
+hoy (según la fecha de tu dispositivo). La ruta empieza en el momento en que calculas: un banner que
+termina hoy se usa hasta su hora de cierre (normalmente las 11:00) y a partir de entonces ya no.
 
 ### 4. Cuántos tiros revisar
 
@@ -52,7 +51,8 @@ proteger las casillas de legendario (ver más abajo).
 
 ### 6. Pulsa «Calcular rutas»
 
-Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso indica el día, el banner
+Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso indica el día (y la hora
+si importa: «antes de las 11:00» si el banner cierra ese día, «desde las 11:00» si abre), el banner
 (con sus fechas, y si cambia respecto al paso anterior) y las casillas. El nombre del banner abre esa
 misma tabla en godfat, en la casilla donde empieza el paso, para que lo compruebes antes de gastar
 nada. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa
@@ -77,8 +77,10 @@ explica por qué faltan los demás.
 
 ### Tiempo
 
-Un banner «S ~ E» está activo desde el cambio de eventos del día S hasta el del día E (el cambio es por
-la mañana: a las 11:00 en España). La ruta solo
+Cada banner abre y cierra a una hora concreta (casi siempre las 11:00) que el juego aplica en la hora
+local de tu dispositivo, y la web la usa igual. Las horas salen de los archivos de eventos del juego
+que publica godfat; si faltara alguna, la tarea diaria lo avisa. Un banner «S ~ E» está activo desde
+su hora del día S hasta su hora del día E. La ruta solo
 avanza en el tiempo: puedes alternar entre banners que coinciden, pero en cuanto tiras en uno que
 empieza más tarde, los que ya han terminado dejan de estar disponibles.
 
@@ -127,7 +129,9 @@ Si falta algún gato, se explica el motivo con las casillas y banners concretos 
 
 - **Banners, gatos y probabilidades**: del archivo abierto `build/bc-en.yaml` del
   [repositorio de godfat](https://gitlab.com/godfat/battle-cats-rolls), el mismo con el que se genera
-  bc.godfat.org. La app no lee la web de godfat: calcula las tablas con su mismo algoritmo.
+  bc.godfat.org. La app no lee la web de godfat: calcula las tablas con su mismo algoritmo. La hora a la
+  que abre y cierra cada banner sale del archivo de eventos del juego que godfat guarda en el mismo
+  repositorio (`data/en/events`), de la misma versión.
 - **Iconos**: de la [Battle Cats Wiki](https://battlecats.miraheze.org). Se descargan una vez al
   publicar la web, no en cada visita, y se reutilizan los que ya están publicados: a la wiki solo se
   le piden los de gatos nuevos.

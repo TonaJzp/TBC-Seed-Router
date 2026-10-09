@@ -30,8 +30,10 @@ It is distributed WITHOUT ANY WARRANTY; see the license for details.
   - `public/core/gacha.js` is a port of its roll algorithm (`lib/battle-cats-rolls/gacha.rb`,
     `gacha_pool.rb`, `cat.rb`) and `scripts/lib/godfat-data.js` ports its end-date normalisation
     (`crystal_ball.rb`). Changes: rewritten in JavaScript and limited to what the route planner needs.
-  - The banner data (`build/bc-en.yaml`) is downloaded from that repository when the site is
-    built; it is not stored here, except the test snapshot `test/fixtures/gacha-data.json`.
+  - The banner data (`build/bc-en.yaml`) and the hours of the banners (the game's event files
+    in `data/en/events`) are downloaded from that repository when the site is built; they are not
+    stored here, except the test snapshot `test/fixtures/gacha-data.json`. `scripts/lib/godfat-data.js`
+    also ports the reading of those event files (`tsv_reader.rb`).
   - `test/fixtures/events.json`, `variants.json` and `godfat-table.html` are pages and tables
     rendered by bc.godfat.org, kept as the reference the tests compare against.
 - **Cat icons** are downloaded from the Battle Cats Wiki (https://battlecats.miraheze.org) when the

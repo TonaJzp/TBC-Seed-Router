@@ -8,6 +8,7 @@ import { optimizeRoutes, legendColorOf } from './optimizer.js';
 import { diagnose } from './diagnostics.js';
 import { describeUnavailable } from './unavailable.js';
 import { MIN_ROLLS, DEFAULT_ROLLS, MAX_ROLLS } from './config.js';
+import { localMinute, minuteOf, nextDayMinute, startsAt, endsAt, localParts } from './time.js';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EXAMPLE_URL = 'https://bc.godfat.org/?seed=123456789';
@@ -75,6 +76,7 @@ function parseRequest(body, now = new Date()) {
     from: body.from,
     to: body.to,
     today,
+    now: minuteOf(now),
     rolls,
     tickets: nonNegInt(body.tickets, 'Rare Tickets'),
     food: nonNegInt(body.food, 'Cat Food'),
@@ -198,8 +200,8 @@ function legendCellsOf(sim, doubleLegend) {
 // Lilac cells are only Legendary in banners with a raised legend rate
 // (Royalfest, double legend...), so protecting them only matters when such a
 // banner can still be rolled: one of the dates, or any later announced one.
-function detectDoubleLegend(events, upcoming, sim, from) {
-  const found = new Map(upcoming.filter((e) => !e.ticket && e.end >= from && raisesLegend(e)).map((e) => [e.id, e]));
+function detectDoubleLegend(events, upcoming, sim, start) {
+  const found = new Map(upcoming.filter((e) => !e.ticket && endsAt(e) > start && raisesLegend(e)).map((e) => [e.id, e]));
   for (const ev of events) {
     for (const [key, c] of Object.entries(ev.raw)) {
       const m = /^(\d+)([AB])$/.exec(key);
@@ -214,28 +216,53 @@ function detectDoubleLegend(events, upcoming, sim, from) {
 }
 
 /**
- * Banners of the dates that can be planned, the ones skipped and every
- * upcoming one that can still be rolled. The data has dates, not the hour of
- * the game's daily event change: on its last day a banner may already be
- * gone, so banners ending today are never planned nor suggested.
+ * The banner that carries on `e` with the very same table (same gacha, rates
+ * and kind) from the minute it closes, if any: a step "before 11:00" in `e`
+ * can just as well be done later in it. Returns { id, end, endTime } or null.
  */
-function selectEvents(data, { from, to, today }) {
-  const upcoming = data.events.filter((e) => e.end > today);
+function continuationOf(data, e) {
+  const next = data.events.find(
+    (x) => x.id !== e.id && x.gacha === e.gacha && startsAt(x) === endsAt(e) && !x.ticket &&
+      x.rare === e.rare && x.supa === e.supa && x.uber === e.uber && x.guaranteed === e.guaranteed
+  );
+  return next ? { id: next.id, end: next.end, endTime: next.endTime } : null;
+}
+
+/** When the plan starts: the start of "from", or now if that is later. */
+const planStart = ({ from, now }) => Math.max(localMinute(from), now);
+
+/**
+ * Banners of the dates that can be planned, the ones skipped and every
+ * upcoming one that can still be rolled. Banners open and close at their hour
+ * (11:00) in the player's local time, like in the game: one that ends today
+ * is planned until that hour, and is gone after it.
+ */
+function selectEvents(data, { from, to, today, now = localMinute(today) }) {
+  const start = planStart({ from, now });
+  const end = nextDayMinute(to) - 1;
+  const upcoming = data.events.filter((e) => endsAt(e) > now);
   const selected = [];
   const skipped = [];
   for (const e of data.events) {
-    if (e.end < today || e.end < from || e.start > to) continue;
-    const skip = (reason) => skipped.push({ id: e.id, name: e.name, start: e.start, end: e.end, reason });
-    if (e.end === today) skip('termina hoy: el juego cambia los banners por la mañana (a las 11:00 en España) y puede haber terminado ya');
-    else if (e.ticket) skip('se paga con tickets Platinum/Legend');
+    const skip = (reason) => skipped.push({ id: e.id, name: e.name, start: e.start, end: e.end, startTime: e.startTime, endTime: e.endTime, reason });
+    if (endsAt(e) <= now) {
+      // Ended earlier today: say so, it was still in the game this morning.
+      if (e.end === today) skip(`terminó hoy a las ${localParts(endsAt(e)).time}`);
+      continue;
+    }
+    if (endsAt(e) <= start || startsAt(e) > end) continue;
+    if (e.ticket) skip('se paga con tickets Platinum/Legend');
     else selected.push(e);
   }
   if (!selected.length) {
-    const later = upcoming.filter((e) => e.end >= from && !e.ticket).slice(0, 6);
+    const later = upcoming.filter((e) => endsAt(e) > start && !e.ticket).slice(0, 6);
     throw new UserError(
       `Entre el ${formatDate(from)} y el ${formatDate(to)} no hay ningún banner que se pueda planificar` +
         (skipped.length
-          ? ` (los que hay ${[...new Set(skipped.map((e) => (e.end === today ? 'terminan hoy y puede que ya no estén en el juego' : 'se pagan con tickets Platinum/Legend')))].join(' o ')})`
+          ? ` (${[
+              skipped.some((e) => e.reason.startsWith('terminó')) && 'alguno ya ha terminado hoy',
+              skipped.some((e) => !e.reason.startsWith('terminó')) && 'hay banners Platinum/Legend, que se pagan con otros tickets',
+            ].filter(Boolean).join('; ')})`
           : '') +
         '.' +
         (later.length
@@ -263,7 +290,7 @@ function plan(body, data, { now = new Date() } = {}) {
   const { resolved, unavailable } = resolveTargets(queries, events, sim.obtainableIds());
   const unavailableItems = describeUnavailable(unavailable, { seed, input, events, upcoming, matchIds, tablesFor });
 
-  const doubleLegend = detectDoubleLegend(events, upcoming, sim, input.from);
+  const doubleLegend = detectDoubleLegend(events, upcoming, sim, planStart(input));
   const protect = {
     avoidLegend: input.protect.avoidLegend,
     avoidLegendFest: input.protect.avoidLegendFest && doubleLegend.length > 0,
@@ -277,6 +304,7 @@ function plan(body, data, { now = new Date() } = {}) {
     protect,
     doubleLegend: doubleLegend.length > 0,
     from: input.from,
+    now: input.now,
     to: input.to,
   };
   let routes = [];
@@ -293,7 +321,10 @@ function plan(body, data, { now = new Date() } = {}) {
     last,
     rolls: input.rolls,
     inventory: { tickets: input.tickets, food: input.food },
-    events: events.map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, kind: e.kind })),
+    events: events.map((e) => ({
+      id: e.id, name: e.name, start: e.start, end: e.end, startTime: e.startTime, endTime: e.endTime, kind: e.kind,
+      continuedBy: continuationOf(data, data.events.find((x) => x.id === e.id)),
+    })),
     skipped,
     targets: resolved.map((t) => ({ query: t.query, names: t.names })),
     // Chosen cats that couldn't enter the plan at all (explained in diagnostics).

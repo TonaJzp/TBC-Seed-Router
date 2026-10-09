@@ -2,22 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { plan, replayRoute, makeSim, loadEvents, loadVariant, gachaData } from './helpers.js';
 import { plan as planner, catalogOf } from '../public/core/planner.js';
-import { eventWindow, rollSlot, toDay, totalCost } from '../public/core/optimizer.js';
+import { eventWindow, rollSlot, totalCost } from '../public/core/optimizer.js';
+import { localMinute, nextDayMinute } from '../public/core/time.js';
 
 // --- Time rules -------------------------------------------------------------
+// Banners open and close at 11:00 local time, as in the game data.
 
 function windowOf(start, end) {
-  const w = eventWindow(start, end);
+  const w = eventWindow({ start, end, startTime: '11:00', endTime: '11:00' });
   return { firstSlot: w.first, lastSlot: w.last };
 }
+const at = (iso, hhmm = '00:00') => localMinute(iso, hhmm);
 
 test('time never goes back: the example of 3 overlapping events', () => {
   // Range 1-10 Oct; e1 1-3, e2 2-7, e3 7-10 (e2 is over once e3 starts).
   const e1 = windowOf('2026-10-01', '2026-10-03');
   const e2 = windowOf('2026-10-02', '2026-10-07');
   const e3 = windowOf('2026-10-07', '2026-10-10');
-  const end = 2 * toDay('2026-10-10') + 1;
-  let slot = 2 * toDay('2026-10-01');
+  const end = nextDayMinute('2026-10-10') - 1;
+  let slot = at('2026-10-01');
 
   slot = rollSlot(slot, e1, end); // day 1 on e1
   assert.ok(slot !== null);
@@ -30,20 +33,23 @@ test('time never goes back: the example of 3 overlapping events', () => {
   assert.equal(rollSlot(afterE3, e1, end), null, 'after rolling e3, e1 has already ended');
 });
 
-test('an event ending on day D and one starting on day D are never simultaneous', () => {
+test('a banner ending at 11:00 and one starting at 11:00 are never simultaneous', () => {
   const old = windowOf('2026-10-05', '2026-10-09');
   const next = windowOf('2026-10-09', '2026-10-11');
-  const end = 2 * toDay('2026-10-20') + 1;
-  const start = 2 * toDay('2026-10-09');
-  const s = rollSlot(start, old, end);
-  assert.ok(s !== null, 'the old event can still be rolled on day 9 before the switch');
-  assert.ok(rollSlot(s, next, end) !== null, 'then the new one');
-  assert.equal(rollSlot(rollSlot(start, next, end), old, end), null, 'but never old after new');
+  const end = nextDayMinute('2026-10-20') - 1;
+  const morning = at('2026-10-09', '03:42');
+  const s = rollSlot(morning, old, end);
+  assert.equal(s, morning, 'at 03:42 the old banner can still be rolled');
+  assert.equal(rollSlot(s, next, end), at('2026-10-09', '11:00'), 'then the new one, from 11:00');
+  assert.equal(rollSlot(rollSlot(morning, next, end), old, end), null, 'but never old after new');
+  assert.equal(rollSlot(at('2026-10-09', '10:59'), old, end), at('2026-10-09', '10:59'), 'last minute of the old one');
+  assert.equal(rollSlot(at('2026-10-09', '11:00'), old, end), null, 'at 11:00 it is gone');
 });
 
 test('events outside the date range cannot be rolled', () => {
   const ev = windowOf('2026-10-16', '2026-10-20');
-  assert.equal(rollSlot(2 * toDay('2026-10-01'), ev, 2 * toDay('2026-10-15') + 1), null);
+  assert.equal(rollSlot(at('2026-10-01'), ev, nextDayMinute('2026-10-15') - 1), null);
+  assert.equal(rollSlot(at('2026-10-01'), ev, nextDayMinute('2026-10-16') - 1), at('2026-10-16', '11:00'), 'from 11:00 of its first day');
 });
 
 // --- Routes -----------------------------------------------------------------
@@ -304,9 +310,35 @@ test('at equal cost, one banner today beats switching banners later (real case, 
   const best = result.routes[0];
   assert.deepEqual([best.totals.ticketsUsed, best.totals.foodUsed], [8, 3000]);
   assert.equal(best.steps.at(-1).cats.at(-1).name, 'Raiden');
-  // Banners ending today may already be gone in the game: never planned.
-  const endingToday = result.skipped.filter((s) => s.end === '2026-10-09');
-  assert.deepEqual(endingToday.map((s) => s.id), ['2026-10-05_1061', '2026-10-05_1077', '2026-10-05_942']);
-  assert.ok(endingToday.every((s) => /termina hoy/.test(s.reason)));
+  // At 12:00 the banners that ended today at 11:00 are gone.
+  const endedToday = result.skipped.filter((s) => s.end === '2026-10-09');
+  assert.deepEqual(endedToday.map((s) => s.id), ['2026-10-05_1061', '2026-10-05_1077', '2026-10-05_942']);
+  assert.ok(endedToday.every((s) => s.reason === 'terminó hoy a las 11:00'));
   assert.ok(result.events.every((e) => e.end > '2026-10-09'));
+});
+
+test('before 11:00, a banner ending today is still planned, to be done before 11:00', () => {
+  // The same case at 03:42: the copy of Metal Maiden ending at 11:00 has the
+  // same table and can be rolled now, so the route is done now in it.
+  const raiden = String(catalogOf(gachaData).find((c) => c.name === 'Raiden').key);
+  const body = {
+    url: 'https://bc.godfat.org/?seed=1530415490&last=53', targets: [raiden], from: '2026-10-09', to: '2026-10-23',
+    rolls: 200, tickets: 100, food: 5000, avoidLegend: true, avoidLegendFest: true,
+  };
+  const result = planner(body, gachaData, { now: new Date(2026, 9, 9, 3, 42) });
+  assert.ok(result.events.some((e) => e.id === '2026-10-05_1061'), 'Squire Luno (ends at 11:00) is planned');
+  assert.ok(!result.skipped.some((s) => s.end === '2026-10-09'));
+  const best = result.routes[0];
+  assert.deepEqual([best.totals.ticketsUsed, best.totals.foodUsed], [8, 3000]);
+  assert.ok(best.steps.every((s) => s.eventId === '2026-10-05_1077' && s.date === '2026-10-09' && s.closesAt === '11:00' && !s.opensAt));
+  // ...but the same banner carries on from 11:00, so there is no hurry; Squire Luno does not.
+  const byId = new Map(result.events.map((e) => [e.id, e]));
+  assert.deepEqual(byId.get('2026-10-05_1077').continuedBy, { id: '2026-10-09_1077', end: '2026-10-16', endTime: undefined });
+  assert.equal(byId.get('2026-10-05_1061').continuedBy, null);
+  // A banner that opens later today is marked with its hour.
+  const fuma = String(catalogOf(gachaData).find((c) => c.name === 'Fuma Kotaro').key);
+  const later = planner({ ...body, targets: [fuma] }, gachaData, { now: new Date(2026, 9, 9, 3, 42) });
+  const steps = later.routes.flatMap((r) => r.steps);
+  assert.equal(steps.find((s) => s.eventId === '2026-10-09_1043')?.opensAt, '11:00', 'Fuma Kotaro opens today at 11:00');
+  assert.ok(steps.filter((s) => s.eventId === '2026-10-18_1043').every((s) => s.date === '2026-10-18' && s.opensAt === '11:00'));
 });
