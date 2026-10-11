@@ -165,13 +165,9 @@ tienen más de 3 días.
 
 ## Apoya el proyecto
 
-TBC Seed Router es gratis, sin anuncios y sin registro, y quiero que siga siendo así. Mantenerla lleva
-trabajo: aunque la revisión diaria es automática, cada vez que el juego cambia algo (banners de un tipo
-nuevo, otras reglas, datos que llegan distintos) hay que adaptarla, y además quiero seguir mejorándola.
-
-Si te ha ahorrado Cat Food o te ha ayudado a conseguir algún gato, una donación me ayuda a seguir
-manteniéndola y a crear más herramientas gratuitas para la comunidad de The Battle Cats. Puedes donar
-con tarjeta o PayPal, sin crear cuenta.
+TBC Seed Router es gratis, sin anuncios y sin registro, y quiero seguir mejorándola. Una donación me
+ayuda a seguir manteniéndola y a crear más herramientas gratuitas para la comunidad de The Battle Cats.
+Puedes donar con tarjeta o PayPal, sin crear cuenta.
 
 [![Apoyar el proyecto en Ko-fi](https://img.shields.io/badge/Ko--fi-Apoyar_el_proyecto-a3401c?logo=kofi&logoColor=white)](https://ko-fi.com/tonajzp)
 
