@@ -321,6 +321,47 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .notice.warn { max-width: 720px; }
 .notice p { margin: 2px 0; }
 
+/* Support card on top of every analysis */
+.support {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  background: var(--accent-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.support-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+  background: var(--raised);
+  border-radius: 50%;
+}
+.support-icon svg { width: 16px; height: 16px; }
+.support-text { flex: 1 1 340px; min-width: 0; }
+.support-text b { display: block; font-size: 14px; font-weight: 600; }
+.support-text p { margin: 3px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.support-cta { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+.support-cta small { font-size: 11px; color: var(--ink-3); }
+.support-button {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--button-text);
+  background: var(--accent);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.support-button:hover { text-decoration: none; filter: brightness(0.9); }
+.support-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
 /* Diagnostics: why the plan can't get every cat */
 .diagnostics { margin-bottom: 8px; }
 .diag-intro { margin: 0 0 10px; color: var(--ink-2); }
@@ -473,6 +514,9 @@ td .dot { margin-right: 6px; }
 .site-footer p { margin: 0 0 8px; line-height: 1.45; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
 .site-footer nav a[hidden] { display: none; }
+.site-footer .support-note { color: var(--ink-2); }
+.support-note a { font-weight: 600; white-space: nowrap; }
+.support-note span { color: var(--ink-3); white-space: nowrap; }
 
 /* Credits page -------------------------------------------------------------- */
 body.doc { display: block; }
@@ -506,6 +550,8 @@ body.doc { display: block; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .content { padding: 20px 16px 48px; }
   .steps .banner { min-width: 150px; max-width: 200px; }
+  .support-cta { width: 100%; }
+  .support-button { width: 100%; text-align: center; }
   .doc-head { padding: 12px 16px; }
   .doc-body { padding: 20px 16px 48px; }
 }

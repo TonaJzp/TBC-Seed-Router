@@ -7,8 +7,11 @@ de conseguir los gatos que quieres, combinando los banners de las próximas fech
 **Úsala aquí: https://tonajzp.github.io/TBC-Seed-Router/**
 
 Funciona en el navegador, también en el móvil. Es gratuita, no tiene anuncios y no necesita cuenta.
-Todo se calcula en tu dispositivo: lo que escribes no se envía a ningún sitio. Si te resulta útil,
-puedes apoyar su desarrollo en [Ko-fi](https://ko-fi.com/tonajzp).
+Todo se calcula en tu dispositivo: lo que escribes no se envía a ningún sitio.
+
+**¿Te resulta útil?** Con una donación me ayudas a mantenerla al día y a seguir creando herramientas
+gratuitas para la comunidad: [apoyar el proyecto en Ko-fi](https://ko-fi.com/tonajzp) (con tarjeta o
+PayPal).
 
 Herramienta de fans no oficial, sin relación con PONOS. Se apoya en los datos abiertos de
 [Battle Cats Rolls](https://bc.godfat.org/) (godfat); ver [Créditos y licencia](#créditos-y-licencia).
@@ -183,4 +186,5 @@ entirely in the browser at https://tonajzp.github.io/TBC-Seed-Router/, using the
 algorithm of [Battle Cats Rolls](https://gitlab.com/godfat/battle-cats-rolls) (godfat, Apache 2.0),
 checked daily against bc.godfat.org. © 2026 TonaJzp, all rights reserved: the source is public to
 read, but copying, hosting or monetising it needs permission (see [LICENSE](LICENSE)). Not affiliated
-with PONOS. If you find it useful, you can support it on [Ko-fi](https://ko-fi.com/tonajzp).
+with PONOS. If you find it useful, a donation helps keep it up to date and fund more free tools for the
+community: [support the project on Ko-fi](https://ko-fi.com/tonajzp) (card or PayPal).

@@ -153,6 +153,7 @@ async function submit(event) {
 function render() {
   const { data } = current;
   $('#results').innerHTML = [
+    renderSupport(),
     renderContext(data),
     renderNotices(data),
     renderDiagnostics(data),
@@ -165,6 +166,24 @@ function render() {
       render();
     });
   }
+}
+
+const SUPPORT_URL = 'https://ko-fi.com/tonajzp';
+
+// Shown on top of every analysis: the moment the tool has just been useful.
+function renderSupport() {
+  return `<aside class="support" aria-label="Apoyar el proyecto">
+    <span class="support-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M8 14.2 2.5 8.9A3.4 3.4 0 0 1 7.3 4.1l.7.7.7-.7a3.4 3.4 0 0 1 4.8 4.8z"/></svg></span>
+    <div class="support-text">
+      <b>¿Te ha ayudado a planear tus tiradas?</b>
+      <p>TBC Seed Router es gratis y sin anuncios, y la mantengo yo. Con una pequeña donación me ayudas a tenerla al día
+        con cada banner nuevo y a seguir creando herramientas gratuitas para la comunidad.</p>
+    </div>
+    <div class="support-cta">
+      <a class="support-button" href="${SUPPORT_URL}" target="_blank" rel="noopener">Apoyar con una donación</a>
+      <small>Con tarjeta o PayPal, en Ko-fi</small>
+    </div>
+  </aside>`;
 }
 
 const withHour = (iso, hour) => `${iso}${hour ? ` ${hour}` : ''}`;
