@@ -19,49 +19,127 @@ Herramienta de fans no oficial, sin relación con PONOS. Se apoya en los datos a
 
 ---
 
+## Contenido
+
+1. [Lo básico en dos minutos](#lo-básico-en-dos-minutos)
+2. [Cómo usarla, paso a paso](#cómo-usarla-paso-a-paso)
+3. [Cómo leer los resultados](#cómo-leer-los-resultados)
+4. [Después de tirar](#después-de-tirar)
+5. [Qué tiene en cuenta](#qué-tiene-en-cuenta)
+6. [Preguntas frecuentes](#preguntas-frecuentes)
+7. [De dónde salen los datos y cómo se vigilan](#de-dónde-salen-los-datos-y-cómo-se-vigilan)
+8. [Privacidad y datos guardados](#privacidad-y-datos-guardados)
+9. [Apoya el proyecto](#apoya-el-proyecto)
+10. [Créditos y licencia](#créditos-y-licencia)
+
+---
+
+## Lo básico en dos minutos
+
+En The Battle Cats, lo que sale en cada tirada del gacha no es aleatorio en el momento: está decidido
+de antemano por tu **semilla** (*seed*). Si conoces tu semilla, sabes qué gato te va a salir en cada
+tirada, en cualquier banner. [bc.godfat.org](https://bc.godfat.org/) te enseña esas tablas; esta
+herramienta las usa para decidir **en qué banner y de qué forma tirar** para llegar a los gatos que
+quieres gastando lo mínimo.
+
+| Término | Qué significa |
+|---------|---------------|
+| **Semilla** | El número que decide todas tus tiradas futuras. Avanza con cada tirada que haces. |
+| **Casilla (1A, 1B, 2A…)** | Cada tirada posible de tu semilla. El número es la fila (la tirada nº 1, 2, 3…) y la letra la pista. Es la misma numeración que en godfat. |
+| **Pistas A y B** | Tu semilla tiene dos columnas de tiradas. Normalmente avanzas por la misma pista (1A → 2A → 3A…), salvo que algo te haga cambiar. |
+| **Rare duplicado / cambio de pista** | Si te sale el mismo gato Rare que en la tirada anterior, el juego lo cambia por otro y tu siguiente tirada salta a la otra pista. La herramienta lo aprovecha para llegar a casillas que de otra forma no alcanzarías. |
+| **Banner** | Cada evento del gacha (con sus fechas y sus gatos). La misma casilla da gatos distintos según el banner en el que tires. |
+| **11-draw** | 11 tiradas seguidas por 1500 Cat Food. |
+| **Garantizado** | 11-draw que asegura un Uber al final. El Uber garantizado siempre te cambia de pista. |
+| **Casilla de legendario** | Casilla que da un gato Legend Rare en los banners que los tienen. Son muy escasas, por eso la herramienta puede protegerlas (ver [Casillas de legendario](#casillas-de-legendario)). |
+
+---
+
 ## Cómo usarla, paso a paso
 
-### 1. Consigue la URL de tu semilla
+### 1. Pega la URL de tu semilla
 
 Si ya usas [bc.godfat.org](https://bc.godfat.org/), copia la dirección de tu semilla tal como la
-tienes abierta, por ejemplo `https://bc.godfat.org/?seed=123456789&last=50`. Si la dirección
-incluye `last=…` (el último gato que sacaste), se tiene en cuenta.
+tienes abierta, por ejemplo `https://bc.godfat.org/?seed=123456789&last=50`, y pégala en «URL de tu
+semilla en godfat o número de semilla».
 
-También vale escribir solo el número de semilla.
+- Si la dirección incluye `last=…` (el último gato que sacaste), se tiene en cuenta: decide si tu
+  próxima tirada cuenta como rare duplicado.
+- También vale escribir solo el número de semilla (sin `last`).
 
 > ¿No sabes tu semilla? Se averigua en bc.godfat.org con el buscador de semillas («Seed seeker»)
 > introduciendo tus últimas tiradas. Sigue la [ayuda de godfat](https://bc.godfat.org/help).
 
 ### 2. Elige los gatos que quieres
 
-Escribe parte del nombre en «Gatos que quieres conseguir» y elige con el ratón (o con las flechas y
-Enter). Busca también por el nombre de las otras formas del gato. Puedes pegar una lista separada
-por comas. No hay límite.
+Escribe parte del nombre en «Gatos que quieres conseguir» y elígelo con el ratón (o con las flechas y
+Enter).
+
+- Busca también por el nombre de las otras formas del gato: «Ritual Saint Kasli» encuentra a Kasli
+  the Scourge.
+- Si dos gatos se llaman igual, a su lado aparece la rareza para distinguirlos.
+- Puedes pegar una lista de nombres separados por comas o en líneas distintas: se añaden todos los que
+  se reconozcan y se avisa de los que no.
+- No hay límite de gatos. Puedes quitar uno con la × o todos con «Quitar todos».
 
 ### 3. Elige las fechas
 
-Solo se usan los banners que estén activos entre «Desde» y «Hasta». «Desde» no puede ser anterior a
-hoy (según la fecha de tu dispositivo). La ruta empieza en el momento en que calculas: un banner que
-termina hoy se usa hasta su hora de cierre (normalmente las 11:00) y a partir de entonces ya no.
+Solo se usan los banners que estén activos entre «Desde» y «Hasta».
+
+- «Desde» no puede ser anterior a hoy (según la fecha de tu dispositivo). Si eliges un día futuro, la
+  ruta empieza ese día.
+- La ruta empieza en el momento en que calculas: un banner que termina hoy se usa hasta su hora de
+  cierre (normalmente las 11:00) y a partir de entonces ya no.
+- Por defecto se proponen las próximas dos semanas. Un rango más amplio da más banners con los que
+  combinar, y a menudo rutas más baratas.
 
 ### 4. Cuántos tiros revisar
 
-Hasta qué fila de tu semilla se busca (200 por defecto, máximo 1000). Más filas solo alargan un poco
-el cálculo.
+Hasta qué fila de tu semilla se busca (200 por defecto, entre 20 y 1000). Si un gato solo sale más
+adelante en tu semilla, sube este número; la propia herramienta te dice cuánto si hace falta. Más
+filas solo alargan un poco el cálculo.
 
 ### 5. Inventario, descuentos y protecciones
 
-Pon tus Rare Tickets y tu Cat Food, marca los descuentos que tengas activos y elige si quieres
-proteger las casillas de legendario (ver más abajo).
+- **Rare Tickets y Cat Food**: lo que tienes ahora. Si ninguna ruta cabe en tu Cat Food, se muestra
+  igualmente la mejor y cuánto te falta.
+- **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
+  750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
+- **Protección de casillas de legendario**: marcadas por defecto. Ver
+  [Casillas de legendario](#casillas-de-legendario).
 
 ### 6. Pulsa «Calcular rutas»
 
-Verás la **ruta recomendada** paso a paso y tres alternativas. Cada paso indica el día (y la hora
-si importa: «antes de las 11:00» si el banner cierra ese día, «desde las 11:00» si abre), el banner
-(con sus fechas, y si cambia respecto al paso anterior) y las casillas. El nombre del banner abre esa
-misma tabla en godfat, en la casilla donde empieza el paso, para que lo compruebes antes de gastar
-nada. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa
-casilla, que allí aparece como 1A.
+En unos segundos verás la ruta recomendada y tres alternativas. Lo que escribes se guarda en tu
+navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y-datos-guardados)).
+
+---
+
+## Cómo leer los resultados
+
+Los resultados aparecen en este orden.
+
+### Resumen de la semilla
+
+Arriba se indica la semilla, cuántos tiros por pista se han revisado y cuántos banners entran en tus
+fechas. Debajo hay dos apartados desplegables:
+
+- **Banners analizados**: cada banner con sus fechas y horas, y su tipo (simples y 11-draw,
+  garantizado o step-up). Los que no se pueden usar aparecen como «Excluido» con el motivo, por
+  ejemplo los que se pagan con tickets Platinum o Legend.
+- **Casillas de legendario en tus próximos tiros**: todas las casillas moradas y lilas de tu semilla
+  y qué legendario darían en cada banner de tus fechas. Cada uno tiene un botón **«Añadir a
+  objetivos»** que lo añade a tu lista y recalcula.
+
+### Avisos
+
+Recuadros amarillos con información importante: si las casillas lilas se están protegiendo o no (y
+por qué banner), si los datos están desactualizados, o si la última comprobación contra godfat
+encontró diferencias. En ese caso, comprueba cada paso en godfat antes de gastar nada.
+
+### Tabla de rutas
+
+Cuatro rutas, cada una con un criterio distinto. Pulsa una fila para ver su detalle debajo.
 
 | Ruta | Criterio (por orden de prioridad) |
 |------|-----------------------------------|
@@ -71,10 +149,85 @@ casilla, que allí aparece como 1A.
 | Menos tiros | menos tiros → menor coste total |
 
 En caso de empate, gana la ruta con menos cambios de banner y, después, la que se puede hacer antes.
-Para el coste total, 1 Rare Ticket =
-150 Cat Food, como en el juego. Si ninguna ruta cabe en tu Cat Food, se muestra igualmente la mejor
-y cuánto falta. Si no se pueden conseguir todos los gatos, se da la ruta que consigue más y se
-explica por qué faltan los demás.
+Si dos criterios llevan a la misma ruta, se indica («Misma ruta que…») en lugar de repetirla.
+
+| Columna | Qué indica |
+|---------|------------|
+| Objetivos | Cuántos de tus gatos consigue la ruta (en rojo si no son todos). |
+| Rare Tickets / Cat Food | Lo que gasta de cada recurso. |
+| Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara la ruta recomendada. |
+| Tiros | Número total de tiradas. |
+| 11-draws + gar. | 11-draws normales + garantizados (incluido el step-up). |
+| Con tu Cat Food | «Sí» si te llega con lo que tienes; si no, cuánto te falta. |
+
+### Detalle de la ruta
+
+- **Cifras**: coste total, Rare Tickets y Cat Food que gasta (y los que tienes), número de tiros y
+  **posición final**: la casilla en la que quedará tu semilla al terminar la ruta.
+- **Descuentos**: en qué paso se usa cada descuento que marcaste o, si no se usa, por qué.
+- **Objetivos**: en qué paso consigues cada gato. Los que faltan salen en rojo y su motivo está en
+  [«Por qué no se puede conseguir todo»](#por-qué-no-se-consigue-todo).
+- **Casillas de legendario en esta ruta**: cada casilla de legendario por la que pasa la ruta, qué
+  sacas en ella y qué otros legendarios podrías sacar ahí con los banners abiertos en ese momento:
+  - **Misma ruta**: tira esa casilla en ese otro banner y te llevas el legendario sin cambiar nada
+    más ni gastar más.
+  - **Cambia la ruta**: conseguirlo obliga a cambiar el resto de la ruta. Pulsa «Añadir a objetivos»
+    y se recalcula para conseguirlo junto a los demás.
+  - Si la ruta gasta alguna casilla de legendario sin sacar el legendario, un aviso te lo dice.
+
+### Pasos
+
+La ruta, paso a paso, en el orden en que debes hacerlos.
+
+| Columna | Qué indica |
+|---------|------------|
+| # | Número de paso. |
+| Día | Desde qué día puedes hacerlo. «desde las 11:00» si el banner abre ese día; «antes de las 11:00» si cierra ese día, y entonces es tu último momento. Si el mismo banner continúa justo después, se indica hasta cuándo puedes seguir usándolo. |
+| Banner | Dónde tirar, con sus fechas. Si cambia respecto al paso anterior, se marca «cambio de banner». **El nombre abre esa misma tabla en godfat**, en la casilla donde empieza el paso, para que compruebes los gatos antes de tirar. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa casilla, que allí aparece como 1A. |
+| Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up. «con descuento» si usa uno. |
+| Posición | De qué casilla a qué casilla va el paso. «cruce por duplicado» si dentro del paso hay un cambio de pista por rare duplicado. |
+| Pago | Rare Tickets y Cat Food (CF) que cuesta el paso. |
+| Gatos | Todo lo que sacas en ese paso. |
+
+Las filas resaltadas son los pasos en los que consigues un gato objetivo. Debajo de la tabla hay una
+leyenda con lo que significa cada marca:
+
+| Marca | Significado |
+|-------|-------------|
+| Borde gris, amarillo, naranja o morado | Rare, Super Rare, Uber Rare o Legend Rare. |
+| Gato resaltado | Uno de tus objetivos. |
+| ↺ | Rare duplicado: el juego lo cambió por otro y la siguiente tirada va por la otra pista. |
+| ★ | Uber del garantizado. |
+| Punto morado o lila | La tirada cae en una casilla de legendario. |
+| Gato tachado | Es un objetivo, pero cae en una casilla protegida y por eso no cuenta ahí. |
+
+### Por qué no se consigue todo
+
+Si falta algún gato, se explica el motivo con las casillas y banners concretos de tu semilla, qué
+puedes hacer y enlaces para comprobarlo en godfat:
+
+| Motivo | Qué se indica |
+|--------|---------------|
+| No sale en el gacha | Es un gato Normal o Especial: no se consigue tirando. |
+| No está en los banners de tus fechas | En qué otro banner próximo sale y a qué fecha ampliar «Hasta». |
+| No sale en los tiros revisados | La primera fila donde aparece (busca hasta 1000) y cuántos tiros poner. |
+| Solo sale en casillas protegidas | Qué protección lo impide y en qué casillas sale. |
+| Las fechas lo impiden | Qué banner hace falta y por qué ya no está activo. |
+| Ninguna combinación de tiros llega | Dónde sale y qué cambios de pista lo impiden. |
+| Choca con otro objetivo | Con qué gato choca: conseguir uno obliga a dejar atrás al otro. |
+
+---
+
+## Después de tirar
+
+1. **Haz los pasos en orden**, cada uno en su banner, y sin tirar nada más entre medias.
+2. **Compruébalo en godfat antes de gastar**: el enlace de cada paso abre la tabla justo en esa
+   casilla. Si lo que ves no coincide con el plan, para y revisa tu semilla.
+3. **Cuando termines (o si haces cualquier otra tirada)**, tu semilla ha avanzado. Actualiza tu
+   semilla en godfat y pega la nueva URL para la próxima vez. La «posición final» del plan te dice
+   dónde deberías estar.
+4. **Si cambian tus planes** (quieres otro gato, se anuncia un banner nuevo, no llegaste a tiempo a un
+   paso), vuelve a calcular desde donde estés.
 
 ---
 
@@ -83,11 +236,12 @@ explica por qué faltan los demás.
 ### Tiempo
 
 Cada banner abre y cierra a una hora concreta (casi siempre las 11:00) que el juego aplica en la hora
-local de tu dispositivo, y la web la usa igual. Las horas salen de los archivos de eventos del juego
-que publica godfat; si faltara alguna, la tarea diaria lo avisa. Un banner «S ~ E» está activo desde
-su hora del día S hasta su hora del día E. La ruta solo
-avanza en el tiempo: puedes alternar entre banners que coinciden, pero en cuanto tiras en uno que
-empieza más tarde, los que ya han terminado dejan de estar disponibles.
+local de tu dispositivo, y la web la usa igual (debajo de las fechas verás tu zona horaria). Las horas
+salen de los archivos de eventos del juego que publica godfat; si faltara alguna, la tarea diaria lo
+avisa. Un banner «S ~ E» está activo desde su hora del día S hasta su hora del día E.
+
+La ruta solo avanza en el tiempo: puedes alternar entre banners que coinciden, pero en cuanto tiras en
+uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
 
 ### Tipos de banner y costes
 
@@ -102,32 +256,63 @@ empieza más tarde, los que ya han terminado dejan de estar disponibles.
   de primer tiro, una vez).
 - **Descuento 11-Draw** (750 Cat Food, una vez): vale para el 11-draw normal o el garantizado.
 - El uber garantizado se elige con media tirada, así que siempre cambia de pista.
+- Para comparar rutas, **1 Rare Ticket = 150 Cat Food**, que es lo que cuesta un tiro simple.
 
 ### Casillas de legendario
 
 - **Moradas**: dan legendario en los banners que tienen legendarios (en los demás, un uber).
 - **Lilas**: solo dan legendario en banners con más probabilidad de legend (Royalfest, doble
-  legend…). Se detectan por las probabilidades de cada banner.
+  legend…). Se detectan por las probabilidades de cada banner. Su protección solo se aplica si a partir
+  de «Desde» hay un banner así anunciado, aunque sea después de «Hasta»; si no, se tratan como
+  casillas normales y un aviso lo indica.
 
 **Proteger** una casilla no impide pasar por ella: un gato objetivo que salga ahí no cuenta (salvo
 que sea el propio legendario), y el plan lo busca en otra casilla para no gastar la oportunidad de
-legendario. Cada ruta indica por qué casillas de legendario pasa, qué sacas en cada una y todos los
-legendarios que podrías sacar ahí con los banners activos en ese momento de la ruta, cada uno con un
-botón para añadirlo a tus objetivos y recalcular.
+legendario. Si quieres usar esas casillas para cualquier gato, desmarca la protección.
 
-### Por qué no se consigue todo
+---
 
-Si falta algún gato, se explica el motivo con las casillas y banners concretos de tu semilla:
+## Preguntas frecuentes
 
-| Motivo | Qué se indica |
-|--------|---------------|
-| No sale en el gacha | Es un gato Normal o Especial |
-| No está en los banners de tus fechas | En qué otro banner próximo sale y a qué fecha ampliar «Hasta» |
-| No sale en los tiros revisados | La primera fila donde aparece (busca hasta 1000) y cuántos tiros poner |
-| Solo sale en casillas protegidas | Qué protección lo impide y en qué casillas sale |
-| Las fechas lo impiden | Qué banner hace falta y por qué ya no está activo |
-| Ninguna combinación de tiros llega | Dónde sale y qué cambios de pista lo impiden |
-| Choca con otro objetivo | Con qué gato choca: conseguir uno obliga a dejar atrás al otro |
+**¿Para qué versión del juego sirve?**
+Para la versión en inglés (la global), que es la que usan los datos de godfat con los que trabaja.
+
+**¿Toca mi cuenta o el juego?**
+No. Solo calcula a partir de tu semilla. No se conecta al juego ni a tu cuenta, y no necesita ningún
+dato tuyo aparte de la semilla.
+
+**¿Es seguro al 100 %?**
+Si tu semilla y el último gato (`last`) son correctos y haces los pasos tal cual, lo que sale es lo
+que indica el plan: la app calcula las tablas con el mismo algoritmo que godfat y se comprueba contra
+godfat cada día. Aun así, comprueba cada paso en godfat antes de gastar; para eso está el enlace.
+
+**¿Por qué la ruta tira en un banner que no tiene el gato que quiero?**
+Porque tirar ahí es la forma más barata de mover tu semilla hasta la casilla buena, o de provocar un
+rare duplicado que te cambia de pista. Lo importante es la casilla a la que llegas, no el banner.
+
+**¿Tengo que hacer cada paso el día exacto?**
+No: el día indicado o después, mientras el banner siga activo y respetando el orden. Lo que no puedes
+es hacer un paso cuando su banner ya ha cerrado.
+
+**¿Qué pasa si hago una tirada que no está en el plan?**
+Tu semilla avanza y el plan deja de valer desde ese punto. Cualquier tirada del gacha raro cuenta,
+también las de Platinum o Legend Ticket. Actualiza tu semilla en godfat y vuelve a calcular.
+
+**¿Por qué no aparece un banner?**
+Puede estar fuera de tus fechas, haber terminado ya, pagarse con tickets Platinum o Legend (se
+muestran como excluidos) o no estar anunciado todavía: solo aparecen los banners que el juego ya ha
+publicado.
+
+**¿Puedo pedir muchos gatos a la vez?**
+Sí, no hay límite. Con muchos objetivos el cálculo tarda algo más y es más fácil que alguno choque
+con otro; en ese caso se explica cuál.
+
+**La app me avisa de que algo no coincide con godfat. ¿Qué hago?**
+Comprueba cada paso en godfat antes de tirar. El aviso desaparece cuando el problema se corrige.
+
+**He encontrado un error o tengo una sugerencia.**
+Ábrela en las [incidencias del repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues),
+con tu semilla y los gatos elegidos si es un error de cálculo.
 
 ---
 
@@ -159,7 +344,19 @@ Una tarea automática de GitHub hace esto **cada día**:
    incidencia se cierra sola.
 
 Si un día no se puede publicar, la web sigue funcionando con los datos del día anterior y avisa si
-tienen más de 3 días.
+tienen más de 3 días. Al pie de la página verás de qué fecha son los datos y cuándo se comprobaron
+por última vez contra godfat.
+
+---
+
+## Privacidad y datos guardados
+
+- Todo se calcula en tu navegador. Tu semilla, tus gatos, tus fechas y tu inventario no se envían a
+  ningún sitio. No hay cookies, analítica ni publicidad.
+- Tu navegador guarda el último formulario y el tema claro u oscuro (botón junto al título) para
+  que no tengas que repetirlos. Puedes borrarlos con «Borrar los datos guardados en este navegador»,
+  al pie de la página.
+- Más detalles en la página [Créditos, licencias y privacidad](https://tonajzp.github.io/TBC-Seed-Router/credits.html).
 
 ---
 
@@ -193,11 +390,12 @@ Errores y sugerencias: [incidencias del repositorio](https://github.com/TonaJzp/
 
 ### English
 
-TBC Seed Router is an unofficial, free route planner for The Battle Cats gacha: given your seed, it
-finds the cheapest sequence of rolls across upcoming banners to get the cats you want. It runs
-entirely in the browser at https://tonajzp.github.io/TBC-Seed-Router/, using the open data and roll
-algorithm of [Battle Cats Rolls](https://gitlab.com/godfat/battle-cats-rolls) (godfat, Apache 2.0),
-checked daily against bc.godfat.org. © 2026 TonaJzp, all rights reserved: the source is public to
-read, but copying, hosting or monetising it needs permission (see [LICENSE](LICENSE)). Not affiliated
-with PONOS. If you find it useful, a donation helps keep it up to date and fund more free tools for the
-community: [support the project on Ko-fi](https://ko-fi.com/tonajzp) (card or PayPal).
+TBC Seed Router is an unofficial, free route planner for The Battle Cats gacha (English version):
+given your seed, it finds the cheapest sequence of rolls across upcoming banners to get the cats you
+want. It runs entirely in the browser at https://tonajzp.github.io/TBC-Seed-Router/, using the open
+data and roll algorithm of [Battle Cats Rolls](https://gitlab.com/godfat/battle-cats-rolls) (godfat,
+Apache 2.0), checked daily against bc.godfat.org. The interface is in Spanish. © 2026 TonaJzp, all
+rights reserved: the source is public to read, but copying, hosting or monetising it needs permission
+(see [LICENSE](LICENSE)). Not affiliated with PONOS. If you find it useful, a donation helps keep it up
+to date and fund more free tools for the community:
+[support the project on Ko-fi](https://ko-fi.com/tonajzp) (card or PayPal).
