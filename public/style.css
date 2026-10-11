@@ -326,14 +326,12 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
    the button on the right; on phones the button goes full width underneath. */
 .support {
   display: grid;
-  grid-template-columns: auto minmax(0, 64ch) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "icon title button"
     "icon body  button";
   align-items: center;
   gap: 2px 16px;
-  width: fit-content;
-  max-width: 100%;
   margin: 0 0 22px;
   padding: 16px 18px;
   background: var(--accent-soft);
@@ -356,7 +354,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .support-body { grid-area: body; margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 .support-button {
   grid-area: button;
-  margin-left: 12px;
+  margin-left: 16px;
   padding: 9px 18px;
   font-size: 13.5px;
   font-weight: 600;
@@ -566,7 +564,6 @@ body.doc { display: block; }
       "body body"
       "button button";
     gap: 8px 12px;
-    width: auto;
     padding: 14px;
   }
   .support-icon { align-self: center; width: 32px; height: 32px; }
