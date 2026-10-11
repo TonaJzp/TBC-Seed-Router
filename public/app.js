@@ -38,10 +38,16 @@ let current = null; // last result, to re-render when another route is selected
 
 // The plan always starts today: no past dates, and "to" never before "from".
 // The calendar won't offer earlier days; typed ones are flagged, not changed.
+// Chrome fires "change" on every typed digit, and any write to `min` (even the
+// same value) resets the segment being typed, so "12" ended up as "02".
 function syncDateLimits() {
   const today = todayIso();
-  form.from.min = today;
-  form.to.min = form.from.value > today ? form.from.value : today;
+  setMin(form.from, today);
+  setMin(form.to, form.from.value > today ? form.from.value : today);
+}
+
+function setMin(input, value) {
+  if (input.min !== value) input.min = value;
 }
 
 function dateProblem() {
