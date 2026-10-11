@@ -321,45 +321,48 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .notice.warn { max-width: 720px; }
 .notice p { margin: 2px 0; }
 
-/* Support card on top of every analysis */
+/* Support card on top of every analysis: icon, title and text on the left,
+   the button on the right; on phones the button goes full width underneath. */
 .support {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon title button"
+    "icon body  button";
   align-items: center;
-  gap: 12px 18px;
+  gap: 2px 16px;
   margin: 0 0 22px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   background: var(--accent-soft);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  border-radius: 8px;
 }
 .support-icon {
+  grid-area: icon;
+  align-self: start;
   display: grid;
   place-items: center;
-  flex: none;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   color: var(--accent);
-  background: var(--raised);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-radius: 50%;
 }
-.support-icon svg { width: 16px; height: 16px; }
-.support-text { flex: 1 1 340px; min-width: 0; }
-.support-text b { display: block; font-size: 14px; font-weight: 600; }
-.support-text p { margin: 3px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
-.support-cta { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
-.support-cta small { font-size: 11px; color: var(--ink-3); }
+.support-icon svg { width: 18px; height: 18px; }
+.support-title { grid-area: title; font-size: 14.5px; font-weight: 600; }
+.support-body { grid-area: body; max-width: 68ch; margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 .support-button {
-  display: inline-block;
-  padding: 8px 16px;
-  font-size: 13px;
+  grid-area: button;
+  padding: 9px 18px;
+  font-size: 13.5px;
   font-weight: 600;
+  text-align: center;
   color: var(--button-text);
   background: var(--accent);
-  border-radius: 4px;
+  border-radius: 6px;
   white-space: nowrap;
 }
-.support-button:hover { text-decoration: none; filter: brightness(0.9); }
+.support-button:hover { text-decoration: none; filter: brightness(0.92); }
 .support-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* Diagnostics: why the plan can't get every cat */
@@ -550,8 +553,18 @@ body.doc { display: block; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .content { padding: 20px 16px 48px; }
   .steps .banner { min-width: 150px; max-width: 200px; }
-  .support-cta { width: 100%; }
-  .support-button { width: 100%; text-align: center; }
+  .support {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon title"
+      "body body"
+      "button button";
+    gap: 8px 12px;
+    padding: 14px;
+  }
+  .support-icon { align-self: center; width: 32px; height: 32px; }
+  .support-icon svg { width: 15px; height: 15px; }
+  .support-button { margin-top: 6px; padding: 10px 18px; }
   .doc-head { padding: 12px 16px; }
   .doc-body { padding: 20px 16px 48px; }
 }

@@ -174,15 +174,10 @@ const SUPPORT_URL = 'https://ko-fi.com/tonajzp';
 function renderSupport() {
   return `<aside class="support" aria-label="Apoyar el proyecto">
     <span class="support-icon" aria-hidden="true"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M8 14.2 2.5 8.9A3.4 3.4 0 0 1 7.3 4.1l.7.7.7-.7a3.4 3.4 0 0 1 4.8 4.8z"/></svg></span>
-    <div class="support-text">
-      <b>¿Te ha ayudado a planear tus tiradas?</b>
-      <p>TBC Seed Router es gratis y sin anuncios, y la mantengo yo. Con una pequeña donación me ayudas a tenerla al día
-        con cada banner nuevo y a seguir creando herramientas gratuitas para la comunidad.</p>
-    </div>
-    <div class="support-cta">
-      <a class="support-button" href="${SUPPORT_URL}" target="_blank" rel="noopener">Apoyar con una donación</a>
-      <small>Con tarjeta o PayPal, en Ko-fi</small>
-    </div>
+    <b class="support-title">¿Te ha ayudado a planear tus tiradas?</b>
+    <p class="support-body">TBC Seed Router es gratis y sin anuncios. Con una pequeña donación me ayudas a tenerla al día
+      con cada banner nuevo y a seguir creando herramientas gratuitas para la comunidad.</p>
+    <a class="support-button" href="${SUPPORT_URL}" target="_blank" rel="noopener">Apoyar con una donación</a>
   </aside>`;
 }
 
@@ -273,13 +268,13 @@ function renderRouteLegendCells(r, data) {
       const options = [...c.legends].sort((a, b) => Number(b.sameRoute) - Number(a.sameRoute));
       const rows = options.length
         ? options.map((l) => {
-            const ev = evById.get(l.eventId);
-            const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : 'next'];
-            return `<td><b>${esc(l.name)}</b></td>
+          const ev = evById.get(l.eventId);
+          const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : 'next'];
+          return `<td><b>${esc(l.name)}</b></td>
               <td class="ev" title="${esc(l.eventName)}"><span class="ev-name">${esc(l.eventName)}</span>${ev ? `<small>hasta el ${esc(shortWithHour(ev.end, ev.endTime))}</small>` : ''}</td>
               <td><span class="fit ${l.sameRoute ? 'same' : 'change'}" title="${esc(why)}">${label}</span></td>
               <td class="add">${addTargetButton(l.name)}</td>`;
-          })
+        })
         : [`<td colspan="4" class="muted">${c.got.rarity === 'legendary' ? 'Ningún otro banner activo en ese momento da otro legendario aquí.' : 'Ningún banner activo en ese momento da legendario aquí.'}</td>`];
       const lead = `<td rowspan="${rows.length}" class="cell"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}<small>paso ${c.step}</small></td>
         <td rowspan="${rows.length}" class="got">${got}</td>`;
@@ -315,12 +310,11 @@ function renderDiagnostics(data) {
         ${d.target ? `<p class="diag-target">Afecta a: <b>${esc(d.target)}</b></p>` : ''}
         <ul>${d.details.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
         ${d.fix ? `<p class="diag-fix"><span>Qué puedes hacer</span>${esc(d.fix)}</p>` : ''}
-        ${
-          d.links.length
-            ? `<p class="diag-links"><span>Compruébalo en godfat:</span> ${d.links
-                .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}">${esc(l.label.split(' · ')[0])}</a>`)
-                .join(' ')}</p>`
-            : ''
+        ${d.links.length
+          ? `<p class="diag-links"><span>Compruébalo en godfat:</span> ${d.links
+            .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}">${esc(l.label.split(' · ')[0])}</a>`)
+            .join(' ')}</p>`
+          : ''
         }
       </article>`
     )
@@ -389,7 +383,7 @@ function renderDetail(data) {
   const t = r.totals;
   const warnings = [
     !r.complete &&
-      `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «Por qué no se puede conseguir todo».`,
+    `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «Por qué no se puede conseguir todo».`,
     r.exhausted && 'La búsqueda alcanzó su límite de tamaño: el resultado puede no ser el óptimo.',
     r.overBudget && `Ninguna ruta cabe en tu Cat Food actual: esta necesita ${fmt(t.shortfall)} más.`,
   ].filter(Boolean);

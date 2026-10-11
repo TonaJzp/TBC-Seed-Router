@@ -10,8 +10,9 @@ Funciona en el navegador, también en el móvil. Es gratuita, no tiene anuncios 
 Todo se calcula en tu dispositivo: lo que escribes no se envía a ningún sitio.
 
 **¿Te resulta útil?** Con una donación me ayudas a mantenerla al día y a seguir creando herramientas
-gratuitas para la comunidad: [apoyar el proyecto en Ko-fi](https://ko-fi.com/tonajzp) (con tarjeta o
-PayPal).
+gratuitas para la comunidad ([más información](#apoya-el-proyecto)).
+
+[![Apoyar el proyecto en Ko-fi](https://img.shields.io/badge/Ko--fi-Apoyar_el_proyecto-a3401c?logo=kofi&logoColor=white)](https://ko-fi.com/tonajzp)
 
 Herramienta de fans no oficial, sin relación con PONOS. Se apoya en los datos abiertos de
 [Battle Cats Rolls](https://bc.godfat.org/) (godfat); ver [Créditos y licencia](#créditos-y-licencia).
@@ -159,6 +160,22 @@ Una tarea automática de GitHub hace esto **cada día**:
 
 Si un día no se puede publicar, la web sigue funcionando con los datos del día anterior y avisa si
 tienen más de 3 días.
+
+---
+
+## Apoya el proyecto
+
+TBC Seed Router es gratis, sin anuncios y sin registro, y quiero que siga siendo así. Mantenerla lleva
+trabajo: aunque la revisión diaria es automática, cada vez que el juego cambia algo (banners de un tipo
+nuevo, otras reglas, datos que llegan distintos) hay que adaptarla, y además quiero seguir mejorándola.
+
+Si te ha ahorrado Cat Food o te ha ayudado a conseguir algún gato, una donación me ayuda a seguir
+manteniéndola y a crear más herramientas gratuitas para la comunidad de The Battle Cats. Puedes donar
+con tarjeta o PayPal, sin crear cuenta.
+
+[![Apoyar el proyecto en Ko-fi](https://img.shields.io/badge/Ko--fi-Apoyar_el_proyecto-a3401c?logo=kofi&logoColor=white)](https://ko-fi.com/tonajzp)
+
+Compartirla con otros jugadores también ayuda mucho.
 
 ---
 
