@@ -110,7 +110,7 @@ filas solo alargan un poco el cálculo.
 
 ### 6. Pulsa «Calcular rutas»
 
-En unos segundos verás la ruta recomendada y tres alternativas. Lo que escribes se guarda en tu
+En unos segundos verás la ruta recomendada y dos alternativas. Lo que escribes se guarda en tu
 navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y-datos-guardados)).
 
 ---
@@ -139,17 +139,17 @@ encontró diferencias. En ese caso, comprueba cada paso en godfat antes de gasta
 
 ### Tabla de rutas
 
-Cuatro rutas, cada una con un criterio distinto. Pulsa una fila para ver su detalle debajo.
+Tres rutas, cada una con un criterio distinto. Pulsa una fila para ver su detalle debajo.
 
 | Ruta | Criterio (por orden de prioridad) |
 |------|-----------------------------------|
 | **Recomendada** | menor coste total (Cat Food + 150 × tickets) → menos Cat Food → menos tiros |
 | Máximo ahorro de Cat Food | menos Cat Food → menos tickets → menos tiros |
 | Máximo ahorro de Rare Tickets | menos tickets → menos Cat Food → menos tiros |
-| Menos tiros | menos tiros → menor coste total |
 
 En caso de empate, gana la ruta con menos cambios de banner y, después, la que se puede hacer antes.
-Si dos criterios llevan a la misma ruta, se indica («Misma ruta que…») en lugar de repetirla.
+Si dos criterios llevan a la misma ruta, se indica («Misma ruta que…») en lugar de repetirla, y si
+llevan a otra ruta con las mismas cifras, «Mismo coste que…».
 
 | Columna | Qué indica |
 |---------|------------|
@@ -157,8 +157,13 @@ Si dos criterios llevan a la misma ruta, se indica («Misma ruta que…») en lu
 | Rare Tickets / Cat Food | Lo que gasta de cada recurso. |
 | Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara la ruta recomendada. |
 | Tiros | Número total de tiradas. |
-| 11-draws + gar. | 11-draws normales + garantizados (incluido el step-up). |
-| Con tu Cat Food | «Sí» si te llega con lo que tienes; si no, cuánto te falta. |
+| 11-draws | Cuántos 11-draws hace la ruta y, debajo, cuántos de ellos son garantizados (o step-up). El resto son tiros simples. |
+| ¿Te alcanza? | «Sí» si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes y paga el resto con Cat Food. |
+
+La ruta recomendada busca el menor coste total, no la que mejor encaja con tu inventario: como un
+11-draw sale más barato por tiro que un tiro simple, puede preferir 11-draws aunque tengas muchos
+Rare Tickets. Por eso, si tienes muchos tickets y poca Cat Food, puede que te falte Cat Food en la
+recomendada y bastante menos en «Máximo ahorro de Cat Food», que gasta primero tus tickets.
 
 ### Detalle de la ruta
 

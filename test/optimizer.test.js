@@ -76,7 +76,7 @@ test('every route replays exactly through the simulator and respects all rules',
   ];
   for (const options of scenarios) {
     const { ctx, routes } = plan(someUbers(3), options);
-    assert.equal(routes.length, 4);
+    assert.deepEqual(routes.map((r) => r.key), ['optimal', 'saveFood', 'saveTickets']);
     assert.equal(routes[0].recommended, true);
     for (const route of routes.filter((r) => r.found)) replayRoute(assert, ctx, route);
   }
@@ -116,14 +116,12 @@ test('each route is the best one for its own criterion', () => {
   for (const tickets of [0, 5, 12, 40]) {
     const { routes } = plan(someUbers(3), { inventory: { tickets, food: 60000 } });
     const done = routes.filter((r) => r.found && r.complete);
-    assert.equal(done.length, 4, 'fixture targets are reachable');
+    assert.equal(done.length, 3, 'fixture targets are reachable');
     const r = byKey(done);
     for (const other of done) {
       assert.ok(r.optimal.totals.totalCost <= other.totals.totalCost, `recommended is cheapest overall (${tickets} tickets)`);
       assert.ok(r.saveFood.totals.foodUsed <= other.totals.foodUsed, 'saveFood spends least Cat Food');
-      assert.ok(r.saveTickets.totals.ticketsUsed <= other.totals.ticketsUsed, 'saveTickets spends least tickets');
-      assert.ok(r.fastest.totals.pulls <= other.totals.pulls, 'fastest uses fewest pulls');
-    }
+      assert.ok(r.saveTickets.totals.ticketsUsed <= other.totals.ticketsUsed, 'saveTickets spends least tickets');    }
     const t = r.optimal.totals;
     assert.equal(t.totalCost, totalCost({ food: t.foodUsed, tickets: t.ticketsUsed }), '1 ticket = 150 Cat Food');
     assert.equal(t.totalCost, t.foodUsed + 150 * t.ticketsUsed);

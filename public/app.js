@@ -126,8 +126,10 @@ async function submit(event) {
   $('#error').hidden = true;
   $('#progress').innerHTML = '<li>Calculando las tiradas de tu semilla y las rutas óptimas...</li>';
   show('status');
-  // Let the page paint the progress before the (synchronous) calculation.
-  await new Promise((resolve) => setTimeout(resolve, 30));
+  // Let the page paint the progress (and finish scrolling to it, on phones the
+  // results are below the form) before the synchronous calculation.
+  const scrolled = bringIntoView($('#status'));
+  await new Promise((resolve) => setTimeout(resolve, scrolled ? 450 : 30));
   let gotResult = false;
   try {
     const result = plan(body, gachaData);
@@ -145,7 +147,20 @@ async function submit(event) {
   } finally {
     $('#submit').disabled = false;
     show(gotResult ? 'results' : 'empty');
+    bringIntoView($(gotResult ? '#results' : '#error'));
   }
+}
+
+/**
+ * Scrolls smoothly so that `el` starts at the top of the screen, unless it is
+ * already near the top. Returns whether it scrolled.
+ */
+function bringIntoView(el) {
+  const top = el.getBoundingClientRect().top;
+  if (top >= 0 && top < window.innerHeight / 3) return false;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  return true;
 }
 
 // --- Rendering ------------------------------------------------------------
@@ -348,7 +363,10 @@ function renderRoutesTable(data) {
       const t = r.totals;
       const got = r.targets.filter((x) => x.obtained).length;
       const requested = r.targets.length + (data.unplanned || []).length;
-      const draws = t.multiDraws || t.guaranteedDraws ? `${t.multiDraws} + ${t.guaranteedDraws}` : '—';
+      const g = t.guaranteedDraws;
+      const draws = t.multiDraws + g
+        ? `${t.multiDraws + g}${g ? `<span class="sub">${g} garantizado${g > 1 ? 's' : ''}</span>` : ''}`
+        : '—';
       const note = r.sameAs
         ? `Misma ruta que «${esc(r.sameAs)}».`
         : r.sameCostAs
@@ -363,18 +381,25 @@ function renderRoutesTable(data) {
         <td class="r num"><b>${fmt(t.totalCost)}</b></td>
         <td class="r num">${fmt(t.pulls)}</td>
         <td class="r num nowrap">${draws}</td>
-        <td class="r">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)}</span>`}</td>
+        <td class="r nowrap">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)} CF</span>`}</td>
       </tr>`;
     })
     .join('');
+  const short = data.routes.some((r) => r.found && !r.totals.affordable);
+  const shortNote = short
+    ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets de cada ruta ya salen de los tuyos. La ruta recomendada busca el menor gasto total y puede preferir 11-draws (más baratos por tiro) a gastar todos tus tickets; si te falta Cat Food, mira «Máximo ahorro de Cat Food», que usa primero tus tickets.</p>`
+    : '';
   return `<h3 class="section-title">Rutas</h3>
     <div class="table-wrap"><table class="routes">
       <thead><tr>
         <th>Ruta</th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
-        <th class="r">Coste total</th><th class="r">Tiros</th><th class="r" title="11-draws normales + garantizados (incluye step-up)">11-draws + gar.</th><th class="r">Con tu Cat Food</th>
+        <th class="r">Coste total</th><th class="r">Tiros</th>
+        <th class="r" title="Cuántos 11-draws hace la ruta (1500 Cat Food cada uno). Debajo, cuántos de ellos son garantizados o step-up.">11-draws</th>
+        <th class="r" title="Si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta.">¿Te alcanza?</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table></div>`;
+    </table></div>
+    ${shortNote}`;
 }
 
 function renderDetail(data) {

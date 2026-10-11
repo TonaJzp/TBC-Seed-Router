@@ -50,12 +50,15 @@ const OBJECTIVES = {
     description: 'Conserva el máximo de Rare Tickets pagando con Cat Food (11-draws y garantizados).',
     priority: (c) => [c.tickets, c.food, c.pulls, c.switches, c.slot],
   },
+  // Not shown as a route (it is almost always the recommended one); the
+  // diagnostics use it to tell whether two targets can be reached together.
   fastest: {
     label: 'Menos tiros',
-    description: 'Avanza lo mínimo en la semilla (deja más tiros futuros intactos), cueste lo que cueste.',
+    description: 'Avanza lo mínimo en la semilla, cueste lo que cueste.',
     priority: (c) => [c.pulls, totalCost(c), c.switches, c.slot],
   },
 };
+const SHOWN_ROUTES = ['optimal', 'saveFood', 'saveTickets'];
 const SWITCHES_FROM_END = 2; // position of `switches` in every priority, from the end
 
 function compare(a, b) {
@@ -519,7 +522,7 @@ function optimizeRoutes(ctx) {
   prepareContext(ctx);
 
   const routes = [];
-  for (const key of Object.keys(OBJECTIVES)) {
+  for (const key of SHOWN_ROUTES) {
     const t0 = Date.now();
     let result = findRoute(ctx, key, { enforceBudget: true });
     let overBudget = false;
