@@ -1,26 +1,10 @@
 # NOTICE
 
 **TBC Seed Router**
-Copyright (C) 2026 TonaJzp — https://github.com/TonaJzp/TBC-Seed-Router
+Copyright (c) 2026 TonaJzp. All rights reserved. — https://github.com/TonaJzp/TBC-Seed-Router
 
-This program is free software: you can redistribute it and/or modify it under the terms of the
-GNU Affero General Public License, version 3 ([LICENSE](LICENSE)), with the additional terms below.
-It is distributed WITHOUT ANY WARRANTY; see the license for details.
-
-## Additional terms (AGPL-3.0, section 7)
-
-1. **Author attribution (section 7(b)).** Every copy, modified version or work based on this
-   program, including any version made available to users over a network, must keep the
-   following attribution visible to its users, in the user interface (for example, in the page
-   footer) and in its documentation:
-
-   > Basado en TBC Seed Router, creado por TonaJzp — https://github.com/TonaJzp/TBC-Seed-Router
-
-   Unmodified copies may instead keep the original footer ("TBC Seed Router, creado por TonaJzp",
-   with the same link).
-
-2. **Origin (section 7(c)).** Modified versions must be marked as different from the original and
-   must not be presented as the original project or as made by its author.
+The code is published so that it can be read, not reused: copying, publishing or hosting it, or
+works based on it, needs the author's written permission. See [LICENSE](LICENSE).
 
 ## Third-party material
 

@@ -160,11 +160,10 @@ tienen más de 3 días.
 
 ## Créditos y licencia
 
-**TBC Seed Router**, creado por [TonaJzp](https://github.com/TonaJzp). Código abierto con licencia
-[AGPL-3.0](LICENSE) y una condición adicional: cualquier copia o versión modificada, también si se
-publica como web, debe mantener visible «Basado en TBC Seed Router, creado por TonaJzp» con el
-enlace a este repositorio, y no puede presentarse como el proyecto original. Detalles en
-[NOTICE.md](NOTICE.md).
+**TBC Seed Router**, creado por [TonaJzp](https://github.com/TonaJzp). © 2026 TonaJzp, todos los
+derechos reservados. El código está a la vista para que se pueda leer y comprobar cómo funciona, pero
+no se puede copiar, publicar ni alojar en otro sitio, ni usar para sacar ingresos, sin permiso del
+autor. Detalles en [LICENSE](LICENSE) y [NOTICE.md](NOTICE.md).
 
 - **Battle Cats Rolls**, de Lin Jen-Shin (godfat), licencia Apache 2.0: datos de los banners y el
   algoritmo de tiradas, adaptado a JavaScript ([LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
@@ -181,5 +180,6 @@ TBC Seed Router is an unofficial, free route planner for The Battle Cats gacha: 
 finds the cheapest sequence of rolls across upcoming banners to get the cats you want. It runs
 entirely in the browser at https://tonajzp.github.io/TBC-Seed-Router/, using the open data and roll
 algorithm of [Battle Cats Rolls](https://gitlab.com/godfat/battle-cats-rolls) (godfat, Apache 2.0),
-checked daily against bc.godfat.org. Licensed under AGPL-3.0 with an attribution requirement (see
-[NOTICE.md](NOTICE.md)). Not affiliated with PONOS.
+checked daily against bc.godfat.org. © 2026 TonaJzp, all rights reserved: the source is public to
+read, but copying, hosting or monetising it needs permission (see [LICENSE](LICENSE)). Not affiliated
+with PONOS.
