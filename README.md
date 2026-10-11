@@ -50,7 +50,7 @@ quieres gastando lo mínimo.
 | **Rare duplicado / cambio de pista** | Si te sale el mismo gato Rare que en la tirada anterior, el juego lo cambia por otro y tu siguiente tirada salta a la otra pista. La herramienta lo aprovecha para llegar a casillas que de otra forma no alcanzarías. |
 | **Banner** | Cada evento del gacha (con sus fechas y sus gatos). La misma casilla da gatos distintos según el banner en el que tires. |
 | **11-draw** | 11 tiradas seguidas por 1500 Cat Food. |
-| **Garantizado** | 11-draw que asegura un Uber al final. El Uber garantizado siempre te cambia de pista. |
+| **Garantizado** | 11-draw que asegura un Uber al final: 10 tiradas normales y luego el Uber. La tirada del Uber te pasa a la otra pista (ver [Tipos de banner y costes](#tipos-de-banner-y-costes)). |
 | **Casilla de legendario** | Casilla que da un gato Legend Rare en los banners que los tienen. Son muy escasas, por eso la herramienta puede protegerlas (ver [Casillas de legendario](#casillas-de-legendario)). |
 
 ---
@@ -255,7 +255,12 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
 - **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (50 con el descuento
   de primer tiro, una vez).
 - **Descuento 11-Draw** (750 Cat Food, una vez): vale para el 11-draw normal o el garantizado.
-- El uber garantizado se elige con media tirada, así que siempre cambia de pista.
+- **Uber garantizado**: tras las 10 tiradas normales, el Uber se elige con la semilla de la casilla
+  siguiente, y esa tirada te pasa a la otra pista: de una casilla A a la B de la misma fila (si
+  empiezas en 15A, el Uber sale en 25A y sigues en 25B), o de una B a la A de la fila siguiente (si
+  empiezas en 17B, el Uber sale en 27B y sigues en 28A). Es lo que godfat muestra como «-> 25B» o
+  «<- 28A». Ojo: si entre esas 10 tiradas hay un rare duplicado, ese ya te cambió de pista, y el Uber
+  te devuelve a la pista en la que empezaste. En el step-up funciona igual, tras sus 14 tiradas.
 - Para comparar rutas, **1 Rare Ticket = 150 Cat Food**, que es lo que cuesta un tiro simple.
 
 ### Casillas de legendario
