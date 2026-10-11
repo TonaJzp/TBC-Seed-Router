@@ -354,6 +354,12 @@ function renderNotices(data) {
   return lines.length ? `<div class="notice">${lines.map((l) => `<p>${l}</p>`).join('')}</div>` : '';
 }
 
+/** How a route is referred to in another one's note: "la recomendada" or «its label». */
+function routeName(data, key) {
+  const r = data.routes.find((x) => x.key === key);
+  return r.recommended ? 'la recomendada' : `«${esc(r.label)}»`;
+}
+
 function renderRoutesTable(data) {
   const rows = data.routes
     .map((r, i) => {
@@ -368,9 +374,9 @@ function renderRoutesTable(data) {
         ? `${t.multiDraws + g}${g ? `<span class="sub">${g} garantizado${g > 1 ? 's' : ''}</span>` : ''}`
         : '—';
       const note = r.sameAs
-        ? `Misma ruta que «${esc(r.sameAs)}».`
+        ? `Misma ruta que ${routeName(data, r.sameAs)}.`
         : r.sameCostAs
-          ? `Mismo coste que «${esc(r.sameCostAs)}»: no hay alternativa mejor en este criterio.`
+          ? `Mismo coste que ${routeName(data, r.sameCostAs)}: no hay alternativa mejor en este criterio.`
           : esc(r.description);
       return `<tr data-i="${i}" class="${i === current.selected ? 'selected' : ''}">
         <td><span class="name">${esc(r.label)}${r.recommended ? '<span class="tag">Recomendada</span>' : ''}</span>
@@ -387,7 +393,7 @@ function renderRoutesTable(data) {
     .join('');
   const short = data.routes.some((r) => r.found && !r.totals.affordable);
   const shortNote = short
-    ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets de cada ruta ya salen de los tuyos. La ruta recomendada busca el menor gasto total y puede preferir 11-draws (más baratos por tiro) a gastar todos tus tickets; si te falta Cat Food, mira «Máximo ahorro de Cat Food», que usa primero tus tickets.</p>`
+    ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes.</p>`
     : '';
   return `<h3 class="section-title">Rutas</h3>
     <div class="table-wrap"><table class="routes">
@@ -433,10 +439,17 @@ function renderDetail(data) {
     .concat((data.unplanned || []).map((name) => `<li class="missing"><span>${esc(name)}</span><span class="where">ver motivo arriba</span></li>`))
     .join('');
 
+  const cheapest = data.routes.find((x) => x.key === 'optimal');
+  const why =
+    r.recommendedFor === 'leastFood' && cheapest?.found
+      ? `<p class="why">Se recomienda esta porque no tienes Cat Food suficiente para ninguna ruta y es la que menos te pide: gasta primero tus Rare Tickets. «${esc(cheapest.label)}» gasta menos en total porque prefiere 11-draws (más baratos por tiro), pero te pediría ${fmt(cheapest.totals.shortfall)} de Cat Food más.</p>`
+      : '';
+
   return `<section class="detail">
     <div class="detail-head">
-      <h3>${esc(r.label)}</h3>
+      <h3>${esc(r.label)}${r.recommended ? '<span class="tag">Recomendada</span>' : ''}</h3>
       <p>${esc(r.description)}</p>
+      ${why}
     </div>
     ${warnings.length ? `<div class="notice">${warnings.map((w) => `<p>${w}</p>`).join('')}</div>` : ''}
     <dl class="figures">

@@ -441,6 +441,7 @@ td.r, th.r { text-align: right; }
 .detail { margin-top: 26px; }
 .detail-head h3 { font-size: 16px; }
 .detail-head p { margin: 2px 0 0; color: var(--ink-2); }
+.detail-head p.why { max-width: 860px; margin-top: 6px; color: var(--ink); }
 .figures { display: flex; flex-wrap: wrap; margin: 14px 0; border: 1px solid var(--line); border-radius: 4px; }
 .figures div { padding: 8px 16px; border-right: 1px solid var(--line); }
 .figures div:last-child { border-right: 0; }
@@ -521,9 +522,6 @@ td .dot { margin-right: 6px; }
 .site-footer p { margin: 0 0 8px; line-height: 1.45; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
 .site-footer nav a[hidden] { display: none; }
-.site-footer .support-note { color: var(--ink-2); }
-.support-note a { font-weight: 600; white-space: nowrap; }
-.support-note span { color: var(--ink-3); white-space: nowrap; }
 
 /* Credits page -------------------------------------------------------------- */
 body.doc { display: block; }

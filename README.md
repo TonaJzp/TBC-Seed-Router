@@ -101,8 +101,8 @@ filas solo alargan un poco el cálculo.
 
 ### 5. Inventario, descuentos y protecciones
 
-- **Rare Tickets y Cat Food**: lo que tienes ahora. Si ninguna ruta cabe en tu Cat Food, se muestra
-  igualmente la mejor y cuánto te falta.
+- **Rare Tickets y Cat Food**: lo que tienes ahora. Si tu Cat Food no alcanza para ninguna ruta, se
+  recomienda la que menos te pide y se indica cuánto te falta (ver [Cuál se recomienda](#cuál-se-recomienda)).
 - **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
   750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
 - **Protección de casillas de legendario**: marcadas por defecto. Ver
@@ -110,7 +110,7 @@ filas solo alargan un poco el cálculo.
 
 ### 6. Pulsa «Calcular rutas»
 
-En unos segundos verás la ruta recomendada y dos alternativas. Lo que escribes se guarda en tu
+En unos segundos verás tres rutas, con la recomendada en primer lugar. Lo que escribes se guarda en tu
 navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y-datos-guardados)).
 
 ---
@@ -139,31 +139,38 @@ encontró diferencias. En ese caso, comprueba cada paso en godfat antes de gasta
 
 ### Tabla de rutas
 
-Tres rutas, cada una con un criterio distinto. Pulsa una fila para ver su detalle debajo.
+Tres rutas, cada una con un criterio distinto. La recomendada lleva la etiqueta «Recomendada», va
+primero y es la que se abre al calcular; pulsa otra fila para ver su detalle debajo.
 
 | Ruta | Criterio (por orden de prioridad) |
 |------|-----------------------------------|
-| **Recomendada** | menor coste total (Cat Food + 150 × tickets) → menos Cat Food → menos tiros |
+| Menor coste total | menor coste total (Cat Food + 150 × tickets) → menos Cat Food → menos tiros |
 | Máximo ahorro de Cat Food | menos Cat Food → menos tickets → menos tiros |
 | Máximo ahorro de Rare Tickets | menos tickets → menos Cat Food → menos tiros |
 
 En caso de empate, gana la ruta con menos cambios de banner y, después, la que se puede hacer antes.
-Si dos criterios llevan a la misma ruta, se indica («Misma ruta que…») en lugar de repetirla, y si
-llevan a otra ruta con las mismas cifras, «Mismo coste que…».
+Si dos criterios llevan a la misma ruta, se indica («Misma ruta que la recomendada», por ejemplo) en
+lugar de repetirla, y si llevan a otra ruta con las mismas cifras, «Mismo coste que…».
 
 | Columna | Qué indica |
 |---------|------------|
 | Objetivos | Cuántos de tus gatos consigue la ruta (en rojo si no son todos). |
 | Rare Tickets / Cat Food | Lo que gasta de cada recurso. |
-| Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara la ruta recomendada. |
+| Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara «Menor coste total». |
 | Tiros | Número total de tiradas. |
 | 11-draws | Cuántos 11-draws hace la ruta y, debajo, cuántos de ellos son garantizados (o step-up). El resto son tiros simples. |
 | ¿Te alcanza? | «Sí» si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes y paga el resto con Cat Food. |
 
-La ruta recomendada busca el menor coste total, no la que mejor encaja con tu inventario: como un
-11-draw sale más barato por tiro que un tiro simple, puede preferir 11-draws aunque tengas muchos
-Rare Tickets. Por eso, si tienes muchos tickets y poca Cat Food, puede que te falte Cat Food en la
-recomendada y bastante menos en «Máximo ahorro de Cat Food», que gasta primero tus tickets.
+#### Cuál se recomienda
+
+- **Normalmente, «Menor coste total»**: la que menos recursos gasta en conjunto, contando cada Rare
+  Ticket como 150 Cat Food, como en el juego.
+- **Si tu Cat Food no alcanza para ninguna ruta, «Máximo ahorro de Cat Food»**: la que menos Cat Food
+  te pide, porque gasta primero tus Rare Tickets. «Menor coste total» puede gastar menos en conjunto
+  porque prefiere 11-draws (más baratos por tiro que un tiro simple), pero deja tickets sin usar y te
+  pide más Cat Food de la que tienes. Por ejemplo, con 70 tickets y 500 Cat Food, «Menor coste total»
+  podría usar 8 tickets y pedirte 11.500 Cat Food más, y «Máximo ahorro de Cat Food» usar los 70 y
+  pedirte solo 3.100. En ese caso, el detalle de la ruta explica por qué se recomienda.
 
 ### Detalle de la ruta
 

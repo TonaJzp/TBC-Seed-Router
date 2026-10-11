@@ -30,13 +30,14 @@ function rollSlot(slot, ev, rangeEndSlot) {
 /** Cat Food equivalent of a route: 1 Rare Ticket = 150 Cat Food. */
 const totalCost = (c) => c.food + c.tickets * TICKET_VALUE;
 
-// Each objective is a lexicographic order of costs. The first one is the main
-// result; the others are alternatives that push one resource to the extreme.
+// Each objective is a lexicographic order of costs. The first one is normally
+// the recommended route (see pickRecommended); the others are alternatives
+// that push one resource to the extreme.
 // Ties go to the route with fewer banner changes, then to the one that can be
 // done sooner (`switches` and `slot` are always the last two, see dominates).
 const OBJECTIVES = {
   optimal: {
-    label: 'Ruta recomendada',
+    label: 'Menor coste total',
     description: 'Menor gasto total de recursos (1 Rare Ticket = 150 Cat Food). A igual coste, gasta menos Cat Food.',
     priority: (c) => [totalCost(c), c.food, c.pulls, c.switches, c.slot],
   },
@@ -517,7 +518,7 @@ function prepareContext(ctx) {
   return ctx;
 }
 
-/** Runs every objective: the recommended route first, then the alternatives. */
+/** Runs every objective and returns the routes, the recommended one first. */
 function optimizeRoutes(ctx) {
   prepareContext(ctx);
 
@@ -536,7 +537,6 @@ function optimizeRoutes(ctx) {
     }
     const base = {
       key,
-      recommended: key === 'optimal',
       label: OBJECTIVES[key].label,
       description: OBJECTIVES[key].description,
     };
@@ -558,15 +558,44 @@ function optimizeRoutes(ctx) {
       ...describeRoute(ctx, result),
       ms: Date.now() - t0,
     };
-    const twin = routes.find((r) => sameRoute(r, route));
-    if (twin) route.sameAs = twin.label;
-    else {
-      const costTwin = routes.find((r) => r.found && sameOutcome(r, route));
-      if (costTwin) route.sameCostAs = costTwin.label;
-    }
     routes.push(route);
   }
-  return routes;
+  const ordered = pickRecommended(routes);
+  // Each route points to an earlier one it repeats (same rolls) or ties with
+  // (same figures), by key, so the page can name it.
+  ordered.forEach((route, i) => {
+    if (!route.found) return;
+    const earlier = ordered.slice(0, i);
+    const twin = earlier.find((r) => r.found && sameRoute(r, route));
+    if (twin) route.sameAs = twin.key;
+    else {
+      const costTwin = earlier.find((r) => r.found && sameOutcome(r, route));
+      if (costTwin) route.sameCostAs = costTwin.key;
+    }
+  });
+  return ordered;
+}
+
+/**
+ * The recommended route is the cheapest overall (1 Rare Ticket = 150 Cat
+ * Food). But when even that one needs more Cat Food than you have, the one
+ * that asks for the least extra Cat Food is recommended instead: it spends
+ * your Rare Tickets first. It must get as many targets. Marks it with
+ * `recommended` and `recommendedFor` ('cheapest' or 'leastFood') and puts it
+ * first.
+ */
+function pickRecommended(routes) {
+  const got = (r) => r.targets.filter((t) => t.obtained).length;
+  const cheapest = routes.find((r) => r.key === 'optimal');
+  const leanest = routes.find((r) => r.key === 'saveFood');
+  const switchToLeanest =
+    cheapest?.found && !cheapest.totals.affordable &&
+    leanest?.found && got(leanest) >= got(cheapest) &&
+    leanest.totals.foodUsed < cheapest.totals.foodUsed;
+  const pick = switchToLeanest ? leanest : cheapest;
+  for (const r of routes) r.recommended = r === pick;
+  if (pick) pick.recommendedFor = switchToLeanest ? 'leastFood' : 'cheapest';
+  return [pick, ...routes.filter((r) => r !== pick)].filter(Boolean);
 }
 
 export {

@@ -76,8 +76,9 @@ test('every route replays exactly through the simulator and respects all rules',
   ];
   for (const options of scenarios) {
     const { ctx, routes } = plan(someUbers(3), options);
-    assert.deepEqual(routes.map((r) => r.key), ['optimal', 'saveFood', 'saveTickets']);
-    assert.equal(routes[0].recommended, true);
+    assert.deepEqual(routes.map((r) => r.key).sort(), ['optimal', 'saveFood', 'saveTickets']);
+    assert.equal(routes[0].recommended, true, 'the recommended route goes first');
+    assert.equal(routes.filter((r) => r.recommended).length, 1);
     for (const route of routes.filter((r) => r.found)) replayRoute(assert, ctx, route);
   }
 });
@@ -119,12 +120,29 @@ test('each route is the best one for its own criterion', () => {
     assert.equal(done.length, 3, 'fixture targets are reachable');
     const r = byKey(done);
     for (const other of done) {
-      assert.ok(r.optimal.totals.totalCost <= other.totals.totalCost, `recommended is cheapest overall (${tickets} tickets)`);
+      assert.ok(r.optimal.totals.totalCost <= other.totals.totalCost, `optimal is cheapest overall (${tickets} tickets)`);
       assert.ok(r.saveFood.totals.foodUsed <= other.totals.foodUsed, 'saveFood spends least Cat Food');
-      assert.ok(r.saveTickets.totals.ticketsUsed <= other.totals.ticketsUsed, 'saveTickets spends least tickets');    }
+      assert.ok(r.saveTickets.totals.ticketsUsed <= other.totals.ticketsUsed, 'saveTickets spends least tickets');
+    }
+    assert.equal(r.optimal.recommended, true, 'with enough Cat Food the cheapest route is recommended');
+    assert.equal(r.optimal.recommendedFor, 'cheapest');
     const t = r.optimal.totals;
     assert.equal(t.totalCost, totalCost({ food: t.foodUsed, tickets: t.ticketsUsed }), '1 ticket = 150 Cat Food');
     assert.equal(t.totalCost, t.foodUsed + 150 * t.ticketsUsed);
+  }
+});
+
+test('when no route fits the Cat Food, the one asking for the least extra Cat Food is recommended', () => {
+  const { routes } = plan(someUbers(3), { inventory: { tickets: 40, food: 0 } });
+  const r = byKey(routes);
+  assert.ok(r.optimal.found && !r.optimal.totals.affordable, 'fixture: the cheapest route needs Cat Food');
+  assert.ok(r.saveFood.totals.foodUsed < r.optimal.totals.foodUsed, 'fixture: tickets save Cat Food');
+  assert.equal(routes[0], r.saveFood, 'it goes first');
+  assert.equal(r.saveFood.recommended, true);
+  assert.equal(r.saveFood.recommendedFor, 'leastFood');
+  assert.equal(r.optimal.recommended, false);
+  for (const other of routes.filter((x) => x.found)) {
+    assert.ok(r.saveFood.totals.shortfall <= other.totals.shortfall, 'no route asks for less Cat Food');
   }
 });
 
