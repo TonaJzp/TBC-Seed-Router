@@ -28,6 +28,7 @@ const ICONS_OUT = path.join(ROOT, 'public', 'icons');
 const CACHE = path.join(ROOT, '.cache');
 const REPORT = path.join(CACHE, 'build-report.json');
 const GITLAB_API = 'https://gitlab.com/api/v4/projects/godfat%2Fbattle-cats-rolls/repository';
+const GODFAT_BRANCH = 'master';
 
 const arg = (name) => {
   const i = process.argv.indexOf(name);
@@ -46,11 +47,19 @@ async function getRaw(commit, file) {
   return res.text();
 }
 
-/** The latest bc-en.yaml from godfat's repository, pinned to its commit. */
+/**
+ * The latest bc-en.yaml from godfat's repository, pinned to its commit. The
+ * commit list (`/commits?path=`) sits behind a Cloudflare challenge for
+ * anonymous clients since October 2026; the file's headers name its last commit.
+ */
 async function downloadGodfat() {
-  const [commit] = await getJson(`${GITLAB_API}/commits?${new URLSearchParams({ path: GODFAT.file, per_page: '1' })}`);
-  if (!commit?.id) throw new Error('GitLab no devolvió el último commit de los datos de godfat.');
-  return { text: await getRaw(commit.id, GODFAT.file), source: { commit: commit.id, committedAt: commit.committed_date } };
+  const url = `${GITLAB_API}/files/${encodeURIComponent(GODFAT.file)}?ref=${GODFAT_BRANCH}`;
+  const res = await fetch(url, { method: 'HEAD', headers: { 'User-Agent': USER_AGENT } });
+  if (!res.ok) throw new Error(`${url} respondió HTTP ${res.status}`);
+  const id = res.headers.get('x-gitlab-last-commit-id');
+  if (!id) throw new Error('GitLab no devolvió el último commit de los datos de godfat.');
+  const commit = await getJson(`${GITLAB_API}/commits/${id}`);
+  return { text: await getRaw(id, GODFAT.file), source: { commit: id, committedAt: commit.committed_date } };
 }
 
 /**
