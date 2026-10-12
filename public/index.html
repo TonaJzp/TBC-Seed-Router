@@ -19,7 +19,53 @@
   <aside class="sidebar">
     <header class="brand">
       <div class="brand-id">
-        <img class="brand-logo" src="favicon.svg" alt="" width="40" height="40">
+        <!-- The logo, drawn inline so app.js can animate it (mascot.js): a
+             route traced around the cat, which follows it with its eyes. -->
+        <svg class="brand-logo" id="mascot" viewBox="-20 -11 84 75" width="52" height="46" aria-hidden="true"
+          focusable="false">
+          <defs>
+            <mask id="mascot-reveal" maskUnits="userSpaceOnUse" x="-20" y="-11" width="84" height="75">
+              <path class="mascot-reveal" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4" fill="none"
+                stroke="#fff" stroke-width="6" pathLength="100" />
+            </mask>
+          </defs>
+          <g class="mascot-map">
+            <path class="mascot-trail" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4" />
+            <circle class="mascot-start" cx="-4" cy="60" r="1.9" />
+          </g>
+          <g class="mascot-run">
+            <path class="mascot-route" id="mascot-route" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4"
+              mask="url(#mascot-reveal)" />
+          </g>
+          <g class="mascot-nodes">
+            <circle class="mascot-node" cx="-15.3" cy="41.9" r="2.3" data-at="0.25" />
+            <circle class="mascot-node" cx="-9.2" cy="20.6" r="2.3" data-at="0.5" />
+            <circle class="mascot-node" cx="4" cy="2.7" r="2.3" data-at="0.75" />
+          </g>
+          <g class="mascot-target">
+            <circle class="mascot-target-ring" cx="25" cy="-4" r="3.6" />
+            <circle class="mascot-target-dot" cx="25" cy="-4" r="1.4" />
+          </g>
+          <circle class="mascot-tip" cx="-4" cy="60" r="2.5" />
+          <g class="mascot-head">
+            <path d="M32 59C16 59 5 52 5 39c0-6 2-11 5-14.5l1-15c.2-2.2 2.6-3.3 4.4-2L25.5 15c2.1-.3 4.3-.5 6.5-.5s4.4.2 6.5.5l10.1-7.5c1.8-1.3 4.2-.2 4.4 2l1 15c3 3.5 5 8.5 5 14.5 0 13-11 20-27 20z"
+              fill="#fbf7f2" stroke="#2b1d16" stroke-width="4.2" stroke-linejoin="round" />
+            <path d="M14.6 12.8 22.3 18.6c-3.4 1.2-5.9 3.2-7.6 5.6zM49.4 12.8 41.7 18.6c3.4 1.2 5.9 3.2 7.6 5.6z"
+              fill="#e8875c" opacity=".45" />
+            <g class="mascot-gaze">
+              <g class="mascot-eyes">
+                <circle cx="22.5" cy="37" r="3.3" fill="#2b1d16" />
+                <circle cx="41.5" cy="37" r="3.3" fill="#2b1d16" />
+              </g>
+              <path class="mascot-happy" d="M19.2 38.4q3.3-4.4 6.6 0M38.2 38.4q3.3-4.4 6.6 0" fill="none"
+                stroke="#2b1d16" stroke-width="2.6" stroke-linecap="round" />
+            </g>
+            <path d="M27.5 43.5q2.25 3 4.5 0q2.25 3 4.5 0" fill="none" stroke="#2b1d16" stroke-width="2.6"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <ellipse class="mascot-blush" cx="15" cy="44.5" rx="4.2" ry="2.6" fill="#e8875c" opacity=".5" />
+            <ellipse class="mascot-blush" cx="49" cy="44.5" rx="4.2" ry="2.6" fill="#e8875c" opacity=".5" />
+          </g>
+        </svg>
         <div>
           <h1>TBC Seed Router</h1>
           <p>Planificador no oficial de tiros para <a href="https://bc.godfat.org/" target="_blank"

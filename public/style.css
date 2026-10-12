@@ -107,7 +107,56 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .brand-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-logo { flex: none; width: 40px; height: 40px; }
+.brand-logo { flex: none; width: 52px; height: 46px; overflow: visible; }
+
+/* Logo mascot (mascot.js). At rest: the cat beside a faint dotted route that
+   ends at a target. Animated: the route is traced, the cat follows it. */
+.mascot-trail {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 0 4.4;
+  opacity: 0.55;
+}
+.mascot-start { fill: var(--ink-3); opacity: 0.55; }
+.mascot-route {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 4.6 3.4;
+}
+.mascot-reveal { stroke-dasharray: 100 100; stroke-dashoffset: 100; }
+.mascot-run, .mascot-tip { opacity: 0; transition: opacity 0.5s ease; }
+.mascot.is-running .mascot-run, .mascot.is-running .mascot-tip { opacity: 1; transition: none; }
+.mascot-node {
+  fill: var(--panel);
+  stroke: var(--ink-3);
+  stroke-width: 1.4;
+  transition: fill 0.5s ease, stroke 0.5s ease;
+}
+.mascot-node.is-lit { fill: var(--accent); stroke: var(--accent); transition: none; }
+.mascot-tip { fill: var(--accent); stroke: var(--panel); stroke-width: 1.3; }
+.mascot-target-ring { fill: var(--panel); stroke: var(--accent); stroke-width: 1.8; }
+.mascot-target-dot { fill: var(--accent); }
+.mascot-target { transform-box: fill-box; transform-origin: center; }
+.mascot.is-arrived .mascot-target { animation: mascot-pop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes mascot-pop {
+  40% { transform: scale(1.45); }
+}
+.mascot-eyes, .mascot-happy { transition: opacity 0.12s ease; }
+.mascot-happy { opacity: 0; }
+.mascot.is-happy .mascot-eyes { opacity: 0; }
+.mascot.is-happy .mascot-happy { opacity: 1; }
+.mascot-blush { transition: opacity 0.3s ease; }
+.mascot.is-happy .mascot-blush { opacity: 0.8; }
+@media (prefers-reduced-motion: no-preference) {
+  .brand-logo.mascot { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+}
+@media (max-width: 420px) {
+  .brand-logo { width: 46px; height: 41px; }
+}
 .brand h1 { font-size: 17px; line-height: 1.25; letter-spacing: -0.01em; }
 .brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; }
 

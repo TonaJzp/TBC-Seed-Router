@@ -1,11 +1,13 @@
 import { plan, catalogOf, UserError } from './core/planner.js';
 import { TargetPicker } from './picker.js';
 import { godfatLink } from './core/godfat-link.js';
+import { initMascot } from './mascot.js';
 
 const $ = (sel) => document.querySelector(sel);
 const form = $('#route-form');
 const STORAGE_KEY = 'bc-seed-router-form';
 const picker = new TargetPicker($('#picker'));
+const mascot = initMascot($('#mascot'));
 const DAY_MS = 86_400_000;
 const STALE_DATA_DAYS = 3; // the data is rebuilt every day
 const UNVERIFIED_DAYS = 4; // and checked against godfat every day
@@ -136,6 +138,7 @@ async function submit(event) {
     gotResult = true;
     current = { data: result, selected: result.routes.findIndex((r) => r.found) };
     render();
+    if (current.selected >= 0) mascot.play(); // a route found: the cat celebrates
   } catch (err) {
     if (err instanceof UserError) showError(err.message);
     else {
