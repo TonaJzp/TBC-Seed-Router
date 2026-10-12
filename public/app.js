@@ -416,8 +416,16 @@ function renderDetail(data) {
     !r.complete &&
     `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «Por qué no se puede conseguir todo».`,
     r.exhausted && 'La búsqueda alcanzó su límite de tamaño: el resultado puede no ser el óptimo.',
-    r.overBudget && `Ninguna ruta cabe en tu Cat Food actual: esta necesita ${fmt(t.shortfall)} más.`,
   ].filter(Boolean);
+  // Not enough Cat Food: the most important thing to know about the route.
+  const budget = t.affordable
+    ? ''
+    : `<div class="notice alert" role="note">
+        <b>Te faltan ${fmt(t.shortfall)} de Cat Food para esta ruta</b>
+        <p>Necesita ${fmt(t.foodUsed)} y tienes ${fmt(data.inventory.food)}. Sin esa Cat Food no podrás hacer todos los pasos, así que no conseguirás todos tus objetivos.${
+          r.overBudget ? ' Ninguna ruta de tus fechas cabe en la Cat Food que tienes.' : ''
+        }</p>
+      </div>`;
   const discountLines = [
     ['Primer 11-Draw a 750', r.discounts.multi],
     ['Primer tiro simple a 50', r.discounts.single],
@@ -451,6 +459,7 @@ function renderDetail(data) {
       <p>${esc(r.description)}</p>
       ${why}
     </div>
+    ${budget}
     ${warnings.length ? `<div class="notice">${warnings.map((w) => `<p>${w}</p>`).join('')}</div>` : ''}
     <dl class="figures">
       <div><dt>Coste total</dt><dd>${fmt(t.totalCost)}</dd></div>

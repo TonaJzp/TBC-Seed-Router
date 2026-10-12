@@ -100,14 +100,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .brand {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 18px 22px 14px;
+  padding: 16px 22px;
   border-bottom: 1px solid var(--line);
 }
-.brand h1 { font-size: 17px; letter-spacing: -0.01em; }
-.brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; }
+.brand-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-logo { flex: none; width: 40px; height: 40px; }
+.brand h1 { font-size: 17px; line-height: 1.25; letter-spacing: -0.01em; }
+.brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; }
 
 .theme-toggle {
   display: inline-flex;
@@ -441,6 +443,15 @@ td.r, th.r { text-align: right; }
 .detail { margin-top: 26px; }
 .detail-head h3 { font-size: 16px; }
 .detail-head p { margin: 2px 0 0; color: var(--ink-2); }
+.detail-head { margin-bottom: 14px; }
+.notice.alert {
+  padding: 12px 14px;
+  border-left-color: var(--bad);
+  background: var(--bad-soft);
+  border-radius: 0 4px 4px 0;
+}
+.notice.alert b { display: block; margin-bottom: 3px; font-size: 14px; color: var(--bad); }
+.notice.alert p { margin: 0; color: var(--ink); line-height: 1.45; }
 .detail-head p.why { max-width: 860px; margin-top: 6px; color: var(--ink); }
 .figures { display: flex; flex-wrap: wrap; margin: 14px 0; border: 1px solid var(--line); border-radius: 4px; }
 .figures div { padding: 8px 16px; border-right: 1px solid var(--line); }
