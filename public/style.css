@@ -112,6 +112,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; }
 
 .theme-toggle {
+  align-self: flex-start; /* level with the title, not centred on the block */
   display: inline-flex;
   align-items: center;
   gap: 6px;
