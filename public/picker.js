@@ -72,12 +72,9 @@ export class TargetPicker {
       this.remove(btn.dataset.name);
       this.focusChip(i);
     });
-    // The button goes away with the cats: the focus moves to the box, with
-    // the list open to choose again.
     root.querySelector('#picker-clear').addEventListener('click', () => {
       this.clear();
-      this.input.focus();
-      if (this.pop.hidden) this.open(); // it had the focus already
+      this.focusEmptyBox();
     });
   }
 
@@ -300,16 +297,25 @@ export class TargetPicker {
   }
 
   // After removing with ×, focus stays in the list (next ×, else the previous one)
-  // so the dropdown does not pop open; with nothing left it returns to the box,
-  // with the list open as after «Quitar todos».
+  // so the dropdown does not pop open; with nothing left it goes as after
+  // «Quitar todos».
   focusChip(i) {
     const buttons = this.chips.querySelectorAll('button.remove');
     const btn = buttons[Math.min(i, buttons.length - 1)];
     if (btn) btn.focus();
-    else {
-      this.input.focus();
-      if (this.pop.hidden) this.open(); // it had the focus already
-    }
+    else this.focusEmptyBox();
+  }
+
+  /**
+   * With no cats left the chosen list and its buttons go away. The dropdown
+   * stays closed until the box is tapped. With a mouse or keyboard the focus
+   * moves to the box; on touch screens it is left alone, as focusing the box
+   * would pop up the keyboard.
+   */
+  focusEmptyBox() {
+    this.close();
+    if (window.matchMedia('(pointer: fine)').matches) this.focusQuietly();
+    else document.activeElement?.blur();
   }
 
   /** Focuses the search box without opening the dropdown. */
