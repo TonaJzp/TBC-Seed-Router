@@ -217,6 +217,12 @@ function showError(message) {
   $('#error').hidden = false;
 }
 
+/** While working, the button says so (and cannot be pressed again). */
+function setBusy(label) {
+  $('#submit').disabled = !!label;
+  $('#submit').textContent = label || 'Calcular rutas';
+}
+
 // Every press of "Calcular rutas" ends somewhere you can see: the progress and
 // then the results, the field to fix, or the error, never a silent no-op.
 async function submit(event) {
@@ -224,12 +230,12 @@ async function submit(event) {
   if ($('#submit').disabled) return; // a calculation is already running
   if (!gachaData && !dataFailed) {
     // Still loading (a slow connection): wait for it, in sight.
-    $('#submit').disabled = true;
-    $('#progress').innerHTML = '<li>Cargando los datos de los banners...</li>';
+    setBusy('Cargando datos…');
+    $('#progress').textContent = 'Cargando los datos de los banners…';
     show('status');
     bringIntoView($('#status'));
     await dataLoaded;
-    $('#submit').disabled = false;
+    setBusy(null);
     show(current ? 'results' : 'empty');
   }
   if (!gachaData) {
@@ -248,9 +254,9 @@ async function submit(event) {
     showFieldError(wrong.field, wrong.message);
     return;
   }
-  $('#submit').disabled = true;
+  setBusy('Calculando…');
   $('#error').hidden = true;
-  $('#progress').innerHTML = '<li>Calculando las tiradas de tu semilla y las rutas óptimas...</li>';
+  $('#progress').textContent = 'Calculando las tiradas de tu semilla y las mejores rutas…';
   show('status');
   // Let the page paint the progress (and finish scrolling to it, on phones the
   // results are below the form) before the synchronous calculation.
@@ -277,7 +283,7 @@ async function submit(event) {
       );
     }
   } finally {
-    $('#submit').disabled = false;
+    setBusy(null);
     show(gotResult ? 'results' : 'empty');
     if (fieldError) showFieldError(fieldError.field, fieldError.message);
     else bringIntoView($(gotResult ? '#results' : '#error'));
@@ -306,7 +312,7 @@ function render() {
     data.routes.some((r) => r.found) ? renderSupport() : '', // only when it has just been useful
     renderContext(data),
     renderDiagnostics(data),
-    data.routes.length ? renderRoutesTable(data) : '',
+    data.routes.some((r) => r.found) ? renderRoutesTable(data) : '', // none: the diagnostics explain why
     renderDetail(data),
   ].join('');
   for (const d of document.querySelectorAll('#results details[data-section]')) d.open = open.has(d.dataset.section);
@@ -692,6 +698,7 @@ const THEME_KEY = 'bc-seed-router-theme';
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const dark = theme === 'dark';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#211f1d' : '#f5f4f1');
   $('#theme-toggle').setAttribute('aria-pressed', String(dark));
   $('#theme-label').textContent = dark ? 'Claro' : 'Oscuro';
 }

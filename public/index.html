@@ -7,6 +7,7 @@
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://tbcseedrouter.goatcounter.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#f5f4f1">
   <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -106,7 +107,7 @@
         <h2>Semilla</h2>
         <label class="field">
           <span>URL de tu semilla en godfat o número de semilla</span>
-          <input type="text" name="url" required inputmode="url" autocomplete="off" spellcheck="false"
+          <input type="text" name="url" required inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
             placeholder="https://bc.godfat.org/?seed=…">
         </label>
       </section>
@@ -120,7 +121,7 @@
               <circle cx="7" cy="7" r="4.8" fill="none" stroke="currentColor" stroke-width="1.6" />
               <path d="m10.6 10.6 3.6 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
             </svg>
-            <input id="picker-input" type="text" autocomplete="off" spellcheck="false" role="combobox"
+            <input id="picker-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox"
               aria-expanded="false" aria-controls="picker-list" aria-autocomplete="list"
               placeholder="Buscar por nombre o forma…">
             <!-- Chosen cats stay in the list, ticked, so each tap shows its
@@ -156,7 +157,7 @@
           dispositivo.</small>
         <label class="field">
           <span>¿Cuántos tiros hacia delante revisar?</span>
-          <input type="number" name="rolls" min="20" max="1000" step="10" value="200" required>
+          <input type="number" name="rolls" min="20" max="1000" step="10" value="200" inputmode="numeric" required>
           <small>Hasta qué fila de tu semilla en godfat se busca (1A/1B, 2A/2B…). Con 200 casi siempre basta; más solo
             hace que el análisis tarde más.</small>
         </label>
@@ -255,7 +256,7 @@
 
     <section id="status" class="status" hidden>
       <div class="bar"><span></span></div>
-      <ol id="progress"></ol>
+      <p id="progress" role="status"></p>
     </section>
 
     <section id="results" hidden></section>
