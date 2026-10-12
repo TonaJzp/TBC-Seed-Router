@@ -377,7 +377,7 @@ por última vez contra godfat.
 - Todo se calcula en tu navegador. Tu semilla, tus gatos, tus fechas y tu inventario no se envían a
   ningún sitio. No hay cookies, analítica ni publicidad.
 - Tu navegador guarda el último formulario y el tema claro u oscuro (botón junto al título) para
-  que no tengas que repetirlos. Puedes borrarlos con «Borrar los datos guardados en este navegador»,
+  que no tengas que repetirlos. Puedes borrarlos con «Borrar datos guardados»,
   al pie de la página.
 - Más detalles en la página [Créditos, licencias y privacidad](https://tonajzp.github.io/TBC-Seed-Router/credits.html).
 

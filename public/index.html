@@ -122,8 +122,8 @@
         <p class="hint">Evita gastar en otros gatos las casillas que pueden darte un legendario.</p>
         <div class="check-help">
           <label class="check"><input type="checkbox" name="avoidLegend" checked><span><i class="dot legend"></i>Proteger
-              casillas moradas (Legendary)<button type="button" class="help" aria-label="Qué hace esta opción"
-                aria-expanded="false" aria-controls="help-legend">?</button></span></label>
+              casillas moradas <span class="nowrap">(Legendary)<button type="button" class="help" aria-label="Qué hace esta opción"
+                aria-expanded="false" aria-controls="help-legend">?</button></span></span></label>
           <div class="help-pop" id="help-legend" role="tooltip" hidden>
             <p>Las casillas moradas dan un gato <b>Legend Rare</b> en los banners que tienen legendarios (en los demás, un
               Uber).</p>
@@ -134,9 +134,9 @@
         </div>
         <div class="check-help">
           <label class="check"><input type="checkbox" name="avoidLegendFest" checked><span><i
-                class="dot legend-fest"></i>Proteger casillas lilas (Legendary en Royalfest)<button
+                class="dot legend-fest"></i>Proteger casillas lilas (Legendary en <span class="nowrap">Royalfest)<button
                 type="button" class="help" aria-label="Qué hace esta opción" aria-expanded="false"
-                aria-controls="help-legend-fest">?</button></span></label>
+                aria-controls="help-legend-fest">?</button></span></span></label>
           <div class="help-pop" id="help-legend-fest" role="tooltip" hidden>
             <p>Las casillas lilas solo dan legendario en banners con más probabilidad de legend, como Royalfest o los de
               doble legend. En los demás banners son casillas normales.</p>
@@ -153,21 +153,22 @@
     </form>
 
     <footer class="site-footer">
-      <p><b>TBC Seed Router</b>, creado por
-        <a href="https://github.com/TonaJzp" target="_blank" rel="noopener">TonaJzp</a>.
-        Código en <a href="https://github.com/TonaJzp/TBC-Seed-Router" target="_blank" rel="noopener">GitHub</a>.
-      </p>
-      <p>Herramienta gratuita y no oficial, sin relación con PONOS. Calcula las tiradas con los datos abiertos de
-        <a href="https://bc.godfat.org/" target="_blank" rel="noopener">Battle Cats Rolls</a> (godfat, Apache 2.0) e
-        iconos de la
-        <a href="https://battlecats.miraheze.org/" target="_blank" rel="noopener">Battle Cats Wiki</a>.
-        The Battle Cats © PONOS Corporation.
-      </p>
-      <p id="data-info"></p>
-      <nav>
+      <div class="foot-brand">
+        <img src="favicon.svg" alt="" width="24" height="24">
+        <p><b>TBC Seed Router</b><span>creado por <a href="https://github.com/TonaJzp" target="_blank"
+              rel="noopener">TonaJzp</a></span></p>
+      </div>
+      <p class="foot-data" id="data-info"></p>
+      <p class="foot-legal">Herramienta gratuita y no oficial, sin relación con PONOS. Calcula las tiradas con los datos
+        abiertos de <a href="https://bc.godfat.org/" target="_blank" rel="noopener">Battle Cats Rolls</a> (godfat,
+        Apache 2.0) e iconos de la <a href="https://battlecats.miraheze.org/" target="_blank" rel="noopener">Battle Cats
+          Wiki</a>. The Battle Cats © PONOS Corporation.</p>
+      <nav class="foot-links">
+        <a href="https://github.com/TonaJzp/TBC-Seed-Router" target="_blank" rel="noopener">Código en GitHub</a>
         <a href="credits.html">Créditos, licencias y privacidad</a>
+        <button type="button" class="link-button" id="forget-data"
+          title="Borra el formulario y el tema guardados en este navegador">Borrar datos guardados</button>
       </nav>
-      <button type="button" class="link-button" id="forget-data">Borrar los datos guardados en este navegador</button>
     </footer>
   </aside>
 

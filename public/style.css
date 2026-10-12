@@ -658,10 +658,32 @@ td .dot { margin-right: 6px; }
 .legend-row .cat { font-weight: 400; }
 
 /* Footer (credits, legal links) ------------------------------------------- */
-.site-footer { padding: 14px 22px 22px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); }
-.site-footer p { margin: 0 0 8px; line-height: 1.45; }
-.site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; }
-.site-footer nav a[hidden] { display: none; }
+.site-footer { padding: 18px 22px 24px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); }
+.foot-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.foot-brand img { flex: none; width: 24px; height: 24px; }
+.foot-brand p { margin: 0; line-height: 1.3; }
+.foot-brand b { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+/* Where the banner data comes from and when it was last checked */
+.foot-data {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.foot-data:empty { display: none; }
+.foot-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.foot-data code { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.foot-check { display: flex; align-items: center; gap: 7px; }
+.foot-check i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.foot-check.warn i { background: var(--warn); }
+.foot-check.bad i { background: var(--bad); }
+.foot-legal { margin: 0 0 14px; line-height: 1.5; }
+.foot-links { display: flex; flex-wrap: wrap; gap: 6px 16px; padding-top: 12px; border-top: 1px solid var(--line); }
 
 /* Credits page -------------------------------------------------------------- */
 body.doc { display: block; }
@@ -695,6 +717,12 @@ body.doc { display: block; }
   .content { padding: 22px 24px 56px; }
 }
 @media (max-width: 900px) {
+  /* The sidebar's footer goes to the very end of the page, after the results */
+  .sidebar { display: contents; }
+  .brand, #route-form { background: var(--panel); }
+  #route-form { border-bottom: 1px solid var(--line); }
+  .content { order: 1; }
+  .site-footer { order: 2; background: var(--panel); }
   body { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .content { padding: 20px 16px 48px; }

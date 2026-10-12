@@ -646,8 +646,19 @@ function dataNotices(data, status, now = Date.now()) {
 function renderDataInfo(data, status) {
   const commit = data.source.commit === 'local' ? 'copia local' : data.source.commit.slice(0, 8);
   const committed = data.source.committedAt ? ` del ${showDate(data.source.committedAt)}` : '';
-  const checked = status?.lastOk ? ` · comprobados con bc.godfat.org el ${showDate(status.lastOk)}` : '';
-  $('#data-info').textContent = `Banners: datos de godfat${committed} (${commit})${checked}.`;
+  // Status dot: green when checked against godfat lately, amber when the
+  // check is old or missing, red when it did not match.
+  const mismatch = status?.result === 'mismatch';
+  const recent = status?.lastOk && Date.now() - Date.parse(status.lastOk) <= UNVERIFIED_DAYS * DAY_MS;
+  const state = mismatch ? 'bad' : recent ? 'ok' : 'warn';
+  const check = mismatch
+    ? `No coincidía con bc.godfat.org el ${showDate(status.checkedAt)}`
+    : status?.lastOk
+      ? `Comprobados con bc.godfat.org el ${showDate(status.lastOk)}`
+      : 'Aún sin comprobar con bc.godfat.org';
+  $('#data-info').innerHTML = `<span class="foot-label">Datos</span>
+    <span>Banners de godfat${esc(committed)} <code>${esc(commit)}</code></span>
+    <span class="foot-check ${state}"><i aria-hidden="true"></i>${esc(check)}</span>`;
   const notices = dataNotices(data, status);
   $('#data-notice').hidden = !notices.length;
   $('#data-notice').innerHTML = notices.map((n) => `<p>${esc(n)}</p>`).join('');
