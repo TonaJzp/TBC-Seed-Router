@@ -303,7 +303,7 @@ function render() {
   // Picking another route re-renders everything: keep the open rows open.
   const open = new Set([...document.querySelectorAll('#results details[open][data-section]')].map((d) => d.dataset.section));
   $('#results').innerHTML = [
-    renderSupport(),
+    data.routes.some((r) => r.found) ? renderSupport() : '', // only when it has just been useful
     renderContext(data),
     renderDiagnostics(data),
     data.routes.length ? renderRoutesTable(data) : '',
@@ -339,14 +339,14 @@ function renderContext(data) {
   const rows = data.events
     .map(
       (e) => `<tr>
-        <td class="num">${esc(withHour(e.start, e.startTime))} – ${esc(withHour(e.end, e.endTime))}</td>
-        <td>${esc(e.name)}</td>
+        <td class="num dates">${esc(withHour(e.start, e.startTime))} – ${esc(withHour(e.end, e.endTime))}</td>
+        <td class="bname">${esc(e.name)}</td>
         <td class="kind">${esc(KIND_LABEL[e.kind] || e.kind)}</td>
       </tr>`
     )
     .join('');
   const skipped = data.skipped
-    .map((s) => `<tr><td></td><td class="muted">${esc(s.name)}</td><td class="kind">Excluido: ${esc(s.reason)}</td></tr>`)
+    .map((s) => `<tr><td class="dates"></td><td class="muted bname">${esc(s.name)}</td><td class="kind">Excluido: ${esc(s.reason)}</td></tr>`)
     .join('');
   return `<section class="summary" aria-label="Resumen del análisis">
     <header class="summary-top">
@@ -354,7 +354,7 @@ function renderContext(data) {
       <p class="summary-facts"><b>${fmt(data.rolls)}</b> tiros por pista · <b>${data.events.length}</b> banners · 1 Rare Ticket = <b>150</b> Cat Food</p>
     </header>
     ${disclosure('banners', 'Banners analizados', data.events.length,
-      `<div class="table-wrap"><table class="banners"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
+      `<div class="table-wrap"><table class="banners events"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
       <tbody>${rows}${skipped}</tbody></table></div>`)}
     ${renderAllLegendCells(data)}
     ${renderNotices(data)}
@@ -393,7 +393,7 @@ function renderAllLegendCells(data) {
     .map((c) => `<tr><td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td><td>${legendOptions(c)}</td></tr>`)
     .join('');
   return disclosure('legend', `Casillas de legendario en tus próximos ${data.rolls} tiros`, cells.length,
-    `<div class="table-wrap"><table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+    `<div class="table-wrap"><table class="banners legend-all"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
 
 const FIT = {
@@ -429,9 +429,9 @@ function renderRouteLegendCells(r, data) {
         ? options.map((l) => {
           const ev = evById.get(l.eventId);
           const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : 'next'];
-          return `<td><b>${esc(l.name)}</b></td>
+          return `<td class="opt"><b>${esc(l.name)}</b></td>
               <td class="ev" title="${esc(l.eventName)}"><span class="ev-name">${esc(l.eventName)}</span>${ev ? `<small>hasta el ${esc(shortWithHour(ev.end, ev.endTime))}</small>` : ''}</td>
-              <td><span class="fit ${l.sameRoute ? 'same' : 'change'}" title="${esc(why)}">${label}</span></td>
+              <td class="fitc"><span class="fit ${l.sameRoute ? 'same' : 'change'}" title="${esc(why)}">${label}</span></td>
               <td class="add">${addTargetButton(l.name)}</td>`;
         })
         : [`<td colspan="4" class="muted">${c.got.rarity === 'legendary' ? 'Ningún otro banner activo en ese momento da otro legendario aquí.' : 'Ningún banner activo en ese momento da legendario aquí.'}</td>`];
@@ -510,7 +510,7 @@ function renderRoutesTable(data) {
   const rows = data.routes
     .map((r, i) => {
       if (!r.found) {
-        return `<tr><td><span class="name">${esc(r.label)}</span><span class="sub">${esc(r.reason)}</span></td><td colspan="7"></td></tr>`;
+        return `<tr><td><span class="name">${esc(r.label)}</span><span class="sub">${esc(r.reason)}</span></td><td colspan="7" class="filler"></td></tr>`;
       }
       const t = r.totals;
       const got = r.targets.filter((x) => x.obtained).length;
@@ -527,20 +527,20 @@ function renderRoutesTable(data) {
       return `<tr data-i="${i}" class="${i === current.selected ? 'selected' : ''}">
         <td><span class="name">${esc(r.label)}${r.recommended ? '<span class="tag">Recomendada</span>' : ''}</span>
           <span class="sub">${note}</span></td>
-        <td class="r num ${got < requested ? 'bad' : ''}">${got}/${requested}</td>
-        <td class="r num">${fmt(t.ticketsUsed)}</td>
-        <td class="r num">${fmt(t.foodUsed)}</td>
-        <td class="r num"><b>${fmt(t.totalCost)}</b></td>
-        <td class="r num">${fmt(t.pulls)}</td>
-        <td class="r num nowrap">${draws}</td>
-        <td class="r nowrap">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)} CF</span>`}</td>
+        <td class="r num ${got < requested ? 'bad' : ''}" data-label="Objetivos">${got}/${requested}</td>
+        <td class="r num" data-label="Rare Tickets">${fmt(t.ticketsUsed)}</td>
+        <td class="r num" data-label="Cat Food">${fmt(t.foodUsed)}</td>
+        <td class="r num" data-label="Coste total"><b>${fmt(t.totalCost)}</b></td>
+        <td class="r num" data-label="Tiros">${fmt(t.pulls)}</td>
+        <td class="r num nowrap" data-label="11-draws">${draws}</td>
+        <td class="r nowrap afford" data-label="¿Te alcanza?">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)} CF</span>`}</td>
       </tr>`;
     })
     .join('');
   const short = data.routes.some((r) => r.found && !r.totals.affordable);
   const shown = data.routes[current.selected];
   const shownNote = shown?.found && data.routes.filter((r) => r.found).length > 1
-    ? `<p class="routes-hint shown">Abajo tienes los pasos y detalles de <b>«${esc(shown.label)}»</b>. Para ver los de otra ruta, pulsa su fila en la tabla.</p>`
+    ? `<p class="routes-hint shown">Abajo tienes los pasos y detalles de <b>«${esc(shown.label)}»</b>. Para ver los de otra ruta, pulsa sobre ella.</p>`
     : '';
   const shortNote = short
     ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes.</p>`
@@ -682,7 +682,7 @@ function renderStep(s, data, prev) {
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>
-    <td><div class="cats">${cats}</div></td>
+    <td class="cats-cell"><div class="cats">${cats}</div></td>
   </tr>`;
 }
 

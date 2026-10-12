@@ -203,7 +203,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .field > span, .field > label { display: block; font-size: 12.5px; margin-bottom: 3px; }
 .field small { display: block; margin-top: 4px; color: var(--ink-3); font-size: 11.5px; line-height: 1.35; }
 .field .field-error { color: var(--bad); }
-.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
 .pair .field { margin-bottom: 0; }
 .hint { display: block; margin: 0 0 8px; color: var(--ink-3); font-size: 11.5px; line-height: 1.4; }
 .pair + .hint { margin: 8px 0 0; }
@@ -212,6 +212,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 input[type="url"], input[type="number"], input[type="date"], input[type="search"], input[type="text"], textarea {
   width: 100%;
+  min-width: 0; /* date fields have a wide minimum of their own */
   padding: 6px 8px;
   font: inherit;
   color: var(--ink);
@@ -311,7 +312,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 /* Target picker ----------------------------------------------------------- */
 /* Search box with a dropdown, and the chosen cats as a list of equal rows
    underneath (icon · name · rarity · remove), so it stays tidy with 1 or 30. */
-.picker-search { position: relative; }
+.picker-search { position: relative; scroll-margin-top: 10px; }
 .picker-search input { padding-left: 30px; }
 .picker-search .search-icon {
   position: absolute;
@@ -342,7 +343,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .picker-list {
   margin: 0;
   padding: 2px 0;
-  max-height: 320px;
+  max-height: min(320px, 45vh);
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
@@ -474,7 +475,9 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 #picker-status { display: block; margin-top: 5px; color: var(--ink-3); font-size: 11.5px; }
 
 /* Main ------------------------------------------------------------------- */
-.content { padding: 24px 32px 64px; min-width: 0; }
+/* The results adapt to the room they have (container queries at the end):
+   tables when they fit, cards when not, whatever the screen. */
+.content { padding: 24px 32px 64px; min-width: 0; container: content / inline-size; }
 #status, #error, #results { scroll-margin-top: 16px; }
 
 .empty { max-width: 620px; color: var(--ink-2); }
@@ -823,6 +826,7 @@ body.doc { display: block; }
   border-bottom: 1px solid var(--line);
 }
 .doc-head nav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.doc-back { font-weight: 600; }
 .doc-body { max-width: 760px; margin: 0 auto; padding: 28px 32px 72px; line-height: 1.55; }
 .doc-body h1 { font-size: 22px; letter-spacing: -0.01em; }
 .doc-body section { padding-top: 28px; scroll-margin-top: 12px; }
@@ -847,7 +851,7 @@ body.doc { display: block; }
   #route-form { border-bottom: 1px solid var(--line); }
   .content { order: 1; }
   .site-footer { order: 2; background: var(--panel); }
-  body { grid-template-columns: 1fr; }
+  body { grid-template-columns: minmax(0, 1fr); }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .content { padding: 20px 16px 48px; }
   .steps .banner { min-width: 150px; max-width: 200px; }
@@ -865,4 +869,184 @@ body.doc { display: block; }
   .support-button { margin: 6px 0 0; padding: 10px 18px; }
   .doc-head { padding: 12px 16px; }
   .doc-body { padding: 20px 16px 48px; }
+}
+
+/* Medium room (tablets, small laptops): the tables stay tables, with
+   narrower columns so they fit. */
+@container content (min-width: 730px) and (max-width: 900px) {
+  .cats { min-width: 200px; }
+  .legend-cells th, .legend-cells td { padding-left: 8px; padding-right: 8px; }
+  .legend-cells td.ev { max-width: 180px; }
+  .legend-cells td.got { max-width: 160px; }
+}
+
+/* Little room (phones, narrow windows): the wide tables become cards ----- */
+/* Each row is laid out as a small grid with its own labels, so everything
+   fits the width of the screen and nothing needs a sideways scroll. */
+@container content (max-width: 729px) {
+  .table-wrap { overflow: visible; }
+  .summary-body { padding: 0 4px 12px; }
+  .routes thead, .steps thead, .legend-cells thead, .events thead, .legend-all thead { display: none; }
+  .routes, .routes tbody, .steps, .steps tbody, .legend-cells, .legend-cells tbody,
+  .events, .events tbody, .legend-all, .legend-all tbody { display: block; }
+
+  /* Banners analysed: name, then dates and type. */
+  .events tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .events td { display: block; padding: 0; border: 0; }
+  .events td.bname { grid-column: 1 / -1; order: -1; }
+  .events td.dates { font-size: 12px; color: var(--ink-2); }
+  .events td.dates:empty { display: none; }
+  .events td.kind { align-self: end; }
+
+  /* Legend cells of the next rolls: the cell, then its legendaries. */
+  .legend-all tr { display: block; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .legend-all td { display: block; padding: 0; border: 0; }
+  .legend-all td:first-child { margin-bottom: 4px; }
+  .legend-option { margin: 3px 0; }
+
+  /* Routes: one card each; tap one to see its steps. */
+  .routes tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 8px;
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+  }
+  .routes tbody tr:hover { background: var(--paper); }
+  .routes tbody tr.selected { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .routes td { display: block; padding: 0; border: 0; text-align: left; }
+  .routes td:first-child { grid-column: 1 / -1; }
+  .routes td.r { text-align: left; }
+  .routes td.afford { grid-column: span 2; }
+  .routes td.filler { display: none; }
+  .routes td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 1px;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ink-3);
+  }
+  .routes .name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+  .routes .sub { margin-top: 2px; }
+
+  /* Route figures: two columns, the last one across. */
+  .figures { display: grid; grid-template-columns: 1fr 1fr; }
+  .figures div { padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .figures div:nth-child(odd) { border-right: 1px solid var(--line); }
+  .figures div:last-child { grid-column: 1 / -1; border-right: 0; border-bottom: 0; }
+
+  /* Legend cells of the route: the cell and what you get, then each other
+     legendary with whether it keeps the route and its button. */
+  .legend-cells tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 12px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--line);
+  }
+  .legend-cells tr.first { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+  .legend-cells td, .legend-cells tr.first td, .legend-cells tr.more td { display: block; padding: 0; border: 0; max-width: none; }
+  .legend-cells td.cell { grid-column: 1 / -1; font-weight: 600; }
+  .legend-cells td.cell small { display: inline; margin-left: 6px; font-weight: 400; }
+  .legend-cells td.got { grid-column: 1 / -1; max-width: none; margin-bottom: 6px; }
+  .legend-cells td.got::before { content: "Qué sacas ahí"; display: block; font-size: 11px; color: var(--ink-3); }
+  .legend-cells td.got b { display: inline; }
+  .legend-cells td.got .tag { margin: 0 0 0 6px; }
+  .legend-cells td.opt { grid-column: 1; order: 1; }
+  .legend-cells td.fitc { grid-column: 2; order: 2; text-align: right; }
+  .legend-cells td.ev { grid-column: 1; order: 3; }
+  .legend-cells td.add { grid-column: 2; order: 4; align-self: end; }
+  .legend-cells td[colspan] { grid-column: 1 / -1; order: 1; }
+
+  /* Steps: one numbered card each, the cats underneath. */
+  .steps tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "idx day    action"
+      "idx banner banner"
+      "idx pos    pay"
+      "idx cats   cats";
+    gap: 6px 10px;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .steps tr.hit { border-radius: 4px; }
+  .steps td { display: block; width: auto; min-width: 0; max-width: none; padding: 0; border: 0; }
+  .steps .idx {
+    grid-area: idx;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    border-radius: 50%;
+  }
+  .steps .day { grid-area: day; font-weight: 600; }
+  .steps .day small { font-weight: 400; }
+  .steps .action { grid-area: action; text-align: right; font-weight: 600; }
+  .steps .action small { font-weight: 400; }
+  .steps .banner { grid-area: banner; width: auto; min-width: 0; max-width: none; }
+  .steps .pos { grid-area: pos; }
+  .steps .pay { grid-area: pay; text-align: right; }
+  .steps .pos::before, .steps .pay::before {
+    display: block;
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .steps .pos::before { content: "Posición"; }
+  .steps .pay::before { content: "Pago"; }
+  .steps .cats-cell { grid-area: cats; }
+  .cats { min-width: 0; }
+  .cat { line-height: 22px; }
+}
+
+/* Touch screens: 16px text in the fields (iPhones zoom into smaller ones)
+   and bigger targets for fingers. */
+@media (pointer: coarse) {
+  input[type="url"], input[type="number"], input[type="date"], input[type="search"], input[type="text"], textarea { font-size: 16px; }
+  input[type="number"], input[type="text"], input[type="url"] { padding: 7px 9px; }
+  .picker-search input { padding-left: 32px; } /* room for the magnifier */
+  .theme-toggle { min-height: 36px; padding: 6px 11px; }
+  .check { margin: 8px 0; }
+  .check input { width: 18px; height: 18px; margin-top: 0; }
+  .link-button { padding: 6px 0; margin: -6px 0; }
+  .picker-list [role="option"] { padding: 6px 8px; }
+  .selected-list li { grid-template-columns: 24px minmax(0, 1fr) auto 36px; height: 40px; }
+  .selected-list .remove { width: 34px; height: 34px; font-size: 18px; }
+  .foot-links { gap: 2px 16px; }
+  .foot-links a, .foot-links .link-button { padding: 7px 0; margin: 0; }
+  .doc-head { gap: 4px 20px; }
+  .doc-head a { padding: 6px 0; }
+}
+
+/* Small phones (320-380px): tighter margins, and the theme button keeps only
+   its icon so the title still fits beside it. */
+@media (max-width: 380px) {
+  .brand { gap: 10px; padding: 14px 16px; }
+  .brand-id { gap: 10px; }
+  .group, .actions { padding-left: 16px; padding-right: 16px; }
+  .site-footer { padding-left: 16px; padding-right: 16px; }
+  .theme-toggle { min-width: 0; }
+  #theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@container content (max-width: 300px) {
+  .routes tbody tr { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 12px; }
+  .routes td.afford { grid-column: 1 / -1; }
 }

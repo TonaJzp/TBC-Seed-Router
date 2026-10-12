@@ -191,6 +191,7 @@ export class TargetPicker {
   /** Shows the list for the typed text; `keep` keeps its scroll and highlighted row (after a tick). */
   open({ keep = false } = {}) {
     clearTimeout(this.closeTimer); // a quick blur and focus again must not close it
+    if (this.pop.hidden) this.makeRoom();
     const scroll = this.list.scrollTop;
     const chosen = new Set(this.selected);
     const results = this.search(this.input.value);
@@ -219,6 +220,22 @@ export class TargetPicker {
     if (keep) this.list.scrollTop = scroll;
     this.input.setAttribute('aria-expanded', 'true');
     this.highlight(!keep);
+  }
+
+  /**
+   * On touch screens the keyboard covers half the screen: once it is up, the
+   * box moves to the top so the list has room under it.
+   */
+  makeRoom() {
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    clearTimeout(this.roomTimer);
+    this.roomTimer = setTimeout(() => {
+      const box = this.input.closest('.picker-search');
+      const top = box.getBoundingClientRect().top;
+      if (this.pop.hidden || (top >= 0 && top < window.innerHeight * 0.15)) return;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      box.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+    }, 300);
   }
 
   close() {
