@@ -18,7 +18,8 @@ import { buildEvents } from '../public/core/gacha.js';
 import { Simulator } from '../public/core/simulator.js';
 import { parseEventList, parseTable, organize, pageUrl, fetchDocument } from './lib/godfat-html.js';
 import { USER_AGENT } from './lib/identity.js';
-import { Differences, compareList, compareBanner } from './lib/compare.js';
+import { Differences, compareList, compareBanner, compareEdgeReroll, aboveOf } from './lib/compare.js';
+import { godfatLink, GODFAT_MAX_ROWS } from '../public/core/godfat-link.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = path.join(ROOT, 'public', 'data', 'gacha.json');
@@ -61,7 +62,22 @@ async function main() {
       const doc = await fetchDocument(page, { userAgent: USER_AGENT });
       const table = parseTable(doc);
       if (!table.cells.length) throw new Error(`godfat no mostró la tabla del banner «${ev.name}» (¿ha cambiado su diseño?)`);
-      cells += compareBanner(diff, organize({ id: ev.id }, [{ offset: 0, table }]), ev, sim, rolls);
+      const edges = [];
+      cells += compareBanner(diff, organize({ id: ev.id }, [{ offset: 0, table }]), ev, sim, rolls, edges);
+      if (edges.length) {
+        // Re-rolls whose next roll falls beyond godfat's table: it does not draw
+        // them there, so each one is checked on the table godfat opens at the
+        // cell above it, computed here with rows to spare.
+        const [wide] = buildEvents(data, [ours.get(ev.id)], seed, rolls + 20);
+        for (const key of edges) {
+          await sleep(PAUSE_MS);
+          const link = new URL(godfatLink({ seed, eventId: ev.id, key: aboveOf(key), untilRow: GODFAT_MAX_ROWS + 1 }).url);
+          link.hash = '';
+          link.searchParams.set('highlighting', 'advanced');
+          const edgeDoc = await fetchDocument(link.href, { userAgent: USER_AGENT });
+          cells += compareEdgeReroll(diff, organize({ id: ev.id }, [{ offset: 0, table: parseTable(edgeDoc) }]), ev, key, wide);
+        }
+      }
       banners++;
     }
     result = diff.list.length ? 'mismatch' : 'ok';

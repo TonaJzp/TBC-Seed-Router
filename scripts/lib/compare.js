@@ -6,6 +6,12 @@ import { addDays } from './godfat-data.js';
 
 const MAX_EXAMPLES = 5;
 
+// Position of a cell in the seed sequence: 1A, 1B, 2A... are 1, 2, 3... (rng.js).
+const posOf = (key) => 2 * Number.parseInt(key, 10) - (key.endsWith('A') ? 1 : 0);
+const keyAt = (pos) => keyOf(Math.ceil(pos / 2), pos % 2 ? 'A' : 'B');
+/** The cell above `key` on its track, where godfat's table for an edge re-roll starts. */
+const aboveOf = (key) => keyOf(Number.parseInt(key, 10) - 1, key.slice(-1));
+
 /** Collects differences, keeping a few examples of each kind. */
 class Differences {
   constructor() {
@@ -40,7 +46,11 @@ function compareList(diff, data, webEvents, today) {
   }
 }
 
-function compareBanner(diff, web, ev, sim, rolls) {
+/**
+ * Compares one banner's table. Re-rolls godfat cannot draw on its last rows
+ * go to `edges`, if given, to be checked with compareEdgeReroll.
+ */
+function compareBanner(diff, web, ev, sim, rolls, edges = null) {
   const label = (key) => `${ev.name} · ${key}`;
   for (const r of ['rare', 'super', 'uber', 'legendary']) {
     if (web.pools[r].join() !== ev.pools[r].join()) diff.add(`Gatos ${r} del banner distintos o en otro orden`, ev.name);
@@ -68,6 +78,13 @@ function compareBanner(diff, web, ev, sim, rolls) {
   for (const key of new Set([...Object.keys(web.alt), ...Object.keys(ev.alt)])) {
     const w = web.alt[key];
     const o = ev.alt[key];
+    // godfat only draws a re-roll when the roll after it is inside its table,
+    // as with guaranteed draws below: on its last rows they are checked on a
+    // table that starts earlier instead.
+    if (!w && o && !o.dest && edges) {
+      edges.push(key);
+      continue;
+    }
     cells++;
     if (!w || !o) diff.add('Repetición de rare que solo aparece en un lado', `${label(key)}: web ${w ? w.id : 'no'}, app ${o ? o.id : 'no'}`);
     else if (w.id !== o.id) diff.add('Gato distinto al repetir un rare', `${label(key)}: web ${w.id}, app ${o.id}`);
@@ -105,4 +122,25 @@ function compareBanner(diff, web, ev, sim, rolls) {
   return cells;
 }
 
-export { Differences, compareList, compareBanner };
+/**
+ * A re-roll on godfat's last rows, checked on godfat's table opened at the
+ * cell above it (as godfat links it), where the cell is 2A. `wide` is the
+ * banner computed with rows beyond the table, so the re-roll has its destination.
+ */
+function compareEdgeReroll(diff, web, ev, key, wide) {
+  const label = `${ev.name} · ${key} (tabla desde ${aboveOf(key)}, donde es 2A)`;
+  const shift = posOf(key) - posOf('2A');
+  const wr = web.raw['2A'];
+  const or = wide.raw[key];
+  if (!wr || !or || wr.id !== or.id) diff.add('Gato distinto en una casilla', `${label}: web ${wr?.id} ${wr?.name ?? '-'}, app ${or?.id} ${or?.name ?? '-'}`);
+  const w = web.alt['2A'];
+  const o = wide.alt[key];
+  if (!w || !o) diff.add('Repetición de rare que solo aparece en un lado', `${label}: web ${w ? w.id : 'no'}, app ${o ? o.id : 'no'}`);
+  else if (w.id !== o.id) diff.add('Gato distinto al repetir un rare', `${label}: web ${w.id}, app ${o.id}`);
+  else if (w.dest && o.dest && keyAt(posOf(w.dest) + shift) !== o.dest) {
+    diff.add('Destino distinto tras repetir un rare', `${label}: web → ${keyAt(posOf(w.dest) + shift)}, app → ${o.dest}`);
+  }
+  return 1;
+}
+
+export { Differences, compareList, compareBanner, compareEdgeReroll, aboveOf };

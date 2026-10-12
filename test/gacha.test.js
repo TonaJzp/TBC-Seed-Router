@@ -137,3 +137,43 @@ test('raised legend rates and legend cells follow godfat', () => {
   assert.deepEqual(scoreColors(9970), ['legend']);
   assert.deepEqual(scoreColors(9939), []);
 });
+
+// --- Re-rolls on godfat's last rows -------------------------------------------
+
+test('a re-roll godfat cannot draw on its last row is checked on a table that starts earlier', async () => {
+  const { compareEdgeReroll, aboveOf } = await import('../scripts/lib/compare.js');
+  const ev = { name: 'Banner', raw: {}, alt: { '300B': { id: 42, dest: null } }, pools: { rare: [], super: [], uber: [], legendary: [] }, names: {} };
+  const web = { raw: {}, alt: {}, pools: ev.pools, names: {}, guaranteed: {}, altGuaranteed: {} };
+  const edges = [];
+  const diff = new Differences();
+  compareBanner(diff, web, ev, null, 300, edges);
+  assert.deepEqual(diff.list, [], 'not a difference yet');
+  assert.deepEqual(edges, ['300B']);
+  assert.equal(aboveOf('300B'), '299B');
+
+  // On the table opened at 299B, 300B is 2A and 301B (two positions on) is 3A.
+  const wide = { raw: { '300B': { id: 7 } }, alt: { '300B': { id: 42, dest: '301B' } } };
+  const same = new Differences();
+  compareEdgeReroll(same, { raw: { '2A': { id: 7 } }, alt: { '2A': { id: 42, dest: '3A' } } }, ev, '300B', wide);
+  assert.deepEqual(same.list, []);
+
+  const other = new Differences();
+  compareEdgeReroll(other, { raw: { '2A': { id: 7 } }, alt: { '2A': { id: 43, dest: '3A' } } }, ev, '300B', wide);
+  assert.deepEqual(other.list.map((d) => d.kind), ['Gato distinto al repetir un rare']);
+
+  const missing = new Differences();
+  compareEdgeReroll(missing, { raw: { '2A': { id: 7 } }, alt: {} }, ev, '300B', wide);
+  assert.deepEqual(missing.list.map((d) => d.kind), ['Repetición de rare que solo aparece en un lado']);
+
+  const elsewhere = new Differences();
+  compareEdgeReroll(elsewhere, { raw: { '2A': { id: 7 } }, alt: { '2A': { id: 42, dest: '3B' } } }, ev, '300B', wide);
+  assert.deepEqual(elsewhere.list.map((d) => d.kind), ['Destino distinto tras repetir un rare']);
+});
+
+test('without an edge list, a re-roll only the app draws is still a difference', () => {
+  const ev = { name: 'Banner', raw: {}, alt: { '300B': { id: 42, dest: null } }, pools: { rare: [], super: [], uber: [], legendary: [] }, names: {} };
+  const web = { raw: {}, alt: {}, pools: ev.pools, names: {}, guaranteed: {}, altGuaranteed: {} };
+  const diff = new Differences();
+  compareBanner(diff, web, ev, null, 300);
+  assert.deepEqual(diff.list.map((d) => d.kind), ['Repetición de rare que solo aparece en un lado']);
+});
