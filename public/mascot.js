@@ -75,7 +75,10 @@ export function initMascot(svg) {
       svg.classList.toggle('is-arrived', t >= TRACE_MS && t < RUN_MS);
       svg.classList.toggle('is-happy', t >= TRACE_MS + 150 && t < TRACE_MS + 1150);
       for (const n of nodes) n.el.classList.toggle('is-lit', running && p >= n.at);
-      reveal.style.strokeDashoffset = 100 * (1 - p);
+      // Once the tip has faded into the target, the last stretch completes, so
+      // the last dash is not left cut in half.
+      const shown = t < TRACE_MS ? p : Math.min(1, end + ((t - TRACE_MS) / 150) * (1 - end));
+      reveal.style.strokeDashoffset = 100 * (1 - shown);
       const at = route.getPointAtLength(p * length);
       tip.setAttribute('transform', `translate(${at.x.toFixed(2)} ${at.y.toFixed(2)})`);
       if (running) target = at;
