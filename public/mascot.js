@@ -11,8 +11,8 @@ const RUN_MS = 3000;
 const LOOK_RADIUS = 200; // px: how close the mouse must be for the cat to look
 // Where the cat glances when idle: the route, its target, the title, the form.
 const GLANCES = [
-  { x: -15, y: 42 },
-  { x: 25, y: -4 },
+  { x: -11, y: 37 },
+  { x: 32, y: -6 },
   { x: 90, y: 30 },
   { x: 40, y: 90 },
 ];

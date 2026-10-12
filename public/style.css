@@ -107,7 +107,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-bottom: 1px solid var(--line);
 }
 .brand-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-logo { flex: none; width: 52px; height: 46px; overflow: visible; }
+.brand-logo { flex: none; width: 50px; height: 48px; overflow: visible; }
 
 /* Logo mascot (mascot.js). At rest: the cat beside a faint dotted route,
    from a start through three stops to a target. Animated: the route is traced
@@ -169,7 +169,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .brand-logo.mascot { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 }
 @media (max-width: 420px) {
-  .brand-logo { width: 46px; height: 41px; }
+  .brand-logo { width: 46px; height: 44px; }
 }
 .brand h1 { font-size: 17px; line-height: 1.25; letter-spacing: -0.01em; }
 .brand p { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; }

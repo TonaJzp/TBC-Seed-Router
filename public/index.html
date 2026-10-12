@@ -21,39 +21,39 @@
       <div class="brand-id">
         <!-- The logo, drawn inline so app.js can animate it (mascot.js): a
              route traced around the cat, which follows it with its eyes. -->
-        <svg class="brand-logo" id="mascot" viewBox="-20 -11 84 75" width="52" height="46" aria-hidden="true"
+        <svg class="brand-logo" id="mascot" viewBox="-16 -13 80 77" width="50" height="48" aria-hidden="true"
           focusable="false">
           <defs>
-            <mask id="mascot-reveal" maskUnits="userSpaceOnUse" x="-20" y="-11" width="84" height="75">
-              <path class="mascot-reveal" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4" fill="none"
-                stroke="#fff" stroke-width="6" pathLength="100" />
+            <mask id="mascot-reveal" maskUnits="userSpaceOnUse" x="-16" y="-13" width="80" height="77">
+              <path class="mascot-reveal" d="M-5.24 58.5A43 43 0 0 1 32-6" fill="none" stroke="#fff" stroke-width="6" pathLength="100" />
             </mask>
           </defs>
-          <!-- pathLength 100: the stops sit at 0, 25, 50, 75 and 100, on the
-               dotted and dashed pattern, so both look even between stops. -->
-          <path class="mascot-trail" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4" pathLength="100" />
+          <!-- The route is an arc around the face (centre 32,37, radius 43)
+               with a stop every 30 degrees. pathLength 100: the stops sit at
+               0, 25, 50, 75 and 100, on the dot and dash pattern, so both look
+               even between stops. -->
+          <path class="mascot-trail" d="M-5.24 58.5A43 43 0 0 1 32-6" pathLength="100" />
           <g class="mascot-run">
-            <path class="mascot-route" id="mascot-route" d="M-4 60C-15 55-18 40-13 29S-4 8 5 2 18-4 25-4"
-              pathLength="100" mask="url(#mascot-reveal)" />
+            <path class="mascot-route" id="mascot-route" d="M-5.24 58.5A43 43 0 0 1 32-6" pathLength="100" mask="url(#mascot-reveal)" />
           </g>
           <g class="mascot-halos">
-            <circle cx="-4" cy="60" r="3.9" />
-            <circle cx="-15.3" cy="41.9" r="3.9" />
-            <circle cx="-9.2" cy="20.6" r="3.9" />
-            <circle cx="4" cy="2.7" r="3.9" />
-            <circle cx="25" cy="-4" r="5" />
+            <circle cx="-5.24" cy="58.5" r="3.9" />
+            <circle cx="-11" cy="37" r="3.9" />
+            <circle cx="-5.24" cy="15.5" r="3.9" />
+            <circle cx="10.5" cy="-.24" r="3.9" />
+            <circle cx="32" cy="-6" r="5" />
           </g>
           <g class="mascot-nodes">
-            <circle class="mascot-node mascot-start" cx="-4" cy="60" r="2.3" data-at="0" />
-            <circle class="mascot-node" cx="-15.3" cy="41.9" r="2.3" data-at="0.25" />
-            <circle class="mascot-node" cx="-9.2" cy="20.6" r="2.3" data-at="0.5" />
-            <circle class="mascot-node" cx="4" cy="2.7" r="2.3" data-at="0.75" />
+            <circle class="mascot-node mascot-start" cx="-5.24" cy="58.5" r="2.3" data-at="0" />
+            <circle class="mascot-node" cx="-11" cy="37" r="2.3" data-at="0.25" />
+            <circle class="mascot-node" cx="-5.24" cy="15.5" r="2.3" data-at="0.5" />
+            <circle class="mascot-node" cx="10.5" cy="-.24" r="2.3" data-at="0.75" />
           </g>
           <g class="mascot-target">
-            <circle class="mascot-target-ring" cx="25" cy="-4" r="3.6" />
-            <circle class="mascot-target-dot" cx="25" cy="-4" r="1.4" />
+            <circle class="mascot-target-ring" cx="32" cy="-6" r="3.6" />
+            <circle class="mascot-target-dot" cx="32" cy="-6" r="1.4" />
           </g>
-          <g class="mascot-tip" transform="translate(-4 60)">
+          <g class="mascot-tip" transform="translate(-5.24 58.5)">
             <circle class="mascot-tip-glow" r="4.6" />
             <circle class="mascot-tip-dot" r="2.4" />
           </g>
