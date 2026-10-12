@@ -17,8 +17,16 @@ const formatDate = (iso) => iso.split('-').reverse().join('/');
 const localIsoDate = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** Errors meant for the user, in Spanish, as opposed to bugs. */
-class UserError extends Error {}
+/**
+ * Errors meant for the user, in Spanish, as opposed to bugs. `field` names the
+ * form field to fix (as in the form: url, targets, from, to, rolls...), if any.
+ */
+class UserError extends Error {
+  constructor(message, field = null) {
+    super(message);
+    this.field = field;
+  }
+}
 
 /** Seed (and last cat) from a godfat URL or a plain seed number. */
 function parseSeedInput(raw) {
@@ -28,47 +36,47 @@ function parseSeedInput(raw) {
   try {
     url = new URL(text);
   } catch {
-    throw new UserError(`Pega la URL de tu semilla en godfat (por ejemplo ${EXAMPLE_URL}) o solo el número de semilla.`);
+    throw new UserError(`Pega la URL de tu semilla en godfat (por ejemplo ${EXAMPLE_URL}) o solo el número de semilla.`, 'url');
   }
   if (url.hostname !== 'bc.godfat.org') {
-    throw new UserError(`La URL debe ser de bc.godfat.org (la web donde ves tu semilla), por ejemplo ${EXAMPLE_URL}`);
+    throw new UserError(`La URL debe ser de bc.godfat.org (la web donde ves tu semilla), por ejemplo ${EXAMPLE_URL}`, 'url');
   }
   if (!url.searchParams.get('seed')) {
-    throw new UserError(`A la URL le falta el número de semilla («?seed=…»). Ábrela en godfat y copia la dirección completa, por ejemplo ${EXAMPLE_URL}`);
+    throw new UserError(`A la URL le falta el número de semilla («?seed=…»). Ábrela en godfat y copia la dirección completa, por ejemplo ${EXAMPLE_URL}`, 'url');
   }
   return checkSeed(Number(url.searchParams.get('seed')), Number(url.searchParams.get('last')) || 0);
 }
 
 function checkSeed(seed, last) {
   if (!Number.isInteger(seed) || seed <= 0 || seed > 0xffffffff) {
-    throw new UserError('El número de semilla no es válido: debe ser un entero entre 1 y 4294967295.');
+    throw new UserError('El número de semilla no es válido: debe ser un entero entre 1 y 4294967295.', 'url');
   }
   return { seed, last: Number.isInteger(last) && last > 0 ? last : 0 };
 }
 
 function parseRequest(body, now = new Date()) {
-  const nonNegInt = (v, label) => {
+  const nonNegInt = (v, label, field) => {
     const n = Number(v ?? 0);
-    if (!Number.isInteger(n) || n < 0) throw new UserError(`${label} debe ser un entero >= 0.`);
+    if (!Number.isInteger(n) || n < 0) throw new UserError(`${label} debe ser un entero >= 0.`, field);
     return n;
   };
   // The picker sends an array of catalogue keys; plain text (comma or line
   // separated) is still accepted.
   const list = Array.isArray(body.targets) ? body.targets : String(body.targets || '').split(/[,\n]/);
   const targets = [...new Set(list.map((s) => String(s).trim()).filter(Boolean))];
-  if (!targets.length) throw new UserError('Indica al menos un gato objetivo.');
+  if (!targets.length) throw new UserError('Indica al menos un gato objetivo.', 'targets');
   if (!ISO_DATE.test(body.from || '') || !ISO_DATE.test(body.to || '')) {
-    throw new UserError('El rango de fechas no es válido.');
+    throw new UserError('El rango de fechas no es válido.', ISO_DATE.test(body.from || '') ? 'to' : 'from');
   }
-  if (body.from > body.to) throw new UserError('La fecha inicial es posterior a la final.');
+  if (body.from > body.to) throw new UserError('La fecha inicial es posterior a la final.', 'to');
   // Past banners can't be rolled any more: the plan always starts today.
   const today = localIsoDate(now);
   if (body.from < today) {
-    throw new UserError(`La fecha inicial no puede ser anterior a hoy (${formatDate(today)}).`);
+    throw new UserError(`La fecha inicial no puede ser anterior a hoy (${formatDate(today)}).`, 'from');
   }
-  const rolls = nonNegInt(body.rolls ?? DEFAULT_ROLLS, 'Tiros a analizar');
+  const rolls = nonNegInt(body.rolls ?? DEFAULT_ROLLS, 'Tiros a analizar', 'rolls');
   if (rolls < MIN_ROLLS || rolls > MAX_ROLLS) {
-    throw new UserError(`Tiros a analizar debe estar entre ${MIN_ROLLS} y ${MAX_ROLLS}.`);
+    throw new UserError(`Tiros a analizar debe estar entre ${MIN_ROLLS} y ${MAX_ROLLS}.`, 'rolls');
   }
   return {
     seed: parseSeedInput(body.url),
@@ -78,8 +86,8 @@ function parseRequest(body, now = new Date()) {
     today,
     now: minuteOf(now),
     rolls,
-    tickets: nonNegInt(body.tickets, 'Rare Tickets'),
-    food: nonNegInt(body.food, 'Cat Food'),
+    tickets: nonNegInt(body.tickets, 'Rare Tickets', 'tickets'),
+    food: nonNegInt(body.food, 'Cat Food', 'food'),
     discounts: { guaranteed: !!body.discount11, single: !!body.discount1 },
     protect: { avoidLegend: !!body.avoidLegend, avoidLegendFest: !!body.avoidLegendFest },
   };

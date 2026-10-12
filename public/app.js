@@ -1,4 +1,4 @@
-import { plan, catalogOf, UserError } from './core/planner.js';
+import { plan, parseRequest, catalogOf, UserError } from './core/planner.js';
 import { TargetPicker } from './picker.js';
 import { godfatLink } from './core/godfat-link.js';
 import { initMascot } from './mascot.js';
@@ -14,6 +14,7 @@ const STALE_DATA_DAYS = 3; // the data is rebuilt every day
 const UNVERIFIED_DAYS = 4; // and checked against godfat every day
 
 let gachaData = null; // banner data (data/gacha.json), loaded at start
+let dataFailed = false; // it could not be loaded: the error says why
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -53,13 +54,25 @@ function setMin(input, value) {
   if (input.min !== value) input.min = value;
 }
 
-function dateProblem() {
+function dateProblem(el) {
   const today = todayIso();
   const show = (iso) => iso.split('-').reverse().join('/');
-  if (form.from.value && form.from.value < today) return `La fecha «Desde» no puede ser anterior a hoy (${show(today)}).`;
-  if (form.to.value && form.to.value < form.from.value) return 'La fecha «Hasta» no puede ser anterior a «Desde».';
-  if (form.to.value && form.to.value < today) return `La fecha «Hasta» no puede ser anterior a hoy (${show(today)}).`;
-  return null;
+  if (el.value < today) return `No puede ser anterior a hoy (${show(today)}).`;
+  if (el === form.to && el.value < form.from.value) return 'No puede ser anterior a «Desde».';
+  return 'Revisa esta fecha.';
+}
+
+// Inventory fields start at 0: entering one empties it, so typing 50 doesn't
+// give "050", and leaving it empty puts the 0 back.
+const INVENTORY = [form.tickets, form.food];
+function zeroIfEmpty(el) {
+  if (el.value === '' && !el.validity.badInput) el.value = '0';
+}
+for (const el of INVENTORY) {
+  el.addEventListener('focus', () => {
+    if (el.value === '0') el.value = '';
+  });
+  el.addEventListener('blur', () => zeroIfEmpty(el));
 }
 
 function restoreForm() {
@@ -92,18 +105,105 @@ function readForm() {
   return { ...data, targets: picker.value(), today: todayIso() };
 }
 
+// --- Field errors ---------------------------------------------------------
+// A problem with a field is told under it, in red, and the page takes you
+// there: on phones the button is far below the fields, and on wide screens the
+// field may be scrolled out of the sidebar.
+
+/** What is wrong with a field, in words, or null (the form is novalidate). */
+function fieldProblem(el) {
+  const v = el.validity;
+  if (v.valid) return null;
+  if (el.name === 'url') return 'Pega aquí la URL de tu semilla en godfat o solo el número de semilla.';
+  if (el.type === 'date') return v.valueMissing || v.badInput ? 'Elige una fecha.' : dateProblem(el);
+  if (v.valueMissing || v.badInput) return 'Escribe un número.';
+  if (v.rangeUnderflow || v.rangeOverflow) return el.max ? `Tiene que estar entre ${el.min} y ${el.max}.` : 'No puede ser negativo.';
+  if (v.stepMismatch) return el.step === '1' ? 'Tiene que ser un número entero.' : `Usa un múltiplo de ${el.step}, por ejemplo ${el.defaultValue}.`;
+  return 'Revisa este valor.';
+}
+
+/** Shows `message` under the field (or removes it, with null). */
+function setFieldError(el, message) {
+  el.classList.toggle('invalid', !!message);
+  const id = `${el.name}-error`;
+  let note = document.getElementById(id);
+  if (!message) {
+    note?.remove();
+    el.removeAttribute('aria-invalid');
+    el.removeAttribute('aria-describedby');
+    return;
+  }
+  if (!note) {
+    note = document.createElement('small');
+    note.id = id;
+    note.className = 'field-error';
+    el.after(note);
+  }
+  note.textContent = message;
+  el.setAttribute('aria-invalid', 'true');
+  el.setAttribute('aria-describedby', id);
+}
+
+/** Scrolls the field to the middle of the screen and puts the cursor in it. */
+function goToField(el) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  if (el === picker.input) picker.focusQuietly({ preventScroll: true });
+  else el.focus({ preventScroll: true });
+}
+
+/** Shows a problem found by the planner under its field and goes there. */
+function showFieldError(field, message) {
+  $('#error').hidden = true;
+  if (field === 'targets') {
+    picker.showError(message);
+    goToField(picker.input);
+    return;
+  }
+  setFieldError(form.elements[field], message);
+  goToField(form.elements[field]);
+}
+
+/**
+ * Marks every field with a problem, each with its message, and returns the
+ * first one in the form (the one to go to), or null.
+ */
 function validateForm() {
   syncDateLimits(); // the page may have been left open since yesterday
-  let ok = true;
+  for (const el of INVENTORY) zeroIfEmpty(el); // Enter pressed while one was empty
+  let first = null;
   for (const el of form.elements) {
+    if (el.name === 'targets') {
+      if (!picker.value().length) {
+        picker.showError('Elige al menos un gato objetivo.');
+        first ||= picker.input;
+      }
+      continue;
+    }
     if (!el.name || el.type === 'checkbox') continue;
-    const valid = el.checkValidity();
-    el.classList.toggle('invalid', !valid);
-    ok &&= valid;
+    const problem = fieldProblem(el);
+    setFieldError(el, problem);
+    if (problem) first ||= el;
   }
-  const hasTargets = picker.value().length > 0;
-  $('#picker-input').classList.toggle('invalid', !hasTargets);
-  return ok && hasTargets;
+  return first;
+}
+
+/** The first problem the planner finds in the form's values, tied to its field. */
+function requestProblem(body) {
+  try {
+    parseRequest(body);
+    return null;
+  } catch (err) {
+    return err instanceof UserError && err.field ? err : null;
+  }
+}
+
+// Fixing a field takes its message away; the date limits move together.
+function recheckField(e) {
+  const el = e.target;
+  if (!el.name || !el.classList.contains('invalid')) return;
+  setFieldError(el, null);
+  if (el === form.from && form.to.classList.contains('invalid')) setFieldError(form.to, fieldProblem(form.to));
 }
 
 // --- Request --------------------------------------------------------------
@@ -117,14 +217,37 @@ function showError(message) {
   $('#error').hidden = false;
 }
 
+// Every press of "Calcular rutas" ends somewhere you can see: the progress and
+// then the results, the field to fix, or the error, never a silent no-op.
 async function submit(event) {
   event.preventDefault();
-  if (!gachaData) return;
-  if (!validateForm()) {
-    showError(dateProblem() || (picker.value().length ? 'Revisa los campos marcados en rojo.' : 'Elige al menos un gato objetivo.'));
+  if ($('#submit').disabled) return; // a calculation is already running
+  if (!gachaData && !dataFailed) {
+    // Still loading (a slow connection): wait for it, in sight.
+    $('#submit').disabled = true;
+    $('#progress').innerHTML = '<li>Cargando los datos de los banners...</li>';
+    show('status');
+    bringIntoView($('#status'));
+    await dataLoaded;
+    $('#submit').disabled = false;
+    show(current ? 'results' : 'empty');
+  }
+  if (!gachaData) {
+    bringIntoView($('#error')); // loadData explains why
+    return;
+  }
+  const invalid = validateForm();
+  if (invalid) {
+    $('#error').hidden = true;
+    goToField(invalid);
     return;
   }
   const body = readForm();
+  const wrong = requestProblem(body);
+  if (wrong) {
+    showFieldError(wrong.field, wrong.message);
+    return;
+  }
   $('#submit').disabled = true;
   $('#error').hidden = true;
   $('#progress').innerHTML = '<li>Calculando las tiradas de tu semilla y las rutas óptimas...</li>';
@@ -134,6 +257,7 @@ async function submit(event) {
   const scrolled = bringIntoView($('#status'));
   await new Promise((resolve) => setTimeout(resolve, scrolled ? 450 : 30));
   let gotResult = false;
+  let fieldError = null;
   countEvent('calcular-ruta', 'Rutas calculadas');
   try {
     const result = plan(body, gachaData);
@@ -143,7 +267,8 @@ async function submit(event) {
     if (current.selected >= 0) mascot.play(); // a route found: the cat celebrates
     else countEvent('sin-ruta', 'Cálculos sin ninguna ruta posible');
   } catch (err) {
-    if (err instanceof UserError) showError(err.message);
+    if (err instanceof UserError && err.field) fieldError = err; // e.g. the day changed meanwhile
+    else if (err instanceof UserError) showError(err.message);
     else {
       console.error(err);
       countEvent('error-inesperado', 'Errores inesperados al calcular');
@@ -154,7 +279,8 @@ async function submit(event) {
   } finally {
     $('#submit').disabled = false;
     show(gotResult ? 'results' : 'empty');
-    bringIntoView($(gotResult ? '#results' : '#error'));
+    if (fieldError) showFieldError(fieldError.field, fieldError.message);
+    else bringIntoView($(gotResult ? '#results' : '#error'));
   }
 }
 
@@ -697,7 +823,7 @@ async function loadData() {
         ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar TBC Seed Router.bat».'
         : `No se pudieron cargar los datos de los banners (${err.message}). Recarga la página; si se repite, escribe a tbcseedrouter@gmail.com.`
     );
-    $('#submit').disabled = true;
+    dataFailed = true; // the button stays: pressing it brings this error into view
     picker.fail();
     return;
   }
@@ -750,9 +876,11 @@ $('#forget-data').addEventListener('click', () => {
 
 initStats();
 restoreForm();
-loadData();
+const dataLoaded = loadData();
 form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);
+form.addEventListener('input', recheckField);
+form.addEventListener('change', recheckField);
 form.addEventListener('submit', submit);
 
 // "Añadir a objetivos y recalcular" on a legendary suggested in the results.

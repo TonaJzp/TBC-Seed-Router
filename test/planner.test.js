@@ -179,3 +179,30 @@ test('plan() reports invalid input as UserError, never as a crash', () => {
   assert.throws(() => plan({ ...ok, targets: [] }, gachaData, { now }), UserError);
   assert.throws(() => plan({ ...ok, from: '2030-01-01', to: '2030-01-02' }, gachaData, { now }), UserError);
 });
+
+test('each input error names the form field to fix, so the page can take you there', () => {
+  const now = new Date(2026, 9, 16, 12, 0);
+  const ok = { url: '1', targets: ['851'], from: '2026-10-16', to: '2026-10-20', rolls: '200', tickets: '0', food: '0' };
+  const fieldOf = (body) => {
+    try {
+      parseRequest(body, now);
+    } catch (err) {
+      assert.ok(err instanceof UserError);
+      return err.field;
+    }
+    return null;
+  };
+  assert.equal(fieldOf(ok), null);
+  assert.equal(fieldOf({ ...ok, url: '' }), 'url');
+  assert.equal(fieldOf({ ...ok, url: 'https://example.com/?seed=1' }), 'url');
+  assert.equal(fieldOf({ ...ok, url: 'https://bc.godfat.org/' }), 'url');
+  assert.equal(fieldOf({ ...ok, url: '99999999999' }), 'url');
+  assert.equal(fieldOf({ ...ok, targets: [] }), 'targets');
+  assert.equal(fieldOf({ ...ok, from: '' }), 'from');
+  assert.equal(fieldOf({ ...ok, to: '' }), 'to');
+  assert.equal(fieldOf({ ...ok, from: '2026-10-21' }), 'to');
+  assert.equal(fieldOf({ ...ok, from: '2026-10-15' }), 'from');
+  assert.equal(fieldOf({ ...ok, rolls: '5000' }), 'rolls');
+  assert.equal(fieldOf({ ...ok, tickets: '-1' }), 'tickets');
+  assert.equal(fieldOf({ ...ok, food: '1.5' }), 'food');
+});

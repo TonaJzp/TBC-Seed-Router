@@ -25,8 +25,9 @@ export function shouldCount({ hostname, optedOut, doNotTrack, globalPrivacyContr
 }
 
 /** The GoatCounter /count URL for a page view or an event. */
-export function countUrl({ path, title = '', referrer = '', event = false }) {
+export function countUrl({ path, title = '', referrer = '', screen = '', event = false }) {
   const params = new URLSearchParams({ p: path, t: title, r: referrer });
+  if (screen) params.set('s', screen); // GoatCounter keeps only the width, to tell phones from computers
   if (event) params.set('e', 'true');
   params.set('rnd', Math.random().toString(36).slice(2, 7)); // cache buster
   return `${STATS_ENDPOINT}?${params}`;
@@ -67,7 +68,12 @@ export function initStats() {
     globalPrivacyControl: navigator.globalPrivacyControl,
     webdriver: navigator.webdriver,
   });
-  send({ path: '/', title: 'TBC Seed Router', referrer: externalReferrer(document.referrer, location.origin) });
+  send({
+    path: '/',
+    title: 'TBC Seed Router',
+    referrer: externalReferrer(document.referrer, location.origin),
+    screen: `${window.screen.width},${window.screen.height},${window.devicePixelRatio || 1}`,
+  });
 }
 
 /** Counts an event: `name` is what the dashboard lists, `title` its description. */

@@ -265,10 +265,16 @@ export class TargetPicker {
   }
 
   /** Focuses the search box without opening the dropdown. */
-  focusQuietly() {
+  focusQuietly(options) {
     this.quiet = true;
-    this.input.focus();
+    this.input.focus(options);
     this.quiet = false;
+  }
+
+  /** Marks the box in red with `message` under it, until a cat is chosen. */
+  showError(message) {
+    this.input.classList.add('invalid');
+    this.status.innerHTML = `<span class="bad">${TargetPicker.esc(message)}</span>`;
   }
 
   clear() {
