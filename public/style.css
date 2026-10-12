@@ -458,78 +458,103 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
   background: var(--raised);
 }
 
-/* Summary card on top of the analysis: seed and key figures, collapsible
-   rows (banners, legend cells) and the lilac protection note. */
-.summary { margin-bottom: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
-.summary-head {
+/* Summary on top of the analysis: a seed "sheet" under a heavy rule, a map
+   of the legend cells along both tracks, and tab buttons for the details. */
+.summary { margin: 0 0 26px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.summary-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; }
+.seed-id { display: flex; align-items: baseline; gap: 10px; }
+.seed-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.seed-num { font-family: var(--mono); font-size: 22px; font-weight: 600; letter-spacing: 0.03em; }
+.summary-facts { margin: 0; font-size: 12.5px; color: var(--ink-3); }
+.summary-facts b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* The map: lane letters on the left, the rows as an axis with their
+   numbers on it, A pins standing above it and B pins hanging below. */
+.seed-map { margin: 14px 0 0; }
+.map { --axis: 46px; position: relative; height: calc(2 * var(--axis)); }
+.map.tall { --axis: 70px; } /* some labels on a second level */
+.lane-tag { position: absolute; left: 0; font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-3); }
+.lane-tag.a { top: calc(var(--axis) - 28px); }
+.lane-tag.b { bottom: calc(var(--axis) - 28px); }
+.map-area { position: absolute; top: 0; bottom: 0; left: 26px; right: 14px; }
+.axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--axis);
+  height: 0;
+  border-top: 1px dashed var(--line-2);
+}
+.tick {
+  position: absolute;
+  top: var(--axis);
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ink-3);
+  background: var(--paper);
+  transform: translate(-50%, -50%);
+}
+.pin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transform: translateX(-50%);
+  --pin: var(--r-legend);
+}
+.pin.legend-fest { --pin: var(--r-legend-fest); }
+.pin.A { bottom: calc(var(--axis) + 1px); }
+.pin.B { top: calc(var(--axis) + 1px); flex-direction: column-reverse; }
+.pin b { font-family: var(--mono); font-size: 10.5px; font-weight: 600; line-height: 1; color: var(--pin); }
+.pin i { width: 9px; height: 9px; background: var(--pin); border-radius: 2px; }
+.pin .stem { width: 1px; height: 7px; background: var(--pin); }
+.pin.raised .stem { height: 31px; } /* label on the second level, clear of the first */
+.pin.unlabelled b { visibility: hidden; }
+.seed-map figcaption {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 28px;
-  padding: 14px 18px;
+  gap: 4px 18px;
+  margin-top: 4px;
+  padding-left: 26px;
+  font-size: 12px;
+  color: var(--ink-3);
 }
-.summary-seed span { display: block; font-size: 11.5px; color: var(--ink-3); }
-.summary-seed h2 { font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
-.summary-facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; }
-.summary-facts dt { font-size: 11.5px; color: var(--ink-3); }
-.summary-facts dd { margin: 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.summary-facts dd small { font-size: 12px; font-weight: 400; color: var(--ink-2); }
-
-.summary-row { border-top: 1px solid var(--line); }
-.summary-row > summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  font-size: 13px;
-  font-weight: 600;
-  list-style: none;
-  cursor: pointer;
-}
-.summary-row > summary::-webkit-details-marker { display: none; }
-.summary-row > summary::before {
-  content: "";
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid var(--ink-3);
-  border-bottom: 1.5px solid var(--ink-3);
-  transform: rotate(-45deg);
-  transition: transform 0.15s;
-}
-.summary-row[open] > summary::before { transform: rotate(45deg); }
-.summary-row > summary:hover { background: var(--panel); }
-.summary-row > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.summary-row .count {
-  min-width: 22px;
-  padding: 0 7px;
-  font-size: 11.5px;
-  font-weight: 600;
-  line-height: 20px;
-  text-align: center;
+.map-key .dot { width: 8px; height: 8px; margin: 0 4px 0 0; vertical-align: 0; }
+.map-key .dot.legend-fest { margin-left: 10px; }
+.map-note {
+  margin: 10px 0 0 26px;
+  padding-left: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--ink-2);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border-left: 2px solid var(--r-legend-fest);
 }
-.summary-body { padding: 0 18px 12px; }
-.summary-body table { font-size: 13px; }
+.map-note b { color: var(--ink); font-weight: 600; }
 
-.summary-note {
-  display: flex;
+/* Tabs: plain labels with their count; the open one is underlined. */
+.summary-tabs { display: flex; flex-wrap: wrap; gap: 0 22px; margin-top: 16px; border-bottom: 1px solid var(--line); }
+.summary-tab {
+  display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  padding: 11px 18px;
+  gap: 7px;
+  margin-bottom: -1px;
+  padding: 8px 0 9px;
   font-size: 13px;
+  font-weight: 600;
   color: var(--ink-2);
-  background: color-mix(in srgb, var(--r-legend-fest) 9%, transparent);
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 8px 8px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
 }
-.summary-note .dot { flex: none; }
-.summary-note p { margin: 0; line-height: 1.5; }
-.summary-note b { color: var(--ink); font-weight: 600; }
+.summary-tab span { font-family: var(--mono); font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+.summary-tab:hover { color: var(--ink); }
+.summary-tab[aria-expanded="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.summary-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.summary-panel { padding: 4px 0 6px; border-bottom: 1px solid var(--line); }
+.summary-panel table { font-size: 13px; }
 
 .section-title { font-size: 13px; color: var(--ink-2); margin: 22px 0 8px; }
 

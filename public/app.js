@@ -167,8 +167,6 @@ function bringIntoView(el) {
 
 function render() {
   const { data } = current;
-  // Picking another route re-renders everything: keep the open sections open.
-  const open = new Set([...document.querySelectorAll('#results details[open][data-section]')].map((d) => d.dataset.section));
   $('#results').innerHTML = [
     renderSupport(),
     renderContext(data),
@@ -176,7 +174,7 @@ function render() {
     data.routes.length ? renderRoutesTable(data) : '',
     renderDetail(data),
   ].join('');
-  for (const d of document.querySelectorAll('#results details[data-section]')) d.open = open.has(d.dataset.section);
+  placeMapMarks();
   for (const tr of document.querySelectorAll('.routes tbody tr[data-i]')) {
     tr.addEventListener('click', () => {
       current.selected = Number(tr.dataset.i);
@@ -200,6 +198,10 @@ function renderSupport() {
 
 const withHour = (iso, hour) => `${iso}${hour ? ` ${hour}` : ''}`;
 
+// Summary on top of the analysis: the seed, a map of its legend cells along
+// both tracks, and two panels (banners, legend cells) behind tab buttons.
+let openPanel = null; // which summary panel is open; kept when another route is picked
+
 function renderContext(data) {
   const rows = data.events
     .map(
@@ -213,29 +215,91 @@ function renderContext(data) {
   const skipped = data.skipped
     .map((s) => `<tr><td></td><td class="muted">${esc(s.name)}</td><td class="kind">Excluido: ${esc(s.reason)}</td></tr>`)
     .join('');
-  return `<section class="summary" aria-label="Resumen del análisis">
-    <div class="summary-head">
-      <div class="summary-seed"><span>Semilla</span><h2>${esc(data.seed)}</h2></div>
-      <dl class="summary-facts">
-        <div><dt>Tiros por pista</dt><dd>${fmt(data.rolls)}</dd></div>
-        <div><dt>Banners</dt><dd>${data.events.length}</dd></div>
-        <div><dt>1 Rare Ticket</dt><dd>150 <small>Cat Food</small></dd></div>
-      </dl>
-    </div>
-    ${disclosure('banners', 'Banners analizados', data.events.length,
+  const cells = data.legendCells || [];
+  const panels = [
+    ['banners', 'Banners analizados', data.events.length,
       `<div class="table-wrap"><table class="banners"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
-      <tbody>${rows}${skipped}</tbody></table></div>`)}
-    ${renderAllLegendCells(data)}
-    ${renderNotices(data)}
+      <tbody>${rows}${skipped}</tbody></table></div>`],
+    cells.length && ['legend', 'Casillas de legendario', cells.length, renderAllLegendCells(data)],
+  ].filter(Boolean);
+  return `<section class="summary" aria-label="Resumen del análisis">
+    <header class="summary-top">
+      <div class="seed-id"><span class="seed-label">Semilla</span><h2 class="seed-num">${esc(data.seed)}</h2></div>
+      <p class="summary-facts"><b>${fmt(data.rolls)}</b> tiros por pista · <b>${data.events.length}</b> banners · 1 Rare Ticket = <b>150</b> Cat Food</p>
+    </header>
+    ${renderSeedMap(data)}
+    <div class="summary-tabs" role="group" aria-label="Detalles del análisis">
+      ${panels
+        .map(([id, title, count]) => `<button type="button" class="summary-tab" data-panel="${id}" aria-expanded="${openPanel === id}" aria-controls="panel-${id}">${title}<span>${count}</span></button>`)
+        .join('')}
+    </div>
+    ${panels.map(([id, , , body]) => `<div class="summary-panel" id="panel-${id}"${openPanel === id ? '' : ' hidden'}>${body}</div>`).join('')}
   </section>`;
 }
 
-/** A collapsible row of the summary: title, a count, and its content. */
-function disclosure(section, title, count, body) {
-  return `<details class="summary-row" data-section="${section}">
-    <summary><span>${title}</span><span class="count">${count}</span></summary>
-    <div class="summary-body">${body}</div>
-  </details>`;
+const PIN_LABEL_ROOM = 38; // px a pin label needs from the previous one on its level
+
+/**
+ * Places the marks of the seed map. The page's CSP blocks inline style
+ * attributes, so their position travels in data-x. Each pin label takes the
+ * first of two levels where it doesn't touch the previous label; if neither
+ * has room, the label is hidden (the pin keeps its tooltip).
+ */
+function placeMapMarks() {
+  for (const el of document.querySelectorAll('#results [data-x]')) el.style.left = `${el.dataset.x}%`;
+  const map = document.querySelector('#results .map');
+  if (!map) return;
+  let twoLevels = false;
+  for (const lane of ['A', 'B']) {
+    const pins = [...map.querySelectorAll(`.pin.${lane}`)].sort((a, b) => a.offsetLeft - b.offsetLeft);
+    const lastAt = [-Infinity, -Infinity];
+    for (const pin of pins) {
+      const x = pin.offsetLeft;
+      const level = lastAt.findIndex((at) => x - at >= PIN_LABEL_ROOM);
+      pin.classList.toggle('raised', level === 1);
+      pin.classList.toggle('unlabelled', level === -1);
+      if (level !== -1) lastAt[level] = x;
+      twoLevels ||= level === 1;
+    }
+  }
+  map.classList.toggle('tall', twoLevels);
+}
+window.addEventListener('resize', () => {
+  if (current) placeMapMarks();
+});
+
+/**
+ * The analysed rows as a ruler, track A above and B below, with a pin on
+ * every purple or lilac cell; the lilac protection note goes under it.
+ */
+function renderSeedMap(data) {
+  const cells = data.legendCells || [];
+  const span = Math.max(1, data.rolls - 1);
+  const at = (row) => (((row - 1) / span) * 100).toFixed(2);
+  const ticks = [1, ...[0.25, 0.5, 0.75].map((f) => Math.round(f * data.rolls)), data.rolls]
+    .map((row) => `<span class="tick" data-x="${at(row)}">${row}</span>`)
+    .join('');
+  const pins = cells
+    .map((c) => {
+      const row = Number.parseInt(c.key, 10);
+      const track = c.key.endsWith('B') ? 'B' : 'A';
+      return `<span class="pin ${track} ${COLOR_DOT[c.color]}" data-x="${at(row)}" title="Casilla ${c.color} ${esc(c.key)}"><b>${esc(c.key)}</b><i></i><span class="stem"></span></span>`;
+    })
+    .join('');
+  const count = cells.length
+    ? `${cells.length} casilla${cells.length > 1 ? 's' : ''} de legendario en tus próximos ${fmt(data.rolls)} tiros`
+    : `Ninguna casilla de legendario en tus próximos ${fmt(data.rolls)} tiros`;
+  return `<figure class="seed-map">
+    <div class="map" role="img" aria-label="${count}">
+      <span class="lane-tag a">A</span><span class="lane-tag b">B</span>
+      <div class="map-area"><span class="axis"></span>${ticks}${pins}</div>
+    </div>
+    <figcaption>
+      <span class="map-key"><i class="dot legend"></i>morada <i class="dot legend-fest"></i>lila</span>
+      <span>${count}</span>
+    </figcaption>
+    ${renderNotices(data)}
+  </figure>`;
 }
 
 const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
@@ -261,8 +325,7 @@ function renderAllLegendCells(data) {
   const rows = cells
     .map((c) => `<tr><td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td><td>${legendOptions(c)}</td></tr>`)
     .join('');
-  return disclosure('legend', `Casillas de legendario en tus próximos ${data.rolls} tiros`, cells.length,
-    `<div class="table-wrap"><table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+  return `<div class="table-wrap"><table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 const FIT = {
@@ -364,9 +427,7 @@ function renderNotices(data) {
     const banners = p.doubleLegendEvents.map((e) => `«${esc(e.name)}» (${shortDate(e.start)}–${shortDate(e.end)})`);
     lines.push(`<b>Casillas lilas protegidas.</b> Dan legendario en ${banners.join('; ')}.`);
   }
-  return lines.length
-    ? `<div class="summary-note"><i class="dot legend-fest" aria-hidden="true"></i><div>${lines.map((l) => `<p>${l}</p>`).join('')}</div></div>`
-    : '';
+  return lines.length ? `<p class="map-note">${lines.join(' ')}</p>` : '';
 }
 
 /** How a route is referred to in another one's note: "la recomendada" or «its label». */
@@ -704,6 +765,18 @@ loadData();
 form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);
 form.addEventListener('submit', submit);
+
+// Summary tabs: open one panel at a time; a second click closes it.
+$('#results').addEventListener('click', (e) => {
+  const tab = e.target.closest('.summary-tab');
+  if (!tab) return;
+  openPanel = openPanel === tab.dataset.panel ? null : tab.dataset.panel;
+  for (const t of document.querySelectorAll('.summary-tab')) {
+    const isOpen = t.dataset.panel === openPanel;
+    t.setAttribute('aria-expanded', String(isOpen));
+    $(`#panel-${t.dataset.panel}`).hidden = !isOpen;
+  }
+});
 
 // "Añadir a objetivos y recalcular" on a legendary suggested in the results.
 $('#results').addEventListener('click', (e) => {
