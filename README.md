@@ -122,22 +122,18 @@ Los resultados aparecen en este orden.
 ### Resumen del análisis
 
 Arriba, tu semilla y tres cifras: cuántos tiros por pista se han revisado, cuántos banners entran en
-tus fechas y el valor de un Rare Ticket (150 Cat Food) con el que se comparan las rutas.
-
-Debajo, un **mapa de tu semilla**: una regla con las filas revisadas (de la 1 a la última), la pista A
-arriba y la B abajo, y una marca en cada casilla de legendario con su nombre (por ejemplo «98B»), en
-morado o lila según su tipo. Así ves de un vistazo dónde caen y cuánto falta para llegar a ellas. Si
-marcaste la protección de las lilas, una nota bajo el mapa indica si se están protegiendo (y por qué
-banner) o si se usan como casillas normales porque no hay ningún banner así.
-
-Al final, dos pestañas que se abren al pulsarlas (y se cierran pulsando otra vez):
+tus fechas y el valor de un Rare Ticket (150 Cat Food) con el que se comparan las rutas. Debajo hay dos
+filas que se despliegan al pulsarlas, cada una con su número de elementos:
 
 - **Banners analizados**: cada banner con sus fechas y horas, y su tipo (simples y 11-draw,
   garantizado o step-up). Los que no se pueden usar aparecen como «Excluido» con el motivo, por
   ejemplo los que se pagan con tickets Platinum o Legend.
-- **Casillas de legendario**: cada casilla morada y lila de tu semilla y qué legendario daría en cada
-  banner de tus fechas. Cada uno tiene un botón **«Añadir a objetivos»** que lo añade a tu lista y
-  recalcula.
+- **Casillas de legendario en tus próximos tiros**: todas las casillas moradas y lilas de tu semilla
+  y qué legendario darían en cada banner de tus fechas. Cada uno tiene un botón **«Añadir a
+  objetivos»** que lo añade a tu lista y recalcula.
+
+Si marcaste la protección de las lilas, una última fila con el punto lila indica si se están
+protegiendo (y por qué banner) o si se usan como casillas normales porque no hay ningún banner así.
 
 ### Avisos
 
