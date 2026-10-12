@@ -5,14 +5,14 @@
 // Purely decorative: with "reduce motion" the logo stays still.
 
 const EYES = { x: 32, y: 37 }; // midpoint between the eyes, in logo units
-const TRACE_MS = 1700; // the route being traced
-const FADE_AT = 2700; // the traced route fades back into the dotted one
-const RUN_MS = 3000;
+const TRACE_MS = 1900; // the route being traced
+const FADE_AT = 2900; // the traced route fades back into the dotted one
+const RUN_MS = 3200;
 const LOOK_RADIUS = 200; // px: how close the mouse must be for the cat to look
 // Where the cat glances when idle: the route, its target, the title, the form.
 const GLANCES = [
-  { x: -11, y: 37 },
-  { x: 32, y: -6 },
+  { x: -13, y: 33 },
+  { x: 54.5, y: -6 },
   { x: 90, y: 30 },
   { x: 40, y: 90 },
 ];
@@ -31,7 +31,7 @@ export function initMascot(svg) {
   const tip = q('.mascot-tip');
   const nodes = [...svg.querySelectorAll('.mascot-node')].map((el) => ({ el, at: Number(el.dataset.at) }));
   const length = route.getTotalLength();
-  const end = 1 - 5 / length; // the tip stops at the target's edge, not on top of it
+  const end = 1 - 6 / length; // the tip stops at the target's edge, not on top of it
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const still = () => reduce.matches || document.hidden;
 
@@ -76,7 +76,6 @@ export function initMascot(svg) {
       svg.classList.toggle('is-happy', t >= TRACE_MS + 150 && t < TRACE_MS + 1150);
       for (const n of nodes) n.el.classList.toggle('is-lit', running && p >= n.at);
       reveal.style.strokeDashoffset = 100 * (1 - p);
-      route.style.strokeDashoffset = 0.8 - t * 0.009; // the dashes keep moving forward
       const at = route.getPointAtLength(p * length);
       tip.setAttribute('transform', `translate(${at.x.toFixed(2)} ${at.y.toFixed(2)})`);
       if (running) target = at;
