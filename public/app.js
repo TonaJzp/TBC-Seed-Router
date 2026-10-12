@@ -2,6 +2,7 @@ import { plan, catalogOf, UserError } from './core/planner.js';
 import { TargetPicker } from './picker.js';
 import { godfatLink } from './core/godfat-link.js';
 import { initMascot } from './mascot.js';
+import { initStats, countEvent } from './stats.js';
 
 const $ = (sel) => document.querySelector(sel);
 const form = $('#route-form');
@@ -133,16 +134,19 @@ async function submit(event) {
   const scrolled = bringIntoView($('#status'));
   await new Promise((resolve) => setTimeout(resolve, scrolled ? 450 : 30));
   let gotResult = false;
+  countEvent('calcular-ruta', 'Rutas calculadas');
   try {
     const result = plan(body, gachaData);
     gotResult = true;
     current = { data: result, selected: result.routes.findIndex((r) => r.found) };
     render();
     if (current.selected >= 0) mascot.play(); // a route found: the cat celebrates
+    else countEvent('sin-ruta', 'Cálculos sin ninguna ruta posible');
   } catch (err) {
     if (err instanceof UserError) showError(err.message);
     else {
       console.error(err);
+      countEvent('error-inesperado', 'Errores inesperados al calcular');
       showError(
         `Error inesperado al calcular: ${err.message}. Si se repite, avísanos con «Reportar un error» (al pie de la página): el correo lleva ya los datos de tu formulario.`
       );
@@ -687,6 +691,7 @@ async function loadData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     gachaData = await res.json();
   } catch (err) {
+    countEvent('error-datos', 'Errores al cargar los datos de los banners');
     showError(
       location.protocol === 'file:'
         ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar TBC Seed Router.bat».'
@@ -743,6 +748,7 @@ $('#forget-data').addEventListener('click', () => {
   location.reload();
 });
 
+initStats();
 restoreForm();
 loadData();
 form.from.addEventListener('change', syncDateLimits);

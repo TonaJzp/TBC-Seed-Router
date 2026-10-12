@@ -383,7 +383,10 @@ por última vez contra godfat.
 ## Privacidad y datos guardados
 
 - Todo se calcula en tu navegador. Tu semilla, tus gatos, tus fechas y tu inventario no se envían a
-  ningún sitio. No hay cookies, analítica ni publicidad.
+  ningún sitio. No hay cookies ni publicidad.
+- Estadísticas anónimas con [GoatCounter](https://www.goatcounter.com/), sin cookies: solo se cuenta
+  cada visita y cada cálculo de rutas, nunca lo que escribes en el formulario. Si tu navegador
+  envía Do Not Track o Global Privacy Control, no se cuenta nada.
 - Tu navegador guarda el último formulario y el tema claro u oscuro (botón junto al título) para
   que no tengas que repetirlos. Puedes borrarlos con «Borrar datos guardados»,
   al pie de la página.
