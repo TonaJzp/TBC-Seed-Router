@@ -333,9 +333,17 @@ con otro; en ese caso se explica cuál.
 **La app me avisa de que algo no coincide con godfat. ¿Qué hago?**
 Comprueba cada paso en godfat antes de tirar. El aviso desaparece cuando el problema se corrige.
 
-**He encontrado un error o tengo una sugerencia.**
-Ábrela en las [incidencias del repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues),
-con tu semilla y los gatos elegidos si es un error de cálculo.
+**He encontrado un error o tengo una sugerencia. ¿Dónde lo digo?**
+Tienes dos opciones:
+
+- Escribir a [tbcseedrouter@gmail.com](mailto:tbcseedrouter@gmail.com). El enlace «Reportar un error» del pie de la web abre el
+  correo ya rellenado con los datos de tu formulario.
+- Abrir una [incidencia en el repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues) (necesitas una cuenta de GitHub).
+
+Si es un error de cálculo, explica qué ha pasado e incluye los datos con los que hiciste el análisis,
+para poder repetirlo: la URL de tu semilla, los gatos elegidos, las fechas «Desde» y «Hasta», los
+tiros revisados, tus Rare Tickets y Cat Food, los descuentos y protecciones que marcaste, y en qué
+ruta y paso no coincide lo que salió. Una captura ayuda mucho.
 
 ---
 
@@ -407,7 +415,8 @@ autor. Detalles en [LICENSE](LICENSE) y [NOTICE.md](NOTICE.md).
 - **Battle Cats Wiki** (Miraheze): iconos de los gatos.
 - **The Battle Cats** y sus imágenes © PONOS Corporation. Proyecto no afiliado ni aprobado por PONOS.
 
-Errores y sugerencias: [incidencias del repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues).
+Errores, sugerencias y contacto: [tbcseedrouter@gmail.com](mailto:tbcseedrouter@gmail.com) o las
+[incidencias del repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues) (ver [cómo avisar de un error](#preguntas-frecuentes)).
 
 ---
 

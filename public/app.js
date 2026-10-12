@@ -141,7 +141,7 @@ async function submit(event) {
     else {
       console.error(err);
       showError(
-        `Error inesperado al calcular: ${err.message}. Si se repite, avísalo en el repositorio del proyecto (enlace al pie de la página) indicando tu semilla y los gatos elegidos.`
+        `Error inesperado al calcular: ${err.message}. Si se repite, avísanos con «Reportar un error» (al pie de la página): el correo lleva ya los datos de tu formulario.`
       );
     }
   } finally {
@@ -687,7 +687,7 @@ async function loadData() {
     showError(
       location.protocol === 'file:'
         ? 'Esta página no funciona abriendo el archivo HTML directamente. Usa la web publicada o arranca la app con «Iniciar TBC Seed Router.bat».'
-        : `No se pudieron cargar los datos de los banners (${err.message}). Recarga la página; si se repite, avísalo en el repositorio del proyecto.`
+        : `No se pudieron cargar los datos de los banners (${err.message}). Recarga la página; si se repite, escribe a tbcseedrouter@gmail.com.`
     );
     $('#submit').disabled = true;
     picker.fail();
@@ -706,6 +706,33 @@ async function loadData() {
   renderDataInfo(gachaData, status);
   renderTimeNote(gachaData);
 }
+
+// "Reportar un error": an e-mail with the form's data already filled in, so
+// the problem can be reproduced. Built on click, with the current values.
+const CONTACT = 'tbcseedrouter@gmail.com';
+$('#report-link').addEventListener('click', (e) => {
+  const f = form.elements;
+  const day = (iso) => (iso ? iso.split('-').reverse().join('/') : '—');
+  const yes = (on) => (on ? 'sí' : 'no');
+  const cats = picker.value().map((key) => picker.byId.get(key)?.name || key);
+  const body = [
+    'Hola, he encontrado un problema en TBC Seed Router.',
+    '',
+    'Qué ha pasado (y en qué ruta y paso, si es un error de cálculo):',
+    '',
+    '',
+    '--- Datos del análisis ---',
+    `Semilla: ${f.url.value.trim() || '—'}`,
+    `Gatos elegidos: ${cats.join(', ') || '—'}`,
+    `Fechas: ${day(f.from.value)} – ${day(f.to.value)}`,
+    `Tiros revisados: ${f.rolls.value || '—'}`,
+    `Rare Tickets: ${f.tickets.value || 0} · Cat Food: ${f.food.value || 0}`,
+    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)} · tiro simple a 50 ${yes(f.discount1.checked)}`,
+    `Proteger casillas: moradas ${yes(f.avoidLegend.checked)} · lilas ${yes(f.avoidLegendFest.checked)}`,
+    `Datos de la web: ${gachaData ? `${showDate(gachaData.generatedAt)} (${gachaData.source.commit.slice(0, 8)})` : 'sin cargar'}`,
+  ].join('\n');
+  e.currentTarget.href = `mailto:${CONTACT}?subject=${encodeURIComponent('Error en TBC Seed Router')}&body=${encodeURIComponent(body)}`;
+});
 
 $('#forget-data').addEventListener('click', () => {
   localStorage.removeItem(STORAGE_KEY);
