@@ -119,10 +119,11 @@ navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y
 
 Los resultados aparecen en este orden.
 
-### Resumen de la semilla
+### Resumen del análisis
 
-Arriba se indica la semilla, cuántos tiros por pista se han revisado y cuántos banners entran en tus
-fechas. Debajo hay dos apartados desplegables:
+Una tarjeta con tu semilla y tres cifras: cuántos tiros por pista se han revisado, cuántos banners
+entran en tus fechas y el valor de un Rare Ticket (150 Cat Food) con el que se comparan las rutas.
+Debajo hay dos filas desplegables, cada una con su número de elementos:
 
 - **Banners analizados**: cada banner con sus fechas y horas, y su tipo (simples y 11-draw,
   garantizado o step-up). Los que no se pueden usar aparecen como «Excluido» con el motivo, por
@@ -131,11 +132,14 @@ fechas. Debajo hay dos apartados desplegables:
   y qué legendario darían en cada banner de tus fechas. Cada uno tiene un botón **«Añadir a
   objetivos»** que lo añade a tu lista y recalcula.
 
+Si marcaste la protección de las lilas, al final de la tarjeta una nota en lila indica si se están
+protegiendo (y por qué banner) o si se usan como casillas normales porque no hay ningún banner así.
+
 ### Avisos
 
-Recuadros amarillos con información importante: si las casillas lilas se están protegiendo o no (y
-por qué banner), si los datos están desactualizados, o si la última comprobación contra godfat
-encontró diferencias. En ese caso, comprueba cada paso en godfat antes de gastar nada.
+Recuadros amarillos con información importante: si los datos están desactualizados o si la última
+comprobación contra godfat encontró diferencias. En ese caso, comprueba cada paso en godfat antes de
+gastar nada.
 
 ### Tabla de rutas
 

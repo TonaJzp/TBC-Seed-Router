@@ -458,11 +458,78 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
   background: var(--raised);
 }
 
-.context { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; margin-bottom: 16px; }
-.context h2 { font-size: 18px; }
-.context span { color: var(--ink-2); }
-.context details { flex-basis: 100%; }
-.context summary { cursor: pointer; color: var(--accent); font-size: 13px; width: max-content; }
+/* Summary card on top of the analysis: seed and key figures, collapsible
+   rows (banners, legend cells) and the lilac protection note. */
+.summary { margin-bottom: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+.summary-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 28px;
+  padding: 14px 18px;
+}
+.summary-seed span { display: block; font-size: 11.5px; color: var(--ink-3); }
+.summary-seed h2 { font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.summary-facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; }
+.summary-facts dt { font-size: 11.5px; color: var(--ink-3); }
+.summary-facts dd { margin: 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.summary-facts dd small { font-size: 12px; font-weight: 400; color: var(--ink-2); }
+
+.summary-row { border-top: 1px solid var(--line); }
+.summary-row > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.summary-row > summary::-webkit-details-marker { display: none; }
+.summary-row > summary::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--ink-3);
+  border-bottom: 1.5px solid var(--ink-3);
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+.summary-row[open] > summary::before { transform: rotate(45deg); }
+.summary-row > summary:hover { background: var(--panel); }
+.summary-row > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.summary-row .count {
+  min-width: 22px;
+  padding: 0 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  color: var(--ink-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.summary-body { padding: 0 18px 12px; }
+.summary-body table { font-size: 13px; }
+
+.summary-note {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 11px 18px;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--r-legend-fest) 9%, transparent);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+}
+.summary-note .dot { flex: none; }
+.summary-note p { margin: 0; line-height: 1.5; }
+.summary-note b { color: var(--ink); font-weight: 600; }
 
 .section-title { font-size: 13px; color: var(--ink-2); margin: 22px 0 8px; }
 

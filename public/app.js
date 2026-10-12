@@ -167,14 +167,16 @@ function bringIntoView(el) {
 
 function render() {
   const { data } = current;
+  // Picking another route re-renders everything: keep the open sections open.
+  const open = new Set([...document.querySelectorAll('#results details[open][data-section]')].map((d) => d.dataset.section));
   $('#results').innerHTML = [
     renderSupport(),
     renderContext(data),
-    renderNotices(data),
     renderDiagnostics(data),
     data.routes.length ? renderRoutesTable(data) : '',
     renderDetail(data),
   ].join('');
+  for (const d of document.querySelectorAll('#results details[data-section]')) d.open = open.has(d.dataset.section);
   for (const tr of document.querySelectorAll('.routes tbody tr[data-i]')) {
     tr.addEventListener('click', () => {
       current.selected = Number(tr.dataset.i);
@@ -211,16 +213,29 @@ function renderContext(data) {
   const skipped = data.skipped
     .map((s) => `<tr><td></td><td class="muted">${esc(s.name)}</td><td class="kind">Excluido: ${esc(s.reason)}</td></tr>`)
     .join('');
-  return `<div class="context">
-    <h2>Semilla ${esc(data.seed)}</h2>
-    <span>${data.rolls} tiros por pista · ${data.events.length} banners · coste total con 1 Rare Ticket = 150 Cat Food</span>
-    <details>
-      <summary>Banners analizados</summary>
-      <table class="banners"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
-      <tbody>${rows}${skipped}</tbody></table>
-    </details>
+  return `<section class="summary" aria-label="Resumen del análisis">
+    <div class="summary-head">
+      <div class="summary-seed"><span>Semilla</span><h2>${esc(data.seed)}</h2></div>
+      <dl class="summary-facts">
+        <div><dt>Tiros por pista</dt><dd>${fmt(data.rolls)}</dd></div>
+        <div><dt>Banners</dt><dd>${data.events.length}</dd></div>
+        <div><dt>1 Rare Ticket</dt><dd>150 <small>Cat Food</small></dd></div>
+      </dl>
+    </div>
+    ${disclosure('banners', 'Banners analizados', data.events.length,
+      `<div class="table-wrap"><table class="banners"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
+      <tbody>${rows}${skipped}</tbody></table></div>`)}
     ${renderAllLegendCells(data)}
-  </div>`;
+    ${renderNotices(data)}
+  </section>`;
+}
+
+/** A collapsible row of the summary: title, a count, and its content. */
+function disclosure(section, title, count, body) {
+  return `<details class="summary-row" data-section="${section}">
+    <summary><span>${title}</span><span class="count">${count}</span></summary>
+    <div class="summary-body">${body}</div>
+  </details>`;
 }
 
 const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
@@ -246,10 +261,8 @@ function renderAllLegendCells(data) {
   const rows = cells
     .map((c) => `<tr><td class="mono nowrap"><i class="dot ${COLOR_DOT[c.color]}"></i>${esc(c.key)}</td><td>${legendOptions(c)}</td></tr>`)
     .join('');
-  return `<details>
-    <summary>Casillas de legendario en tus próximos ${data.rolls} tiros (${cells.length})</summary>
-    <table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table>
-  </details>`;
+  return disclosure('legend', `Casillas de legendario en tus próximos ${data.rolls} tiros`, cells.length,
+    `<div class="table-wrap"><table class="banners"><thead><tr><th>Casilla</th><th>Legendario posible según los banners de tus fechas</th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
 
 const FIT = {
@@ -346,12 +359,14 @@ function renderNotices(data) {
   const p = data.protection;
   const shortDate = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
   if (p.legendFestRequested && !p.legendFest) {
-    lines.push('Las casillas lilas no se protegen: desde tu fecha «Desde» no hay ningún banner anunciado con más probabilidad de legendario (Royalfest, doble legend...).');
+    lines.push('<b>Casillas lilas sin proteger.</b> Desde tu fecha «Desde» no hay ningún banner anunciado con más probabilidad de legendario (Royalfest, doble legend…), así que se usan como casillas normales.');
   } else if (p.legendFest) {
-    const banners = p.doubleLegendEvents.map((e) => `${esc(e.name)} (${shortDate(e.start)}–${shortDate(e.end)})`);
-    lines.push(`Casillas lilas protegidas: dan legendario en ${banners.join('; ')}.`);
+    const banners = p.doubleLegendEvents.map((e) => `«${esc(e.name)}» (${shortDate(e.start)}–${shortDate(e.end)})`);
+    lines.push(`<b>Casillas lilas protegidas.</b> Dan legendario en ${banners.join('; ')}.`);
   }
-  return lines.length ? `<div class="notice">${lines.map((l) => `<p>${l}</p>`).join('')}</div>` : '';
+  return lines.length
+    ? `<div class="summary-note"><i class="dot legend-fest" aria-hidden="true"></i><div>${lines.map((l) => `<p>${l}</p>`).join('')}</div></div>`
+    : '';
 }
 
 /** How a route is referred to in another one's note: "la recomendada" or «its label». */
