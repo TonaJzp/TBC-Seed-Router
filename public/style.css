@@ -109,41 +109,55 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .brand-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .brand-logo { flex: none; width: 52px; height: 46px; overflow: visible; }
 
-/* Logo mascot (mascot.js). At rest: the cat beside a faint dotted route that
-   ends at a target. Animated: the route is traced, the cat follows it. */
+/* Logo mascot (mascot.js). At rest: the cat beside a faint dotted route,
+   from a start through three stops to a target. Animated: the route is traced
+   in dashes, lighting each stop, and the cat follows it with its eyes. Every
+   stop has a halo of the background colour, so lines never run into it. */
 .mascot-trail {
   fill: none;
   stroke: var(--ink-3);
-  stroke-width: 1.8;
+  stroke-width: 1.7;
   stroke-linecap: round;
-  stroke-dasharray: 0 4.4;
-  opacity: 0.55;
+  stroke-dasharray: 0 6.25;
+  opacity: 0.7;
+  transition: opacity 0.5s ease;
 }
-.mascot-start { fill: var(--ink-3); opacity: 0.55; }
 .mascot-route {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 2.4;
+  stroke-width: 2.3;
   stroke-linecap: round;
-  stroke-dasharray: 4.6 3.4;
+  stroke-dasharray: 1.6 4.65; /* same 6.25 period as the dots */
 }
 .mascot-reveal { stroke-dasharray: 100 100; stroke-dashoffset: 100; }
+.mascot-halos { fill: var(--panel); }
 .mascot-run, .mascot-tip { opacity: 0; transition: opacity 0.5s ease; }
 .mascot.is-running .mascot-run, .mascot.is-running .mascot-tip { opacity: 1; transition: none; }
+.mascot.is-running .mascot-trail { opacity: 0; transition-duration: 0.2s; }
+.mascot.is-arrived .mascot-tip { opacity: 0; transition: opacity 0.15s ease; }
 .mascot-node {
   fill: var(--panel);
   stroke: var(--ink-3);
   stroke-width: 1.4;
+  transform-box: fill-box;
+  transform-origin: center;
   transition: fill 0.5s ease, stroke 0.5s ease;
 }
-.mascot-node.is-lit { fill: var(--accent); stroke: var(--accent); transition: none; }
-.mascot-tip { fill: var(--accent); stroke: var(--panel); stroke-width: 1.3; }
+.mascot-start { fill: var(--ink-3); }
+.mascot-node.is-lit {
+  fill: var(--accent);
+  stroke: var(--accent);
+  transition: none;
+  animation: mascot-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.mascot-tip-glow { fill: var(--accent); opacity: 0.22; }
+.mascot-tip-dot { fill: var(--accent); }
 .mascot-target-ring { fill: var(--panel); stroke: var(--accent); stroke-width: 1.8; }
 .mascot-target-dot { fill: var(--accent); }
 .mascot-target { transform-box: fill-box; transform-origin: center; }
 .mascot.is-arrived .mascot-target { animation: mascot-pop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes mascot-pop {
-  40% { transform: scale(1.45); }
+  40% { transform: scale(1.4); }
 }
 .mascot-eyes, .mascot-happy { transition: opacity 0.12s ease; }
 .mascot-happy { opacity: 0; }

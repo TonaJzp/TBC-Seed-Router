@@ -31,6 +31,7 @@ export function initMascot(svg) {
   const tip = q('.mascot-tip');
   const nodes = [...svg.querySelectorAll('.mascot-node')].map((el) => ({ el, at: Number(el.dataset.at) }));
   const length = route.getTotalLength();
+  const end = 1 - 5 / length; // the tip stops at the target's edge, not on top of it
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const still = () => reduce.matches || document.hidden;
 
@@ -68,17 +69,16 @@ export function initMascot(svg) {
 
     if (run !== null) {
       const t = Math.max(0, now - run);
-      const p = ease(Math.min(1, t / TRACE_MS));
+      const p = end * ease(Math.min(1, t / TRACE_MS));
       const running = t < FADE_AT;
       svg.classList.toggle('is-running', running);
-      svg.classList.toggle('is-arrived', t >= TRACE_MS && t < TRACE_MS + 600);
+      svg.classList.toggle('is-arrived', t >= TRACE_MS && t < RUN_MS);
       svg.classList.toggle('is-happy', t >= TRACE_MS + 150 && t < TRACE_MS + 1150);
       for (const n of nodes) n.el.classList.toggle('is-lit', running && p >= n.at);
       reveal.style.strokeDashoffset = 100 * (1 - p);
-      route.style.strokeDashoffset = -t * 0.008; // the dashes keep moving forward
+      route.style.strokeDashoffset = 0.8 - t * 0.009; // the dashes keep moving forward
       const at = route.getPointAtLength(p * length);
-      tip.setAttribute('cx', at.x.toFixed(2));
-      tip.setAttribute('cy', at.y.toFixed(2));
+      tip.setAttribute('transform', `translate(${at.x.toFixed(2)} ${at.y.toFixed(2)})`);
       if (running) target = at;
       if (t >= RUN_MS) run = null;
     }
