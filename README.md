@@ -105,8 +105,8 @@ filas solo alargan un poco el cálculo.
   recomienda la que menos te pide y se indica cuánto te falta (ver [Cuál se recomienda](#cuál-se-recomienda)).
 - **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
   750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
-- **Protección de casillas de legendario**: marcadas por defecto. Ver
-  [Casillas de legendario](#casillas-de-legendario).
+- **Protección de casillas de legendario**: marcadas por defecto. El «?» de cada opción explica qué
+  hace (pasa el ratón por encima o tócalo). Ver [Casillas de legendario](#casillas-de-legendario).
 
 ### 6. Pulsa «Calcular rutas»
 

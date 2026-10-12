@@ -551,6 +551,56 @@ $('#theme-toggle').addEventListener('click', () => {
 });
 applyTheme(document.documentElement.dataset.theme || 'light');
 
+// --- Help popovers -----------------------------------------------------------
+// The "?" next to an option. With a mouse, hovering shows the explanation;
+// a click or tap keeps it open until you tap elsewhere or press Escape.
+const helpButtons = [...document.querySelectorAll('.help')];
+let pinnedHelp = null;
+const popOf = (btn) => document.getElementById(btn.getAttribute('aria-controls'));
+
+function openHelp(btn) {
+  for (const other of helpButtons) if (other !== btn) closeHelp(other);
+  const pop = popOf(btn);
+  pop.hidden = false;
+  const b = btn.getBoundingClientRect();
+  const arrow = b.left + b.width / 2 - pop.getBoundingClientRect().left;
+  pop.style.setProperty('--arrow-x', `${Math.max(12, arrow)}px`);
+  btn.setAttribute('aria-expanded', 'true');
+}
+
+function closeHelp(btn) {
+  popOf(btn).hidden = true;
+  btn.setAttribute('aria-expanded', 'false');
+  if (pinnedHelp === btn) pinnedHelp = null;
+}
+
+for (const btn of helpButtons) {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); // it sits inside the option's label: don't tick the checkbox
+    e.stopPropagation();
+    if (pinnedHelp === btn) closeHelp(btn);
+    else {
+      openHelp(btn);
+      pinnedHelp = btn;
+    }
+  });
+  btn.addEventListener('pointerenter', (e) => {
+    if (e.pointerType === 'mouse' && !pinnedHelp) openHelp(btn);
+  });
+  btn.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse' && pinnedHelp !== btn) closeHelp(btn);
+  });
+}
+document.addEventListener('click', (e) => {
+  if (pinnedHelp && !e.target.closest('.help-pop')) closeHelp(pinnedHelp);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !pinnedHelp) return;
+  const btn = pinnedHelp;
+  closeHelp(btn);
+  btn.focus();
+});
+
 // --- Data -----------------------------------------------------------------
 // The banners come from godfat's open data, rebuilt every day and checked
 // against bc.godfat.org (data/status.json). Visitors are told when the data is

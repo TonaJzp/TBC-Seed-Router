@@ -102,7 +102,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
   padding: 16px 22px;
   border-bottom: 1px solid var(--line);
 }
@@ -115,8 +115,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   align-self: flex-start; /* level with the title, not centred on the block */
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   flex: none;
+  min-width: 84px; /* same width for Claro and Oscuro */
   padding: 5px 9px;
   font-size: 12px;
   color: var(--ink-2);
@@ -159,6 +161,62 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .check { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 13px; cursor: pointer; }
 .check input { margin: 2px 0 0; accent-color: var(--accent); }
 .check em { display: block; font-size: 11.5px; }
+/* "?" after an option: its explanation opens in a box under the option,
+   with an arrow pointing at the "?" (left set from app.js). */
+.check-help { position: relative; }
+.help {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  padding: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink-3);
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  vertical-align: 1px;
+  cursor: help;
+}
+.help::after { content: ""; position: absolute; inset: -8px; } /* bigger target for fingers */
+.help:hover, .help[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.help:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.help-pop {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 24px;
+  right: 0;
+  max-width: 420px;
+  margin-top: 2px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+.help-pop::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: var(--arrow-x, 16px);
+  width: 10px;
+  height: 10px;
+  background: var(--raised);
+  border-top: 1px solid var(--line-2);
+  border-left: 1px solid var(--line-2);
+  transform: translateX(-50%) rotate(45deg);
+}
+.help-pop[hidden] { display: none; }
+.help-pop p { margin: 0; }
+.help-pop p + p { margin-top: 6px; }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
 .dot.legend { background: var(--r-legend); }
 .dot.legend-fest { background: var(--r-legend-fest); }
