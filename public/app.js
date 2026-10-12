@@ -408,10 +408,10 @@ function renderRoutesTable(data) {
   const shortNote = short
     ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes.</p>`
     : '';
-  return `<h3 class="section-title">Rutas</h3>
+  return `<h3 class="section-title">Elige una ruta <span class="title-hint">pulsa una fila para ver sus pasos</span></h3>
     <div class="table-wrap"><table class="routes">
       <thead><tr>
-        <th>Ruta</th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
+        <th>Criterio</th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
         <th class="r">Coste total</th><th class="r">Tiros</th>
         <th class="r" title="Cuántos 11-draws hace la ruta (1500 Cat Food cada uno). Debajo, cuántos de ellos son garantizados o step-up.">11-draws</th>
         <th class="r" title="Si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta.">¿Te alcanza?</th>

@@ -519,6 +519,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .summary-note b { color: var(--ink); font-weight: 600; }
 
 .section-title { font-size: 13px; color: var(--ink-2); margin: 22px 0 8px; }
+.title-hint { margin-left: 8px; font-weight: 400; color: var(--ink-3); }
 
 table { width: 100%; border-collapse: collapse; }
 .table-wrap { overflow-x: auto; }

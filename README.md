@@ -143,8 +143,9 @@ gastar nada.
 
 ### Tabla de rutas
 
-Tres rutas, cada una con un criterio distinto. La recomendada lleva la etiqueta «Recomendada», va
-primero y es la que se abre al calcular; pulsa otra fila para ver su detalle debajo.
+La tabla «Elige una ruta» muestra tres rutas, cada una con un criterio distinto. La recomendada lleva
+la etiqueta «Recomendada», va primero y es la que se abre al calcular; pulsa otra fila para ver sus
+pasos debajo.
 
 | Ruta | Criterio (por orden de prioridad) |
 |------|-----------------------------------|
@@ -158,6 +159,7 @@ lugar de repetirla, y si llevan a otra ruta con las mismas cifras, «Mismo coste
 
 | Columna | Qué indica |
 |---------|------------|
+| Criterio | Qué prioriza la ruta y, debajo, una frase que lo explica (o «Misma ruta que la recomendada» si coincide con otra). |
 | Objetivos | Cuántos de tus gatos consigue la ruta (en rojo si no son todos). |
 | Rare Tickets / Cat Food | Lo que gasta de cada recurso. |
 | Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara «Menor coste total». |
