@@ -336,8 +336,8 @@ Comprueba cada paso en godfat antes de tirar. El aviso desaparece cuando el prob
 **He encontrado un error o tengo una sugerencia. ¿Dónde lo digo?**
 Tienes dos opciones:
 
-- Escribir a [tbcseedrouter@gmail.com](mailto:tbcseedrouter@gmail.com). El enlace «Reportar un error» del pie de la web abre el
-  correo ya rellenado con los datos de tu formulario.
+- Escribir a [tbcseedrouter@gmail.com](mailto:tbcseedrouter@gmail.com). El enlace «Reportar un
+  error» del pie de la web abre el correo ya rellenado con los datos de tu formulario.
 - Abrir una [incidencia en el repositorio](https://github.com/TonaJzp/TBC-Seed-Router/issues) (necesitas una cuenta de GitHub).
 
 Si es un error de cálculo, explica qué ha pasado e incluye los datos con los que hiciste el análisis,
