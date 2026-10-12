@@ -405,10 +405,14 @@ function renderRoutesTable(data) {
     })
     .join('');
   const short = data.routes.some((r) => r.found && !r.totals.affordable);
+  const shown = data.routes[current.selected];
+  const shownNote = shown?.found && data.routes.filter((r) => r.found).length > 1
+    ? `<p class="routes-hint shown">Abajo tienes los pasos y detalles de <b>«${esc(shown.label)}»</b>. Para ver los de otra ruta, pulsa su fila en la tabla.</p>`
+    : '';
   const shortNote = short
     ? `<p class="hint routes-hint">«Faltan»: Cat Food que necesitarías además de la que tienes (${fmt(data.inventory.food)}) para hacer esa ruta entera. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes.</p>`
     : '';
-  return `<header class="sheet-head"><h3 class="sheet-label">Rutas</h3><span class="title-hint">Pulsa una fila para ver sus pasos</span></header>
+  return `<header class="sheet-head"><h3 class="sheet-label">Rutas</h3></header>
     <div class="table-wrap"><table class="routes">
       <thead><tr>
         <th><span class="sr-only">Ruta</span></th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
@@ -418,6 +422,7 @@ function renderRoutesTable(data) {
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
+    ${shownNote}
     ${shortNote}`;
 }
 
