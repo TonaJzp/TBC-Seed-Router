@@ -325,20 +325,27 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 }
 .picker-search input.invalid { border-color: var(--bad); }
 
-.picker-list {
+/* The dropdown: the list, which scrolls, and a bar under it with the count
+   and "Listo". Chosen cats stay in the list with their box ticked. */
+.picker-pop {
   position: absolute;
   z-index: 10;
   left: 0;
   right: 0;
-  margin: 2px 0 0;
-  padding: 2px 0;
-  max-height: 320px;
-  overflow-y: auto;
-  list-style: none;
+  margin-top: 2px;
+  overflow: hidden;
   background: var(--raised);
   border: 1px solid var(--line-2);
   border-radius: 4px;
   box-shadow: var(--shadow);
+}
+.picker-list {
+  margin: 0;
+  padding: 2px 0;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
 }
 .picker-list [role="option"] {
   display: flex;
@@ -349,7 +356,52 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
   border-left: 3px solid transparent;
   cursor: pointer;
 }
-.picker-list [role="option"][aria-selected="true"] { background: var(--accent-soft); border-left-color: var(--accent); }
+.picker-list [role="option"].active { background: var(--accent-soft); border-left-color: var(--accent); }
+@media (hover: hover) {
+  .picker-list [role="option"]:hover { background: var(--accent-soft); }
+}
+.opt-check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: var(--raised);
+  border: 1.5px solid var(--line-2);
+  border-radius: 3px;
+}
+[aria-selected="true"] > .opt-check { background: var(--accent); border-color: var(--accent); }
+[aria-selected="true"] > .opt-check::after {
+  content: "";
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border: solid var(--raised);
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg);
+}
+[aria-selected="true"] .opt-name { font-weight: 600; }
+.picker-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px 6px 11px;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+.picker-done {
+  min-height: 30px;
+  padding: 4px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--button-text);
+  background: var(--button);
+  border: 0;
+  border-radius: 4px;
+}
 .opt-name { flex: 1; min-width: 0; }
 .opt-name small { display: block; color: var(--ink-3); font-size: 11px; }
 .picker-empty { padding: 6px 10px; font-size: 12px; color: var(--ink-3); }

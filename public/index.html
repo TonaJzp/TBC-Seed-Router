@@ -123,7 +123,16 @@
             <input id="picker-input" type="text" autocomplete="off" spellcheck="false" role="combobox"
               aria-expanded="false" aria-controls="picker-list" aria-autocomplete="list"
               placeholder="Buscar por nombre o forma…">
-            <ul class="picker-list" id="picker-list" role="listbox" hidden></ul>
+            <!-- Chosen cats stay in the list, ticked, so each tap shows its
+                 effect where it happens; the bar keeps the count in sight. -->
+            <div class="picker-pop" id="picker-pop" hidden>
+              <ul class="picker-list" id="picker-list" role="listbox" aria-multiselectable="true"
+                aria-label="Gatos del juego"></ul>
+              <div class="picker-foot">
+                <span id="picker-foot-count" aria-live="polite"></span>
+                <button type="button" class="picker-done" id="picker-done">Listo</button>
+              </div>
+            </div>
           </div>
           <div class="picker-selected" id="picker-selected" hidden>
             <div class="picker-selected-head">

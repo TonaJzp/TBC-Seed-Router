@@ -1,8 +1,11 @@
 /**
  * Multi-select combobox for target cats: type to filter (name or any other
- * form of the cat), arrows + Enter to pick, Backspace to remove the last one.
- * Pasting a comma/line separated list adds every name it recognises.
- * The selection is mirrored as a JSON array in a hidden form input.
+ * form of the cat), tap or arrows + Enter to tick or untick one, Backspace to
+ * remove the last one. Chosen cats stay in the list, ticked, and the list
+ * keeps its place, so several can be chosen in a row and each tap shows its
+ * effect where it happens. Pasting a comma/line separated list adds every
+ * name it recognises. The selection is mirrored as a JSON array in a hidden
+ * form input.
  */
 export class TargetPicker {
   static MAX_OPTIONS = 60;
@@ -11,7 +14,9 @@ export class TargetPicker {
   constructor(root) {
     this.root = root;
     this.input = root.querySelector('#picker-input');
+    this.pop = root.querySelector('#picker-pop'); // the list and its bar
     this.list = root.querySelector('#picker-list');
+    this.footCount = root.querySelector('#picker-foot-count');
     this.chips = root.querySelector('#picker-chips');
     this.selectedBox = root.querySelector('#picker-selected');
     this.count = root.querySelector('#picker-count');
@@ -25,21 +30,40 @@ export class TargetPicker {
     this.active = -1;
     this.statusText = '';
     this.quiet = false; // true while focusing the box without opening the list
+    this.closeTimer = 0;
 
     this.input.addEventListener('input', () => this.open());
     this.input.addEventListener('focus', () => {
       if (!this.quiet) this.open();
     });
-    this.input.addEventListener('blur', () => setTimeout(() => this.close(), 120));
+    // A tap or click on the box always shows the list, also when the box
+    // already has the focus and no focus event comes: after the page put the
+    // cursor there, after Escape, or on phones, where tapping elsewhere does
+    // not always take the focus away. Tapping the label clicks the box too.
+    this.input.addEventListener('click', () => {
+      if (this.pop.hidden) this.open();
+    });
+    this.input.addEventListener('blur', () => {
+      this.closeTimer = setTimeout(() => this.close(), 120);
+    });
     this.input.addEventListener('keydown', (e) => this.onKey(e));
     this.input.addEventListener('paste', (e) => this.onPaste(e));
-    this.list.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus
+    this.pop.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus
     document.addEventListener('mousedown', (e) => {
       if (!this.root.contains(e.target)) this.close();
     });
     this.list.addEventListener('click', (e) => {
       const li = e.target.closest('[data-i]');
-      if (li) this.pick(this.options[Number(li.dataset.i)]);
+      if (!li) return;
+      this.active = Number(li.dataset.i);
+      this.toggle(this.options[this.active]);
+    });
+    // "Listo" closes the list and clears the search, so it opens whole next
+    // time; on phones it also puts the keyboard away.
+    root.querySelector('#picker-done').addEventListener('click', () => {
+      this.input.value = '';
+      this.close();
+      this.input.blur();
     });
     this.chips.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-name]');
@@ -48,9 +72,12 @@ export class TargetPicker {
       this.remove(btn.dataset.name);
       this.focusChip(i);
     });
+    // The button goes away with the cats: the focus moves to the box, with
+    // the list open to choose again.
     root.querySelector('#picker-clear').addEventListener('click', () => {
       this.clear();
-      this.focusQuietly();
+      this.input.focus();
+      if (this.pop.hidden) this.open(); // it had the focus already
     });
   }
 
@@ -101,13 +128,14 @@ export class TargetPicker {
       if (cat) this.add(cat.key);
     }
     this.sync();
-    // Whatever was typed while the list was loading gets its results now.
-    if (document.activeElement === this.input && this.input.value.trim()) this.open();
+    // A list opened (or text typed) while loading gets its cats now.
+    if (document.activeElement === this.input && (!this.pop.hidden || this.input.value.trim())) this.open();
   }
 
   fail() {
     this.statusText = 'No se pudo cargar la lista de gatos.';
     this.sync();
+    if (!this.pop.hidden) this.open();
   }
 
   find(text) {
@@ -135,13 +163,11 @@ export class TargetPicker {
     return [...this.selected];
   }
 
-  // Ranks catalogue entries for the typed text.
+  // Ranks catalogue entries for the typed text (chosen ones too: they show ticked).
   search(text) {
     const q = TargetPicker.norm(text);
-    const taken = new Set(this.selected);
     const results = [];
     for (const cat of this.cats) {
-      if (taken.has(cat.key)) continue;
       if (!q) {
         results.push({ cat, score: 9, via: null });
         continue;
@@ -165,10 +191,14 @@ export class TargetPicker {
     return results;
   }
 
-  open() {
+  /** Shows the list for the typed text; `keep` keeps its scroll and highlighted row (after a tick). */
+  open({ keep = false } = {}) {
+    clearTimeout(this.closeTimer); // a quick blur and focus again must not close it
+    const scroll = this.list.scrollTop;
+    const chosen = new Set(this.selected);
     const results = this.search(this.input.value);
     this.options = results.slice(0, TargetPicker.MAX_OPTIONS).map((r) => r.cat);
-    this.active = this.input.value.trim() && this.options.length ? 0 : -1;
+    if (!keep) this.active = this.input.value.trim() && this.options.length ? 0 : -1;
     const rows = results.slice(0, TargetPicker.MAX_OPTIONS).map((r, i) => {
       const c = r.cat;
       const img = TargetPicker.icon(c);
@@ -177,31 +207,36 @@ export class TargetPicker {
         c.gacha === false && 'no sale en el gacha',
       ].filter(Boolean);
       const alias = notes.length ? `<small>${notes.join(' · ')}</small>` : '';
-      return `<li role="option" id="picker-opt-${i}" data-i="${i}" class="r-${c.rarity}" aria-selected="false">
-        ${img}<span class="opt-name">${TargetPicker.esc(c.label)}${alias}</span>${TargetPicker.rarity(c)}
+      return `<li role="option" id="picker-opt-${i}" data-i="${i}" class="r-${c.rarity}" aria-selected="${chosen.has(c.key)}">
+        <span class="opt-check" aria-hidden="true"></span>${img}<span class="opt-name">${TargetPicker.esc(c.label)}${alias}</span>${TargetPicker.rarity(c)}
       </li>`;
     });
     const more = results.length - this.options.length;
-    if (!rows.length) rows.push('<li class="picker-empty">Ningún gato coincide.</li>');
+    if (!rows.length) {
+      const why = this.cats.length ? 'Ningún gato coincide.' : this.statusText || 'Cargando lista de gatos…';
+      rows.push(`<li class="picker-empty">${TargetPicker.esc(why)}</li>`);
+    }
     if (more > 0) rows.push(`<li class="picker-empty">${more} más… sigue escribiendo para filtrar.</li>`);
     this.list.innerHTML = rows.join('');
-    this.list.hidden = false;
+    this.pop.hidden = false;
+    if (keep) this.list.scrollTop = scroll;
     this.input.setAttribute('aria-expanded', 'true');
-    this.highlight();
+    this.highlight(!keep);
   }
 
   close() {
-    this.list.hidden = true;
+    this.pop.hidden = true;
     this.input.setAttribute('aria-expanded', 'false');
     this.input.removeAttribute('aria-activedescendant');
     this.active = -1;
   }
 
-  highlight() {
+  /** Marks the row Enter acts on; `scroll` brings it into the list's view. */
+  highlight(scroll = true) {
     for (const li of this.list.querySelectorAll('[role="option"]')) {
       const on = Number(li.dataset.i) === this.active;
-      li.setAttribute('aria-selected', String(on));
-      if (on) li.scrollIntoView({ block: 'nearest' });
+      li.classList.toggle('active', on);
+      if (on && scroll) li.scrollIntoView({ block: 'nearest' });
     }
     if (this.active >= 0) this.input.setAttribute('aria-activedescendant', `picker-opt-${this.active}`);
     else this.input.removeAttribute('aria-activedescendant');
@@ -210,13 +245,14 @@ export class TargetPicker {
   onKey(e) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      if (this.list.hidden) this.open();
+      if (this.pop.hidden) this.open();
       const step = e.key === 'ArrowDown' ? 1 : -1;
       this.active = Math.max(0, Math.min(this.options.length - 1, this.active + step));
       this.highlight();
     } else if (e.key === 'Enter') {
       e.preventDefault(); // never submit the form from here
-      if (!this.list.hidden && this.options[this.active]) this.pick(this.options[this.active]);
+      if (this.pop.hidden) this.open();
+      else if (this.options[this.active]) this.toggle(this.options[this.active]);
     } else if (e.key === 'Escape') {
       this.close();
     } else if (e.key === 'Backspace' && !this.input.value && this.selected.length) {
@@ -238,12 +274,19 @@ export class TargetPicker {
     this.open();
   }
 
-  pick(cat) {
+  /**
+   * Ticks or unticks a cat. The list stays as it is, with the search text, to
+   * go on choosing; with a mouse or keyboard the text gets selected, so typing
+   * the next name replaces it (on touch screens that would pop up the
+   * selection handles, so it is left alone there).
+   */
+  toggle(cat) {
     if (!cat) return;
-    this.add(cat.key);
-    this.input.value = '';
+    if (this.selected.includes(cat.key)) this.selected = this.selected.filter((k) => k !== cat.key);
+    else this.add(cat.key);
     this.sync();
-    this.open();
+    this.open({ keep: true });
+    if (this.input.value && window.matchMedia('(pointer: fine)').matches) this.input.select();
   }
 
   add(key) {
@@ -253,15 +296,20 @@ export class TargetPicker {
   remove(key) {
     this.selected = this.selected.filter((k) => k !== key);
     this.sync();
+    if (!this.pop.hidden) this.open({ keep: true });
   }
 
   // After removing with ×, focus stays in the list (next ×, else the previous one)
-  // so the dropdown does not pop open; with nothing left it returns to the box.
+  // so the dropdown does not pop open; with nothing left it returns to the box,
+  // with the list open as after «Quitar todos».
   focusChip(i) {
     const buttons = this.chips.querySelectorAll('button.remove');
     const btn = buttons[Math.min(i, buttons.length - 1)];
     if (btn) btn.focus();
-    else this.focusQuietly();
+    else {
+      this.input.focus();
+      if (this.pop.hidden) this.open(); // it had the focus already
+    }
   }
 
   /** Focuses the search box without opening the dropdown. */
@@ -295,6 +343,7 @@ export class TargetPicker {
     this.selectedBox.hidden = n === 0;
     if (n) this.input.classList.remove('invalid');
     this.count.textContent = `${n} gato${n === 1 ? '' : 's'} elegido${n === 1 ? '' : 's'}`;
+    this.footCount.textContent = n ? this.count.textContent : 'Ningún gato elegido todavía';
     this.status.innerHTML = message ? `<span class="bad">${TargetPicker.esc(message)}</span>` : TargetPicker.esc(this.statusText);
   }
 }
