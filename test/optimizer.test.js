@@ -425,3 +425,33 @@ test('a legendary of another banner is "without leaving the route" only if the r
   assert.equal(inDraw.got.name, 'Megidora');
   assert.deepEqual(inDraw.legends.map((l) => [l.name, l.sameRoute]), [['Lumina', false]]);
 });
+
+// --- «Gastar el 11-draw a 750 sí o sí» -----------------------------------------
+
+test('spending the 11-draw discount in any case: every route uses it, at the lowest cost for its criterion', () => {
+  const targets = someUbers(1);
+  const options = { inventory: { tickets: 30, food: 60000 } };
+  const free = byKey(plan(targets, { ...options, discounts: { guaranteed: true } }).routes);
+  const { ctx, routes } = plan(targets, { ...options, discounts: { guaranteed: true, spendMulti: true } });
+  for (const route of routes.filter((r) => r.found)) {
+    replayRoute(assert, ctx, route);
+    assert.equal(route.complete, true, route.label);
+    assert.ok(route.discounts.multi.step, `${route.label}: the discount is spent`);
+    assert.equal(route.discounts.multi.spend, true);
+    const before = free[route.key].totals;
+    // Forcing it can never make a route better for its own criterion.
+    if (route.key === 'optimal') assert.ok(route.totals.totalCost >= before.totalCost);
+    if (route.key === 'saveFood') assert.ok(route.totals.foodUsed >= before.foodUsed);
+    if (route.key === 'saveTickets') assert.ok(route.totals.ticketsUsed >= before.ticketsUsed);
+  }
+});
+
+test('if the 11-draw discount cannot be paid, the route is still given and says why', () => {
+  const { routes } = plan(someUbers(1), { inventory: { tickets: 200, food: 0 }, discounts: { guaranteed: true, spendMulti: true } });
+  const found = routes.filter((r) => r.found && r.complete);
+  assert.ok(found.length, 'the target is reachable with tickets alone');
+  for (const route of found) {
+    assert.equal(route.discounts.multi.step, null);
+    assert.match(route.discounts.multi.reason, /no se ha podido gastar/);
+  }
+});

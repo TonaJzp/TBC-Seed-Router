@@ -617,6 +617,8 @@ function renderDetail(data) {
     .concat((data.unplanned || []).map(missing))
     .join('');
 
+  // Step that gets the last target: an 11-draw after it only spends the discount.
+  const lastHit = Math.max(0, ...r.targets.filter((x) => x.obtained).map((x) => x.step));
   const cheapest = data.routes.find((x) => x.key === 'optimal');
   const why =
     r.recommendedFor === 'leastFood' && cheapest?.found
@@ -646,7 +648,7 @@ function renderDetail(data) {
     <p class="hint steps-hint">Haz cada paso en el banner que indica, el día indicado o después, mientras siga activo. Las horas son las de tu dispositivo, que son las que usa el juego para cambiar los banners. Pulsa el nombre del banner para abrir esa misma tabla en godfat y comprobar los gatos antes de tirar.</p>
     <div class="table-wrap"><table class="steps">
       <thead><tr><th>#</th><th title="Día en el que puedes hacer este paso">Día</th><th>Banner</th><th>Acción</th><th>Posición</th><th class="r">Pago</th><th>Gatos</th></tr></thead>
-      <tbody>${r.steps.map((s, i) => renderStep(s, data, r.steps[i - 1])).join('')}</tbody>
+      <tbody>${r.steps.map((s, i) => renderStep(s, data, r.steps[i - 1], lastHit)).join('')}</tbody>
     </table></div>
     <div class="legend-row">
       <span><span class="cat">Rare</span></span>
@@ -672,7 +674,7 @@ function closingNote(s, ev) {
   return `<small>antes de las ${esc(s.closesAt)}; luego sigue igual hasta el ${esc(shortWithHour(next.end, next.endTime))}</small>`;
 }
 
-function renderStep(s, data, prev) {
+function renderStep(s, data, prev, lastHit = Infinity) {
   // The table as godfat draws it after the cat rolled just before this step.
   const last = prev ? prev.cats[prev.cats.length - 1].id : data.last;
   const untilRow = Math.max(Number.parseInt(s.from, 10), Number.parseInt(s.to, 10));
@@ -682,7 +684,9 @@ function renderStep(s, data, prev) {
   const pay = [s.ticketsSpent && `${s.ticketsSpent} ticket${s.ticketsSpent > 1 ? 's' : ''}`, s.foodSpent && `${fmt(s.foodSpent)} CF`]
     .filter(Boolean)
     .join(' + ');
-  const note = /descuento/.test(s.payment) ? '<small>con descuento</small>' : '';
+  const discounted = /descuento/.test(s.payment);
+  const spendOnly = discounted && s.type !== 'single' && s.index > lastHit;
+  const note = spendOnly ? '<small>solo para gastar el descuento</small>' : discounted ? '<small>con descuento</small>' : '';
   const jump = s.dupeSwitch ? '<span class="jump">cruce por duplicado</span>' : '';
   // On phones the card says which targets the step gets (the table marks the cats).
   const got = s.cats.filter((c) => c.newTarget).map((c) => `<b>${esc(c.name)}</b>`);
@@ -884,7 +888,7 @@ $('#report-link').addEventListener('click', (e) => {
     `Fechas: ${day(f.from.value)} – ${day(f.to.value)}`,
     `Tiros revisados: ${f.rolls.value || '—'}`,
     `Rare Tickets: ${f.tickets.value || 0} · Cat Food: ${f.food.value || 0}`,
-    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)} · tiro simple a 50 ${yes(f.discount1.checked)}`,
+    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)}${f.discount11.checked ? ` (gastarlo sí o sí: ${yes(f.spend11.checked)})` : ''} · tiro simple a 50 ${yes(f.discount1.checked)}`,
     `Proteger casillas: moradas ${yes(f.avoidLegend.checked)} · lilas ${yes(f.avoidLegendFest.checked)}`,
     `Datos de la web: ${gachaData ? `${showDate(gachaData.generatedAt)} (${gachaData.source.commit.slice(0, 8)})` : 'sin cargar'}`,
   ].join('\n');
@@ -899,6 +903,12 @@ $('#forget-data').addEventListener('click', () => {
 
 initStats();
 restoreForm();
+// «Gastarlo sí o sí» belongs to the 11-draw discount: shown only with it.
+const syncSpendOption = () => {
+  $('#spend11-row').hidden = !form.discount11.checked;
+};
+syncSpendOption();
+form.discount11.addEventListener('change', syncSpendOption);
 const dataLoaded = loadData();
 form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);

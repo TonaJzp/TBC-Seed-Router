@@ -105,6 +105,11 @@ filas solo alargan un poco el cálculo.
   recomienda la que menos te pide y se indica cuánto te falta (ver [Cuál se recomienda](#cuál-se-recomienda)).
 - **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
   750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
+  - **Gastarlo sí o sí en la ruta** (bajo el 11-draw a 750, marcada por defecto): el juego no acumula
+    este descuento, así que si te da otro antes de que uses el que tienes, pierdes uno. Con la casilla
+    marcada, todas las rutas lo gastan, de la forma más barata para cada una (normalmente dentro de
+    los tiros que harías igualmente). Si no se puede (por ejemplo, no te llega la Cat Food para pagarlo),
+    la ruta sale igual y en «Descuentos» se explica por qué no se usa.
 - **Protección de casillas de legendario**: marcadas por defecto. El «?» de cada opción explica qué
   hace (pasa el ratón por encima o tócalo). Ver [Casillas de legendario](#casillas-de-legendario).
 
@@ -202,7 +207,7 @@ La ruta, paso a paso, en el orden en que debes hacerlos.
 | # | Número de paso. |
 | Día | Desde qué día puedes hacerlo. «desde las 11:00» si el banner abre ese día; «antes de las 11:00» si cierra ese día, y entonces es tu último momento. Si el mismo banner continúa justo después, se indica hasta cuándo puedes seguir usándolo. |
 | Banner | Dónde tirar, con sus fechas. Si cambia respecto al paso anterior, se marca «cambio de banner». **El nombre abre esa misma tabla en godfat**, en la casilla donde empieza el paso, para que compruebes los gatos antes de tirar. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa casilla, que allí aparece como 1A. |
-| Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up. «con descuento» si usa uno. |
+| Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up. «con descuento» si usa uno; «solo para gastar el descuento» si es un 11-draw que la ruta hace después de conseguir todos los objetivos, únicamente para no perder el descuento. |
 | Posición | De qué casilla a qué casilla va el paso. «cruce por duplicado» si dentro del paso hay un cambio de pista por rare duplicado. |
 | Pago | Rare Tickets y Cat Food (CF) que cuesta el paso. |
 | Gatos | Todo lo que sacas en ese paso. |

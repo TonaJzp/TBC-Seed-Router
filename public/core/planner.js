@@ -88,7 +88,8 @@ function parseRequest(body, now = new Date()) {
     rolls,
     tickets: nonNegInt(body.tickets, 'Rare Tickets', 'tickets'),
     food: nonNegInt(body.food, 'Cat Food', 'food'),
-    discounts: { guaranteed: !!body.discount11, single: !!body.discount1 },
+    // spendMulti: spend the 11-draw discount in any case (it does not stack).
+    discounts: { guaranteed: !!body.discount11, single: !!body.discount1, spendMulti: !!body.discount11 && !!body.spend11 },
     protect: { avoidLegend: !!body.avoidLegend, avoidLegendFest: !!body.avoidLegendFest },
   };
 }

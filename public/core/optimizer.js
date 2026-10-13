@@ -11,6 +11,9 @@ const COST = {
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
 const MAX_EXPANSIONS = 2_000_000;
+// With «gastar el descuento sí o sí», how far the search goes on after the
+// first complete route looking for one that also spends it.
+const SPEND_SEARCH = 400_000;
 
 // Time is measured in local minutes (time.js). A banner can be rolled from
 // the minute it opens to the one before it is gone, so a banner ending at the
@@ -270,16 +273,32 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
   });
 
+  // «Gastar el 11-draw a 750 sí o sí»: the game does not stack this discount
+  // (a new one replaces the one you still have), so the route only counts as
+  // finished once it has spent it. If no route can, the first complete one
+  // is kept and the page says why the discount was not used.
+  const mustSpend = !!(discounts.guaranteed && discounts.spendMulti);
+  let firstComplete = -1;
+  let completeAt = 0;
+  const unspent = () => ({ node: firstComplete, nodes, expansions, complete: true, unspent: true });
+
   let bestPartial = 0;
   let expansions = 0;
   while (heap.size) {
     const idx = heap.pop();
     const node = nodes[idx];
     if (node.dead) continue;
-    if (node.mask === fullMask) return { node: idx, nodes, expansions, complete: true };
+    if (node.mask === fullMask) {
+      if (!mustSpend || !node.d11) return { node: idx, nodes, expansions, complete: true };
+      if (firstComplete < 0) {
+        firstComplete = idx;
+        completeAt = expansions;
+      }
+    }
     // Dijkstra pops in cost order: the first node reaching a new count is the cheapest one.
     if (node.found > nodes[bestPartial].found) bestPartial = idx;
-    if (++expansions > MAX_EXPANSIONS) return { node: bestPartial, nodes, expansions, exhausted: true };
+    if (++expansions > MAX_EXPANSIONS) return firstComplete >= 0 ? unspent() : { node: bestPartial, nodes, expansions, exhausted: true };
+    if (firstComplete >= 0 && expansions - completeAt > SPEND_SEARCH) return unspent();
 
     // Try the banner already in use first so equal-cost ties keep it.
     const order = node.ev >= 0 ? [node.ev, ...events.keys()].filter((e, i, a) => a.indexOf(e) === i) : [...events.keys()];
@@ -307,6 +326,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
       }
     }
   }
+  if (firstComplete >= 0) return unspent();
   return { node: bestPartial, nodes, expansions };
 }
 
@@ -426,7 +446,12 @@ function describeRoute(ctx, result) {
     discounts: {
       multi: ctx.discounts.guaranteed && {
         step: multiStep,
-        reason: multiStep ? null : 'la ruta no hace ningún 11-draw: le sale más barato sin él.',
+        spend: !!ctx.discounts.spendMulti,
+        reason: multiStep
+          ? null
+          : ctx.discounts.spendMulti
+            ? 'no se ha podido gastar: ningún 11-draw cabe en esta ruta con tus fechas, tus tiros y tu Cat Food.'
+            : 'la ruta no hace ningún 11-draw: le sale más barato sin él.',
       },
       single: ctx.discounts.single && {
         step: singleStep,
