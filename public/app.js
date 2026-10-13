@@ -594,7 +594,7 @@ function renderDetail(data) {
       </div>`;
   const discountLines = [
     ['Primer 11-Draw a 750', r.discounts.multi],
-    ['Primer tiro simple a 50', r.discounts.single],
+    ['Primer tiro simple a 30', r.discounts.single],
   ]
     .filter(([, d]) => d)
     .map(([name, d]) =>
@@ -888,7 +888,7 @@ $('#report-link').addEventListener('click', (e) => {
     `Fechas: ${day(f.from.value)} – ${day(f.to.value)}`,
     `Tiros revisados: ${f.rolls.value || '—'}`,
     `Rare Tickets: ${f.tickets.value || 0} · Cat Food: ${f.food.value || 0}`,
-    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)}${f.discount11.checked ? ` (incluirlo siempre: ${yes(f.spend11.checked)})` : ''} · tiro simple a 50 ${yes(f.discount1.checked)}`,
+    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)}${f.discount11.checked ? ` (incluirlo siempre: ${yes(f.spend11.checked)})` : ''} · tiro simple a 30 ${yes(f.discount1.checked)}`,
     `Proteger casillas: moradas ${yes(f.avoidLegend.checked)} · lilas ${yes(f.avoidLegendFest.checked)}`,
     `Datos de la web: ${gachaData ? `${showDate(gachaData.generatedAt)} (${gachaData.source.commit.slice(0, 8)})` : 'sin cargar'}`,
   ].join('\n');

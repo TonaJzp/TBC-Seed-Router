@@ -202,7 +202,7 @@ function singlePrices(route) {
   return prices;
 }
 
-test('when the tickets run out, singles cost Cat Food (and the first one 50 with the discount)', () => {
+test('when the tickets run out, singles cost Cat Food (and the first one 30 with the discount)', () => {
   const TICKETS = 3;
   const sim = makeSim(standardOnly());
   const names = [...new Set(sim.events.flatMap((e) => Object.values(e.raw).filter((c) => e.rarityOf.get(c.id) !== 'rare').map((c) => c.name)))];
@@ -219,7 +219,7 @@ test('when the tickets run out, singles cost Cat Food (and the first one 50 with
         if (prices.length <= TICKETS) continue;
         replayRoute(assert, ctx, r);
         assert.deepEqual(prices.slice(0, TICKETS), Array(TICKETS).fill('ticket'), 'the first singles use every ticket');
-        assert.equal(prices[TICKETS], discount ? 50 : 150, 'the next single has no ticket left');
+        assert.equal(prices[TICKETS], discount ? 30 : 150, 'the next single has no ticket left');
         assert.ok(prices.slice(TICKETS + 1).every((p) => p === 150), 'later singles cost 150');
         assert.equal(r.totals.ticketsLeft, 0);
         checked++;

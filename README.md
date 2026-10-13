@@ -104,7 +104,7 @@ filas solo alargan un poco el cálculo.
 - **Rare Tickets y Cat Food**: lo que tienes ahora. Si tu Cat Food no alcanza para ninguna ruta, se
   recomienda la que menos te pide y se indica cuánto te falta (ver [Cuál se recomienda](#cuál-se-recomienda)).
 - **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
-  750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
+  750 Cat Food y el primer tiro simple a 30). El plan decide si le conviene usarlos.
   - **Incluirlo siempre en la ruta** (bajo el 11-draw a 750, marcada por defecto): el juego no acumula
     este descuento, así que si te da otro antes de que uses el que tienes, lo perderías. Con la casilla
     marcada, todas las rutas lo gastan, de la forma más barata para cada una (normalmente dentro de
@@ -275,7 +275,7 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
 | Step-up 3+5+7 | solo el step-up completo: 14 tiros + uber por 2100 Cat Food |
 | Platinum / Legend | no se usan: se pagan con sus propios tickets (Platinum Ticket y Legend Ticket), no con Rare Tickets ni Cat Food |
 
-- **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (50 con el descuento
+- **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (30 con el descuento
   de primer tiro, una vez).
 - **Descuento 11-Draw** (750 Cat Food, una vez): vale para el 11-draw normal o el garantizado.
 - **Uber garantizado**: tras las 10 tiradas normales, el Uber se elige con la semilla de la casilla

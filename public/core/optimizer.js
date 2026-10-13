@@ -3,7 +3,7 @@ import { localMinute, localParts, nextDayMinute, startsAt, endsAt } from './time
 
 const COST = {
   single: 150,
-  singleDiscount: 50,
+  singleDiscount: 30,
   multi: 1500, // 11-draw, guaranteed or not
   multiDiscount: 750,
   stepup: 2100, // 300 + 750 + 1050
