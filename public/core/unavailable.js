@@ -20,9 +20,10 @@ function poolHas(ev, ids) {
   return ids.some((id) => Object.prototype.hasOwnProperty.call(ev.names, id));
 }
 
-function firstOccurrence(ev, ids) {
+/** First cell from the start row on where the banner gives one of `ids`. */
+function firstOccurrence(ev, ids, start) {
   const keys = Object.entries(ev.raw)
-    .filter(([, c]) => ids.includes(c.id))
+    .filter(([key, c]) => ids.includes(c.id) && parseInt(key, 10) >= start.n)
     .map(([key]) => key)
     .sort((a, b) => parseInt(a, 10) - parseInt(b, 10) || a.localeCompare(b));
   return keys[0] || null;
@@ -30,7 +31,8 @@ function firstOccurrence(ev, ids) {
 
 /**
  * @param problems  unavailable targets from resolveTargets
- * @param env       { seed, input, events, upcoming, matchIds, tablesFor(list, rolls) }
+ * @param env       { seed, input, start, events, upcoming, matchIds, tablesFor(list, rows) }
+ *                  `start` is the cell of the first roll: the rolls count from it.
  */
 function describeUnavailable(problems, env) {
   const { input } = env;
@@ -49,7 +51,7 @@ function describeUnavailable(problems, env) {
   if (deepNeeded.length && input.rolls < MAX_ROLLS) {
     const ids = deepNeeded.flatMap((p) => p.ids);
     const list = env.events.filter((e) => poolHas(e, ids));
-    if (list.length) deep = env.tablesFor(list, MAX_ROLLS);
+    if (list.length) deep = env.tablesFor(list, env.start.n - 1 + MAX_ROLLS);
   }
 
   for (const p of problems) {
@@ -108,11 +110,12 @@ function notInBanners(p, env, outside) {
 }
 
 function notInRolls(p, env, deep) {
-  const { input } = env;
+  const { input, start } = env;
   const name = p.query;
   const banners = env.events.filter((e) => poolHas(e, p.ids));
+  const from = start.n === 1 && start.track === 'A' ? '' : ` desde ${start.n}${start.track}`;
   const details = [
-    `Está entre los gatos posibles de ${banners.slice(0, 4).map(banner).join('; ')}, pero no sale en ninguna de las ${input.rolls} filas revisadas de tu semilla.`,
+    `Está entre los gatos posibles de ${banners.slice(0, 4).map(banner).join('; ')}, pero no sale en ninguna de las ${input.rolls} filas revisadas de tu semilla${from}.`,
   ];
   if (input.rolls >= MAX_ROLLS) {
     return {
@@ -124,13 +127,14 @@ function notInRolls(p, env, deep) {
     };
   }
   const hits = (deep || [])
-    .map((e) => ({ e, key: firstOccurrence(e, p.ids) }))
+    .map((e) => ({ e, key: firstOccurrence(e, p.ids, start) }))
     .filter((h) => h.key)
     .sort((a, b) => parseInt(a.key, 10) - parseInt(b.key, 10));
   if (hits.length) {
     const { e, key } = hits[0];
     const row = parseInt(key, 10);
-    const needed = Math.min(MAX_ROLLS, Math.ceil((row + 15) / 10) * 10);
+    // Rolls to analyse are counted from the start row.
+    const needed = Math.min(MAX_ROLLS, Math.ceil((row - start.n + 1 + 15) / 10) * 10);
     details.push(`La primera vez que sale es en la fila ${key} de ${banner(e)}.`);
     return {
       target: name,
@@ -140,7 +144,7 @@ function notInRolls(p, env, deep) {
       links: [godfatLink(env.seed, e, key)],
     };
   }
-  details.push(`Tampoco sale en las primeras ${MAX_ROLLS} filas de esos banners.`);
+  details.push(`Tampoco sale en las ${MAX_ROLLS} primeras filas${from} de esos banners.`);
   return {
     target: name,
     headline: `${name} no sale en los próximos ${input.rolls} tiros.`,

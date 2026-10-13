@@ -2,7 +2,7 @@
 // the dates, builds their tables for the seed (gacha.js), resolves the target
 // cats and computes the routes and the explanations.
 
-import { buildEvents, rarityName, raisesLegend } from './gacha.js';
+import { buildEvents, rarityName, raisesLegend, legendFrom, LEGEND_FEST_SCORE } from './gacha.js';
 import { Simulator } from './simulator.js';
 import { optimizeRoutes, legendColorOf } from './optimizer.js';
 import { diagnose } from './diagnostics.js';
@@ -12,6 +12,15 @@ import { localMinute, minuteOf, nextDayMinute, startsAt, endsAt, localParts } fr
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const EXAMPLE_URL = 'https://bc.godfat.org/?seed=123456789';
+// godfat's `pos`: the cell of the next roll ("12B"), with "R" when that roll
+// re-rolls a duplicate (godfat Route#pos and View#uri_for_number_td).
+const POS = /^(\d+)([AB])?(R)?$/;
+const MAX_START_ROW = 5000;
+// Other versions of the game on godfat (Route#lang); the data here is the
+// English (global) one.
+const OTHER_VERSIONS = { jp: 'japonesa', tw: 'taiwanesa', kr: 'coreana' };
+const UPDATE_SEED_HINT =
+  'En godfat, pulsa el nombre del último gato que sacaste: te lleva a tu semilla actualizada. Pega esa URL.';
 
 const formatDate = (iso) => iso.split('-').reverse().join('/');
 const localIsoDate = (d) =>
@@ -28,23 +37,80 @@ class UserError extends Error {
   }
 }
 
-/** Seed (and last cat) from a godfat URL or a plain seed number. */
+/**
+ * Seed, last cat and position from a godfat URL or a plain seed number:
+ * { seed, last, pos }. `pos` is null at 1A, else { n, track, rerolled, event }
+ * (godfat's "next position" marker; see startOf).
+ */
 function parseSeedInput(raw) {
   const text = String(raw ?? '').trim();
-  if (/^\d+$/.test(text)) return checkSeed(Number(text), 0);
+  if (/^\d+$/.test(text)) return { ...checkSeed(Number(text), 0), pos: null };
   let url;
   try {
-    url = new URL(text);
+    // Copied without the scheme ("bc.godfat.org/?seed=…"): still godfat.
+    url = new URL(/^bc\.godfat\.org([/?#]|$)/i.test(text) ? `https://${text}` : text);
   } catch {
     throw new UserError(`Pega la URL de tu semilla en godfat (por ejemplo ${EXAMPLE_URL}) o solo el número de semilla.`, 'url');
   }
   if (url.hostname !== 'bc.godfat.org') {
     throw new UserError(`La URL debe ser de bc.godfat.org (la web donde ves tu semilla), por ejemplo ${EXAMPLE_URL}`, 'url');
   }
+  const version = OTHER_VERSIONS[url.searchParams.get('lang')];
+  if (version) {
+    throw new UserError(
+      `Esta URL es de la versión ${version} del juego («lang=${url.searchParams.get('lang')}»). La herramienta solo sirve para la versión en inglés (la global): sus banners y gatos son otros. Si juegas la global, quita «lang=…» de la URL en godfat y vuelve a copiarla.`,
+      'url'
+    );
+  }
   if (!url.searchParams.get('seed')) {
     throw new UserError(`A la URL le falta el número de semilla («?seed=…»). Ábrela en godfat y copia la dirección completa, por ejemplo ${EXAMPLE_URL}`, 'url');
   }
-  return checkSeed(Number(url.searchParams.get('seed')), Number(url.searchParams.get('last')) || 0);
+  const parsed = checkSeed(Number(url.searchParams.get('seed')), Number(url.searchParams.get('last')) || 0);
+  return { ...parsed, pos: parsePos(url.searchParams.get('pos'), url.searchParams.get('event')) };
+}
+
+/** godfat's `pos` parameter; null when absent or 1A (where `last` applies). */
+function parsePos(value, event) {
+  if (!value) return null;
+  const m = POS.exec(value.trim().toUpperCase());
+  const n = m ? Number(m[1]) : 0;
+  if (!m || n < 1 || n > MAX_START_ROW) {
+    throw new UserError(`La posición de la URL («pos=${value}») no es una casilla válida (por ejemplo 12B). Vuelve a copiar la URL de godfat.`, 'url');
+  }
+  const track = m[2] || 'A';
+  if (n === 1 && track === 'A') return null;
+  return { n, track, rerolled: !!m[3], event: event || null };
+}
+
+/**
+ * Where the plan starts and the cat rolled just before it: { start, last,
+ * lastUnknown }.
+ * godfat marks the next roll with `pos` instead of moving the seed, and then
+ * leaves `last` out: the last cat only counts at 1A. With "R" (the next roll
+ * is a duplicate re-rolled), the last cat is the one at that cell of the
+ * banner the URL shows.
+ */
+function startOf({ seed, last, pos }, data) {
+  if (!pos) return { start: { n: 1, track: 'A' }, last, lastUnknown: false };
+  const start = { n: pos.n, track: pos.track };
+  const key = `${pos.n}${pos.track}`;
+  if (!pos.rerolled) return { start, last: 0, lastUnknown: true };
+  const event = data.events.find((e) => e.id === pos.event);
+  if (!event) {
+    throw new UserError(
+      `Tu URL marca que la próxima tirada (${key}) es un rare duplicado, pero no indica un banner que la herramienta conozca${pos.event ? ` («${pos.event}»)` : ''}, y sin él no se sabe qué gato sacaste el último. ${UPDATE_SEED_HINT}`,
+      'url'
+    );
+  }
+  const [table] = buildEvents(data, [event], seed, pos.n);
+  const cat = table.raw[key];
+  if (!cat || !table.pools.rare.includes(cat.id)) {
+    throw new UserError(
+      `Tu URL marca que la próxima tirada (${key}) es un rare duplicado, pero en «${event.name}» esa casilla no es un rare. Vuelve a copiar la URL de godfat. ${UPDATE_SEED_HINT}`,
+      'url'
+    );
+  }
+  return { start, last: cat.id, lastUnknown: false };
 }
 
 function checkSeed(seed, last) {
@@ -192,14 +258,15 @@ function resolveTargets(queries, events, obtainable) {
 }
 
 /**
- * Every legend cell in the analysed rows (purple; lilac only with a double
- * legend event) and the legendaries the banners of the dates give there.
+ * Every legend cell in the analysed rows still ahead (purple; lilac only with
+ * a double legend event) and the legendaries the banners of the dates give there.
  */
 function legendCellsOf(sim, doubleLegend) {
   const cells = [];
   for (const key of sim.legendColors.keys()) {
     const n = parseInt(key, 10);
     const track = key.at(-1);
+    if (!sim.isAhead(n)) continue;
     const color = legendColorOf(sim, { n, track }, doubleLegend);
     if (color) cells.push({ key, color, legends: sim.legendsAt(n, track) });
   }
@@ -208,19 +275,13 @@ function legendCellsOf(sim, doubleLegend) {
 
 // Lilac cells are only Legendary in banners with a raised legend rate
 // (Royalfest, double legend...), so protecting them only matters when such a
-// banner can still be rolled: one of the dates, or any later announced one.
-function detectDoubleLegend(events, upcoming, sim, start) {
-  const found = new Map(upcoming.filter((e) => !e.ticket && endsAt(e) > start && raisesLegend(e)).map((e) => [e.id, e]));
-  for (const ev of events) {
-    for (const [key, c] of Object.entries(ev.raw)) {
-      const m = /^(\d+)([AB])$/.exec(key);
-      if (sim.legendColorsAt(Number(m[1]), m[2]).has('legend_fest') && ev.rarityOf.get(c.id) === 'legendary') {
-        found.set(ev.id, ev);
-      }
-    }
-  }
-  return [...found.values()]
-    .map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end }))
+// banner can still be rolled: one of the dates, or any later announced one
+// (every banner of the dates is among the upcoming ones). `legendFrom` is the
+// lowest score that gives a Legendary in each.
+function detectDoubleLegend(upcoming, start) {
+  return upcoming
+    .filter((e) => !e.ticket && endsAt(e) > start && raisesLegend(e))
+    .map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, legendFrom: legendFrom(e) }))
     .sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id));
 }
 
@@ -289,17 +350,30 @@ function selectEvents(data, { from, to, today, now = localMinute(today) }) {
  */
 function plan(body, data, { now = new Date() } = {}) {
   const input = parseRequest(body, now);
-  const { seed, last } = input.seed;
+  const { seed } = input.seed;
+  const { start, last, lastUnknown } = startOf(input.seed, data);
   const { selected, skipped, upcoming } = selectEvents(data, input);
-  const tablesFor = (list, rolls) => buildEvents(data, list, seed, rolls);
+  // Tables up to row `rows` of the seed; the rolls to analyse count from the start.
+  const tablesFor = (list, rows) => buildEvents(data, list, seed, rows);
+  const lastRow = start.n - 1 + input.rolls;
 
-  const events = tablesFor(selected, input.rolls);
-  const sim = new Simulator(seed, events, input.rolls);
+  const events = tablesFor(selected, lastRow);
+  const doubleLegend = detectDoubleLegend(upcoming, planStart(input));
+  const legendFestFrom = Math.min(LEGEND_FEST_SCORE, ...doubleLegend.map((e) => e.legendFrom));
+  const sim = new Simulator(seed, events, lastRow, { start, legendFestFrom });
   const queries = withAliases(input.targets, catalogOf(data));
   const { resolved, unavailable } = resolveTargets(queries, events, sim.obtainableIds());
-  const unavailableItems = describeUnavailable(unavailable, { seed, input, events, upcoming, matchIds, tablesFor });
+  const unavailableItems = describeUnavailable(unavailable, { seed, input, start, events, upcoming, matchIds, tablesFor });
 
-  const doubleLegend = detectDoubleLegend(events, upcoming, sim, planStart(input));
+  const startKey = `${start.n}${start.track}`;
+  const notices = [];
+  // godfat leaves the last cat out of a `pos` URL: it only matters if some
+  // banner has a rare at the start cell, which it could duplicate.
+  if (lastUnknown && events.some((ev) => ev.pools.rare.includes(ev.raw[startKey]?.id))) {
+    notices.push(
+      `Tu URL marca la próxima tirada en ${startKey} («pos»), y la ruta empieza ahí. Esa URL no dice cuál fue tu último gato: si fue el mismo rare que sale en ${startKey} en el banner donde tires, el juego lo cambiaría por otro y la ruta dejaría de valer. ${UPDATE_SEED_HINT}`
+    );
+  }
   const protect = {
     avoidLegend: input.protect.avoidLegend,
     avoidLegendFest: input.protect.avoidLegendFest && doubleLegend.length > 0,
@@ -328,6 +402,9 @@ function plan(body, data, { now = new Date() } = {}) {
   return {
     seed,
     last,
+    // The cell of the first roll when the URL marks it (godfat's `pos`), else null.
+    start: startKey === '1A' ? null : startKey,
+    notices,
     rolls: input.rolls,
     inventory: { tickets: input.tickets, food: input.food },
     events: events.map((e) => ({
@@ -344,6 +421,8 @@ function plan(body, data, { now = new Date() } = {}) {
       legendFest: protect.avoidLegendFest,
       legendFestRequested: input.protect.avoidLegendFest,
       doubleLegendEvents: doubleLegend,
+      // Below 9940 when a banner gives Legendaries on cells godfat does not paint lilac.
+      legendFestFrom,
     },
     legendCells: legendCellsOf(sim, doubleLegend.length > 0),
     routes,

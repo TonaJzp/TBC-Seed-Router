@@ -268,7 +268,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   };
 
   push({
-    n: 1, track: 'A', last: inventory.lastCat, mask: 0n, found: 0,
+    n: sim.start.n, track: sim.start.track, last: inventory.lastCat, mask: 0n, found: 0,
     tl: inventory.tickets, d11: discounts.guaranteed, d1: discounts.single,
     slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
   });

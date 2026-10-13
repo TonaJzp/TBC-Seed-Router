@@ -150,6 +150,7 @@ test('nothing to explain when the recommended route gets every target', () => {
 const ENV = (overrides = {}) => ({
   seed: 1,
   input: { from: '2026-10-08', to: '2026-10-12', rolls: 200 },
+  start: { n: 1, track: 'A' },
   events: [],
   upcoming: [],
   matchIds,
@@ -192,6 +193,18 @@ test('a cat beyond the analysed rolls says in which row it first appears', () =>
   assert.equal(url.searchParams.get('seed'), String(buildSequence(1, 312)[2 * 312 - 1]));
   assert.equal(url.hash, '#N1A');
   assert.match(item.links[0].label, /^312B \(1A en godfat\)/);
+});
+
+test('from a later start, rows behind it are ignored and the rolls to raise count from it', () => {
+  const ev = { id: 'e', name: 'Banner', start: '2026-10-08', end: '2026-10-12', names: { 7: 'Gato Lejano' }, raw: {} };
+  const deep = { ...ev, raw: { '50A': { id: 7 }, '312B': { id: 7 } } };
+  const [item] = describeUnavailable(
+    [{ query: 'Gato Lejano', reason: 'notInRolls', ids: [7] }],
+    ENV({ start: { n: 100, track: 'A' }, events: [ev], tablesFor: () => [deep] })
+  );
+  assert.match(item.headline, /aparece por primera vez en la fila 312/, '50A is behind the start');
+  assert.match(text(item), /filas revisadas de tu semilla desde 100A/);
+  assert.match(item.fix, /a 230 o más/, 'rows 100 to 312, plus a margin');
 });
 
 test('a non-gacha cat is explained', () => {

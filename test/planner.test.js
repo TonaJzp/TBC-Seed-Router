@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { plan, parseRequest, parseSeedInput, resolveTargets, withAliases, catalogOf, selectEvents, UserError } from '../public/core/planner.js';
+import { buildEvents } from '../public/core/gacha.js';
+import { Simulator } from '../public/core/simulator.js';
+import { buildSequence, raritySeed } from '../public/core/rng.js';
 import { gachaData, fixture } from './helpers.js';
 
 // A fixed "now" so date rules don't depend on when the tests run.
@@ -103,8 +106,8 @@ test('cats outside the gacha are reported, never confused with similarly named o
 // --- Seed, banners and the whole analysis ---------------------------------------
 
 test('the seed comes from a godfat URL (with the last cat) or a plain number', () => {
-  assert.deepEqual(parseSeedInput('https://bc.godfat.org/?seed=1234567&last=150&event=x'), { seed: 1234567, last: 150 });
-  assert.deepEqual(parseSeedInput(' 1234567 '), { seed: 1234567, last: 0 });
+  assert.deepEqual(parseSeedInput('https://bc.godfat.org/?seed=1234567&last=150&event=x'), { seed: 1234567, last: 150, pos: null });
+  assert.deepEqual(parseSeedInput(' 1234567 '), { seed: 1234567, last: 0, pos: null });
   assert.throws(() => parseSeedInput('https://example.org/?seed=1'), /bc\.godfat\.org/);
   assert.throws(() => parseSeedInput('https://bc.godfat.org/?event=x'), /falta el número de semilla/);
   assert.throws(() => parseSeedInput('4294967296'), /no es válido/);
@@ -205,4 +208,139 @@ test('each input error names the form field to fix, so the page can take you the
   assert.equal(fieldOf({ ...ok, rolls: '5000' }), 'rolls');
   assert.equal(fieldOf({ ...ok, tickets: '-1' }), 'tickets');
   assert.equal(fieldOf({ ...ok, food: '1.5' }), 'food');
+});
+
+// --- Where the plan starts: godfat's `pos`, other versions --------------------
+
+test('the URL may mark the next roll with pos (godfat), with R when it re-rolls a duplicate', () => {
+  const at = (query) => parseSeedInput(`https://bc.godfat.org/?seed=1234567${query}`);
+  assert.deepEqual(at('&pos=12B').pos, { n: 12, track: 'B', rerolled: false, event: null });
+  assert.deepEqual(at('&pos=12BR&event=2026-10-16_1068').pos, { n: 12, track: 'B', rerolled: true, event: '2026-10-16_1068' });
+  assert.deepEqual(at('&pos=7').pos, { n: 7, track: 'A', rerolled: false, event: null }, 'the track defaults to A, as on godfat');
+  // At 1A the last cat of the URL is what decides a duplicate.
+  assert.deepEqual(at('&last=150&pos=1A'), { seed: 1234567, last: 150, pos: null });
+  for (const bad of ['zz', '0A', '12C', '99999A']) assert.throws(() => at(`&pos=${bad}`), /no es una casilla válida/);
+});
+
+test('URLs of other versions of the game are refused; a URL without https:// is accepted', () => {
+  assert.throws(() => parseSeedInput('https://bc.godfat.org/?seed=1&lang=jp'), /versión japonesa/);
+  assert.throws(() => parseSeedInput('https://bc.godfat.org/?seed=1&lang=tw'), /versión taiwanesa/);
+  assert.throws(() => parseSeedInput('https://bc.godfat.org/?seed=1&lang=kr'), /versión coreana/);
+  assert.equal(parseSeedInput('https://bc.godfat.org/?seed=1&lang=en').seed, 1);
+  assert.equal(parseSeedInput('bc.godfat.org/?seed=77&last=3').last, 3);
+  assert.equal(parseSeedInput('http://bc.godfat.org/?seed=77').seed, 77);
+});
+
+const START_NOW = new Date(2026, 9, 16, 12, 0);
+function anyRareOf(eventId) {
+  const ev = gachaData.events.find((e) => e.id === eventId);
+  return String(gachaData.gacha[ev.gacha].find((id) => gachaData.cats[id].rarity === 2));
+}
+const startBody = (url, extra = {}) => ({
+  url, targets: [anyRareOf('2026-10-16_1068')], from: '2026-10-16', to: '2026-10-20', rolls: '60', tickets: '0', food: '100000', ...extra,
+});
+/** A cell from row `from` on where `eventId` gives a rare (`rare`) or not, for the fixture seed. */
+function cellOf(eventId, from, rare) {
+  const [ev] = buildEvents(gachaData, [gachaData.events.find((e) => e.id === eventId)], fixture.seed, from + 40);
+  for (let n = from; n < from + 40; n++) {
+    for (const track of ['A', 'B']) {
+      const c = ev.raw[`${n}${track}`];
+      if (c && ev.pools.rare.includes(c.id) === rare) return { key: `${n}${track}`, id: c.id };
+    }
+  }
+  throw new Error('no such cell in the fixture');
+}
+
+test('with pos the routes start there, and the rolls to analyse count from it', () => {
+  const url = `https://bc.godfat.org/?seed=${fixture.seed}&pos=40B`;
+  const result = plan(startBody(url), gachaData, { now: START_NOW });
+  assert.equal(result.start, '40B');
+  assert.equal(result.last, 0, 'godfat leaves the last cat out of a pos URL');
+  const found = result.routes.filter((r) => r.found);
+  assert.ok(found.length > 0);
+  for (const r of found) {
+    assert.equal(r.steps[0].from, '40B');
+    r.steps.slice(1).forEach((s, i) => assert.equal(s.from, r.steps[i].to, 'steps follow each other'));
+  }
+  // 60 rolls from row 40: rows 40 to 99, nothing behind the start.
+  assert.ok(result.legendCells.every((c) => parseInt(c.key, 10) >= 40 && parseInt(c.key, 10) <= 99));
+  assert.equal(plan(startBody(`https://bc.godfat.org/?seed=${fixture.seed}`), gachaData, { now: START_NOW }).start, null);
+});
+
+test('with pos R the last cat is the rare of that cell in the banner of the URL', () => {
+  const eventId = '2026-10-16_1068';
+  const rare = cellOf(eventId, 30, true);
+  const url = `https://bc.godfat.org/?seed=${fixture.seed}&pos=${rare.key}R&event=${eventId}`;
+  const result = plan(startBody(url), gachaData, { now: START_NOW });
+  assert.equal(result.start, rare.key);
+  assert.equal(result.last, rare.id);
+  // Rolled in that banner, the first roll re-rolls the duplicate.
+  const [table] = buildEvents(gachaData, [gachaData.events.find((e) => e.id === eventId)], fixture.seed, 80);
+  const sim = new Simulator(fixture.seed, [table], 80);
+  const { n, track } = { n: parseInt(rare.key, 10), track: rare.key.at(-1) };
+  assert.equal(sim.single(table, n, track, result.last).rerolled, true);
+
+  // Without a known banner, or on a cell that is not a rare, the last cat can't be known.
+  const fails = (u) =>
+    assert.throws(() => plan(startBody(u), gachaData, { now: START_NOW }), (err) => err instanceof UserError && err.field === 'url');
+  fails(`https://bc.godfat.org/?seed=${fixture.seed}&pos=${rare.key}R`);
+  fails(`https://bc.godfat.org/?seed=${fixture.seed}&pos=${rare.key}R&event=2019-01-01_1`);
+  fails(`https://bc.godfat.org/?seed=${fixture.seed}&pos=${cellOf(eventId, 30, false).key}R&event=${eventId}`);
+});
+
+test('a pos URL warns that the last cat is unknown only where a rare could duplicate it', () => {
+  const ids = ['2026-10-16_1068', '2026-10-16_979', '2026-10-16_986'];
+  const tables = buildEvents(gachaData, ids.map((id) => gachaData.events.find((e) => e.id === id)), fixture.seed, 120);
+  const rows = Array.from({ length: 100 }, (_, i) => 20 + i).flatMap((n) => [`${n}A`, `${n}B`]);
+  const anyRare = (key) => tables.some((ev) => ev.pools.rare.includes(ev.raw[key]?.id));
+  const withRare = rows.find(anyRare);
+  const without = rows.find((key) => !anyRare(key));
+  assert.ok(withRare && without, 'the fixture has both kinds of cell');
+  const to = '2026-10-17'; // only those three banners
+  const noticesAt = (key) =>
+    plan(startBody(`https://bc.godfat.org/?seed=${fixture.seed}&pos=${key}`, { to }), gachaData, { now: START_NOW }).notices;
+  assert.equal(noticesAt(withRare).length, 1);
+  assert.match(noticesAt(withRare)[0], /no dice cuál fue tu último gato/);
+  assert.deepEqual(noticesAt(without), []);
+});
+
+// --- Lilac cells of banners with an even higher legend rate -------------------
+
+/** A seed with a cell scoring `lo`..`hi` in its first 30 rows: { seed, key }. */
+function seedWithScore(lo, hi) {
+  for (let seed = 1; ; seed++) {
+    const seq = buildSequence(seed, 32);
+    for (let n = 1; n <= 30; n++) {
+      for (const track of ['A', 'B']) {
+        const score = raritySeed(seq, n, track) % 10000;
+        if (score >= lo && score < hi) return { seed, key: `${n}${track}` };
+      }
+    }
+  }
+}
+
+test('a banner with 0.7 % legend makes its cells from 9930 lilac, though godfat paints them uber', () => {
+  const { seed, key } = seedWithScore(9930, 9940);
+  // 2026-10-09_1077 (Metal Maiden, 120M DL) gives Legendaries from score 9930.
+  const now = new Date(2026, 9, 10, 12, 0);
+  const body = {
+    url: String(seed), targets: [anyRareOf('2026-10-09_1077')], from: '2026-10-10', to: '2026-10-12',
+    rolls: '40', tickets: '0', food: '100000', avoidLegendFest: true,
+  };
+  const result = plan(body, gachaData, { now });
+  assert.equal(result.protection.legendFestFrom, 9930);
+  assert.equal(result.protection.legendFest, true);
+  const cell = result.legendCells.find((c) => c.key === key);
+  assert.ok(cell, `${key} is listed as a legend cell`);
+  assert.equal(cell.color, 'lila');
+  assert.ok(cell.legends.some((l) => l.eventId === '2026-10-09_1077'), 'that banner gives a Legendary there');
+
+  // Once that banner is over, 9940 is the limit again: the cell is a normal one.
+  const later = plan(
+    { ...body, targets: [anyRareOf('2026-10-16_1068')], from: '2026-10-17', to: '2026-10-20' },
+    gachaData,
+    { now: new Date(2026, 9, 17, 12, 0) }
+  );
+  assert.equal(later.protection.legendFestFrom, 9940);
+  assert.ok(!later.legendCells.some((c) => c.key === key));
 });

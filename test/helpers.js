@@ -57,7 +57,7 @@ function plan(queries, options = {}) {
 function replayRoute(assert, ctx, route) {
   const { sim, inventory, discounts, protect } = ctx;
   const byId = new Map(sim.events.map((e) => [e.id, e]));
-  let pos = { n: 1, track: 'A' };
+  let pos = { ...sim.start };
   let last = inventory.lastCat;
   let tickets = inventory.tickets;
   let d1 = discounts.single;

@@ -1,5 +1,5 @@
 import { buildSequence, raritySeed, slotSeed } from './rng.js';
-import { rerollRare, afterReroll } from './gacha.js';
+import { rerollRare, afterReroll, BASE, LEGEND_FEST_SCORE } from './gacha.js';
 
 // Banner kinds, from the banner data (godfat GachaPool#guaranteed_rolls):
 //   standard   no guaranteed: singles and plain 11-draws
@@ -24,16 +24,34 @@ function parseKey(key) {
  * godfat cannot draw on a single banner page: a duplicate rare caused by the
  * previous cat of *another* banner, and guaranteed draws whose normal rolls
  * cross tracks because of such duplicates.
+ *
+ * `maxN` is the last row of the tables. Options:
+ *   start          the cell of the next roll ({ n, track }, 1A by default):
+ *                  the cells before it are already spent
+ *   legendFestFrom lowest score treated as lilac (9940, as godfat paints it).
+ *                  Lower when a banner raises the legend rate further: those
+ *                  cells give a Legendary there too.
  */
 class Simulator {
-  constructor(seed, events, maxN) {
+  constructor(seed, events, maxN, { start = { n: 1, track: 'A' }, legendFestFrom = LEGEND_FEST_SCORE } = {}) {
     this.maxN = maxN;
+    this.start = { n: start.n, track: start.track };
     this.seq = buildSequence(seed, maxN + 2);
     this.events = events;
     this.rawIdsCache = new Map();
     // Purple/lilac cells are a property of the seed position, so a position is
     // protected if any banner colours it.
     this.legendColors = new Map();
+    const addColor = (key, color) => {
+      if (!this.legendColors.has(key)) this.legendColors.set(key, new Set());
+      this.legendColors.get(key).add(color);
+    };
+    for (let n = 1; legendFestFrom < LEGEND_FEST_SCORE && n <= maxN; n++) {
+      for (const track of ['A', 'B']) {
+        const score = raritySeed(this.seq, n, track) % BASE;
+        if (score >= legendFestFrom && score < LEGEND_FEST_SCORE) addColor(keyOf(n, track), LEGEND_COLORS.legendFest);
+      }
+    }
     for (const ev of events) {
       ev.rarityOf = new Map();
       for (const [rarity, ids] of Object.entries(ev.pools)) {
@@ -41,9 +59,7 @@ class Simulator {
       }
       for (const [key, c] of Object.entries(ev.raw)) {
         for (const color of c.colors) {
-          if (color !== LEGEND_COLORS.legend && color !== LEGEND_COLORS.legendFest) continue;
-          if (!this.legendColors.has(key)) this.legendColors.set(key, new Set());
-          this.legendColors.get(key).add(color);
+          if (color === LEGEND_COLORS.legend || color === LEGEND_COLORS.legendFest) addColor(key, color);
         }
       }
       ev.guaranteedSize ||= 0;
@@ -54,6 +70,15 @@ class Simulator {
 
   cell(ev, n, track) {
     return ev.raw[keyOf(n, track)] || null;
+  }
+
+  /**
+   * True if row `n` is not behind the start: the rows before it are already
+   * spent. (The other track of the start row can't be reached either, but
+   * that is the search's to find out and the diagnostics' to explain.)
+   */
+  isAhead(n) {
+    return n >= this.start.n;
   }
 
   /** Raw cat ids of every banner at a position (the candidates for a duplicate). */
@@ -161,8 +186,9 @@ class Simulator {
     const ids = new Set();
     for (const ev of this.events) {
       for (const [key, c] of Object.entries(ev.raw)) {
-        ids.add(c.id);
         const { n, track } = parseKey(key);
+        if (!this.isAhead(n)) continue;
+        ids.add(c.id);
         if (ev.rarityOf.get(c.id) === 'rare') {
           const r = this.rerollDuplicate(ev, n, track, c.id);
           if (r) ids.add(r.id);

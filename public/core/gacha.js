@@ -53,9 +53,12 @@ function scoreColors(score) {
   return [];
 }
 
+/** Lowest score that gives a Legendary in this banner. */
+const legendFrom = (event) => event.rare + event.supa + event.uber;
+
 /** True if some lilac cell gives a Legendary in this banner (legend rate above the usual 0.3 %). */
 function raisesLegend(event) {
-  return event.rare + event.supa + event.uber < LEGEND_SCORE;
+  return legendFrom(event) < LEGEND_SCORE;
 }
 
 /**
@@ -155,11 +158,14 @@ function buildEvents(data, events, seed, rolls) {
 export {
   BASE,
   RARITIES,
+  LEGEND_SCORE,
+  LEGEND_FEST_SCORE,
   GUARANTEED_SIZES,
   rarityName,
   poolsOf,
   rarityOfScore,
   scoreColors,
+  legendFrom,
   raisesLegend,
   rerollRare,
   afterReroll,

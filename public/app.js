@@ -1,6 +1,7 @@
 import { plan, parseRequest, catalogOf, UserError } from './core/planner.js';
 import { TargetPicker } from './picker.js';
 import { godfatLink } from './core/godfat-link.js';
+import { BASE, LEGEND_FEST_SCORE } from './core/gacha.js';
 import { initMascot } from './mascot.js';
 import { initStats, countEvent } from './stats.js';
 
@@ -357,8 +358,9 @@ function renderContext(data) {
   return `<section class="summary" aria-label="Resumen del análisis">
     <header class="summary-top">
       <div class="seed-id"><span class="seed-label">Semilla</span><h2 class="seed-num">${esc(data.seed)}</h2></div>
-      <p class="summary-facts"><b>${fmt(data.rolls)}</b> tiros por pista · <b>${data.events.length}</b> banners · 1 Rare Ticket = <b>150</b> Cat Food</p>
+      <p class="summary-facts">${data.start ? `Empiezas en <b>${esc(data.start)}</b> · ` : ''}<b>${fmt(data.rolls)}</b> tiros por pista · <b>${data.events.length}</b> banners · 1 Rare Ticket = <b>150</b> Cat Food</p>
     </header>
+    ${(data.notices || []).map((n) => `<div class="notice"><p>${esc(n)}</p></div>`).join('')}
     ${disclosure('banners', 'Banners analizados', data.events.length,
       `<div class="table-wrap"><table class="banners events"><thead><tr><th>Fechas</th><th>Banner</th><th>Tipo</th></tr></thead>
       <tbody>${rows}${skipped}</tbody></table></div>`)}
@@ -506,9 +508,20 @@ function renderNotices(data) {
   const shortDate = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
   if (p.legendFestRequested && !p.legendFest) {
     lines.push('<b>Casillas lilas sin proteger.</b> Desde tu fecha «Desde» no hay ningún banner anunciado con más probabilidad de legendario (Royalfest, doble legend…), así que se usan como casillas normales.');
-  } else if (p.legendFest) {
-    const banners = p.doubleLegendEvents.map((e) => `«${esc(e.name)}» (${shortDate(e.start)}–${shortDate(e.end)})`);
+  }
+  // Banners with an even higher legend rate (over 0.6 %) give Legendaries on
+  // cells godfat paints as uber: they are lilac here.
+  const higher = p.doubleLegendEvents.filter((e) => e.legendFrom < LEGEND_FEST_SCORE);
+  const rate = (e) => `${((BASE - e.legendFrom) / 100).toLocaleString('es-ES')} % de legendario`;
+  const higherNote = 'también dan legendario algunas casillas que godfat pinta como uber; aquí cuentan como lilas.';
+  if (p.legendFest) {
+    const banners = p.doubleLegendEvents.map(
+      (e) => `«${esc(e.name)}» (${shortDate(e.start)}–${shortDate(e.end)}${e.legendFrom < LEGEND_FEST_SCORE ? `; ${rate(e)}` : ''})`
+    );
     lines.push(`<b>Casillas lilas protegidas.</b> Dan legendario en ${banners.join('; ')}.`);
+    if (higher.length) lines.push(`Con más del 0,6 % de legendario, ${higherNote}`);
+  } else if (higher.length) {
+    lines.push(`En ${higher.map((e) => `«${esc(e.name)}» (${rate(e)})`).join('; ')} ${higherNote}`);
   }
   return lines.length
     ? `<div class="summary-note"><i class="dot legend-fest" aria-hidden="true"></i><p>${lines.join(' ')}</p></div>`

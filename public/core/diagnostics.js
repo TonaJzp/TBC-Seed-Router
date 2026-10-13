@@ -27,7 +27,8 @@ const list = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} y 
 function explore(ctx, protect, { ignoreTime = false } = {}) {
   const { sim, events } = ctx;
   const canonical = (n, track, last) => (sim.rawIdsAt(n, track).has(last) ? last : 0);
-  const queue = [{ n: 1, track: 'A', last: canonical(1, 'A', ctx.inventory.lastCat), slot: ctx.startSlot }];
+  const { n, track } = sim.start;
+  const queue = [{ n, track, last: canonical(n, track, ctx.inventory.lastCat), slot: ctx.startSlot }];
   const seen = new Set();
   const obtained = new Map(); // cat id -> [{ eventId, key, guaranteed }]
   const blocked = new Map(); // protected cell where a cat did not count -> its colours
@@ -123,13 +124,15 @@ class Diagnoser {
     return [...spots].sort((a, b) => byRow(a.key, b.key)).slice(0, MAX_LINKS).map((s) => this.link(s.eventId, s.key));
   }
 
-  /** Every cell of the computed tables where the target appears (any path or not). */
+  /** Every cell still ahead in the computed tables where the target appears (any path or not). */
   occurrences(target) {
+    const { sim } = this.ctx;
+    const ahead = (key) => sim.isAhead(rowOf(key));
     const spots = [];
     for (const ev of this.ctx.events) {
-      for (const [key, c] of Object.entries(ev.raw)) if (target.ids.has(c.id)) spots.push({ eventId: ev.id, key });
+      for (const [key, c] of Object.entries(ev.raw)) if (target.ids.has(c.id) && ahead(key)) spots.push({ eventId: ev.id, key });
       for (const [key, c] of Object.entries(ev.alt)) {
-        if (target.ids.has(c.id)) spots.push({ eventId: ev.id, key, reroll: true });
+        if (target.ids.has(c.id) && ahead(key)) spots.push({ eventId: ev.id, key, reroll: true });
       }
     }
     return spots;
@@ -269,7 +272,8 @@ class Diagnoser {
     const seen = new Set();
     for (const s of [...spots].sort((a, b) => byRow(a.key, b.key)).slice(0, 4)) {
       const { n, track } = parseKey(s.key);
-      for (let r = n - 1; r >= Math.max(2, n - 4); r--) {
+      // Only rows after the start: the ones before are already spent.
+      for (let r = n - 1; r >= Math.max(2, n - 4, this.ctx.sim.start.n + 1); r--) {
         const k = keyOf(r, track);
         if (seen.has(k)) continue;
         const forced = this.ctx.events.every((ev) => {

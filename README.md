@@ -65,7 +65,14 @@ semilla en godfat o número de semilla».
 
 - Si la dirección incluye `last=…` (el último gato que sacaste), se tiene en cuenta: decide si tu
   próxima tirada cuenta como rare duplicado.
+- Si marcas en godfat por dónde vas pulsando el número de una casilla, la dirección lleva `pos=…`
+  (por ejemplo `pos=12B`) y la ruta empieza en esa casilla. Esa dirección no guarda cuál fue tu
+  último gato, así que la herramienta te avisa si eso puede cambiar tu primera tirada. Lo más seguro
+  es actualizar la semilla: en godfat, pulsa el nombre del último gato que sacaste y pega la
+  dirección a la que te lleva.
 - También vale escribir solo el número de semilla (sin `last`).
+- Solo sirve para la versión en inglés (la global): las direcciones de otras versiones (`lang=jp`,
+  `lang=tw` o `lang=kr`) se rechazan.
 
 > ¿No sabes tu semilla? Se averigua en bc.godfat.org con el buscador de semillas («Seed seeker»)
 > introduciendo tus últimas tiradas. Sigue la [ayuda de godfat](https://bc.godfat.org/help).
@@ -95,9 +102,9 @@ Solo se usan los banners que estén activos entre «Desde» y «Hasta».
 
 ### 4. Cuántos tiros revisar
 
-Hasta qué fila de tu semilla se busca (200 por defecto, entre 20 y 1000). Si un gato solo sale más
-adelante en tu semilla, sube este número; la propia herramienta te dice cuánto si hace falta. Más
-filas solo alargan un poco el cálculo.
+Cuántas filas de tu semilla se revisan desde tu posición (200 por defecto, entre 20 y 1000). Si un
+gato solo sale más adelante en tu semilla, sube este número; la propia herramienta te dice cuánto si
+hace falta. Más filas solo alargan un poco el cálculo.
 
 ### 5. Inventario, descuentos y protecciones
 
@@ -127,7 +134,8 @@ Los resultados aparecen en este orden.
 ### Resumen del análisis
 
 Arriba, tu semilla y tres cifras: cuántos tiros por pista se han revisado, cuántos banners entran en
-tus fechas y el valor de un Rare Ticket (150 Cat Food) con el que se comparan las rutas. Debajo hay dos
+tus fechas y el valor de un Rare Ticket (150 Cat Food) con el que se comparan las rutas. Si tu
+dirección marca la posición (`pos=…`), también la casilla en la que empiezas. Debajo hay dos
 filas que se despliegan al pulsarlas, cada una con su número de elementos:
 
 - **Banners analizados**: cada banner con sus fechas y horas, y su tipo (simples y 11-draw,
@@ -293,6 +301,9 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
   legend…). Se detectan por las probabilidades de cada banner. Su protección solo se aplica si a partir
   de «Desde» hay un banner así anunciado, aunque sea después de «Hasta»; si no, se tratan como
   casillas normales y un aviso lo indica.
+- Si un banner tiene más del 0,6 % de legend (por ejemplo, un 0,7 %), también da legendario en
+  algunas casillas que godfat pinta como uber. Aquí esas casillas cuentan como lilas mientras ese
+  banner se pueda usar, y una nota lo indica.
 
 **Proteger** una casilla no impide pasar por ella: un gato objetivo que salga ahí no cuenta (salvo
 que sea el propio legendario), y el plan lo busca en otra casilla para no gastar la oportunidad de
@@ -304,6 +315,8 @@ legendario. Si quieres usar esas casillas para cualquier gato, desmarca la prote
 
 **¿Para qué versión del juego sirve?**
 Para la versión en inglés (la global), que es la que usan los datos de godfat con los que trabaja.
+Si pegas una dirección de godfat de otra versión (`lang=jp`, `tw` o `kr`), te lo indica en vez de
+calcular con banners que no son los tuyos.
 
 **¿Toca mi cuenta o el juego?**
 No. Solo calcula a partir de tu semilla. No se conecta al juego ni a tu cuenta, y no necesita ningún
