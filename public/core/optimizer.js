@@ -149,9 +149,127 @@ const isSubset = (a, b) => (a & b) === a;
 function dominates(a, pa, b, pb) {
   if (!isSubset(b.mask, a.mask)) return false;
   if (a.ev === b.ev) return compare(pa, pb) <= 0;
-  const worst = [...pa];
-  worst[worst.length - SWITCHES_FROM_END]++;
-  return compare(worst, pb) <= 0;
+  // `pa` with one banner change more, compared in place.
+  const switches = pa.length - SWITCHES_FROM_END;
+  for (let i = 0; i < pa.length; i++) {
+    const x = i === switches ? pa[i] + 1 : pa[i];
+    if (x !== pb[i]) return x < pb[i];
+  }
+  return true;
+}
+
+// From this many states at one base state on, they are indexed by target.
+const INDEX_FROM = 64;
+
+/** Positions of the targets in a mask. */
+function targetsOf(mask) {
+  const out = [];
+  for (let m = mask, t = 0; m; m >>= 1n, t++) if (m & 1n) out.push(t);
+  return out;
+}
+
+const doubled = (words) => {
+  const out = new Uint32Array(words.length * 2);
+  out.set(words);
+  return out;
+};
+
+/**
+ * The non-dominated states at one base state (indexes in `nodes`), in order
+ * of arrival; -1 where one was beaten. Asking whether a state is dominated, or
+ * which ones it dominates, gives the same answer as checking every state with
+ * `dominates`: once there are many, an index by target leaves out only states
+ * whose targets rule them out (a state can only be dominated by one with every
+ * target it has, and only dominate one with no target it lacks), and
+ * `dominates` decides on the rest.
+ */
+class LabelSet {
+  constructor(targets, indexFrom) {
+    this.targets = targets;
+    this.indexFrom = indexFrom;
+    this.slots = [];
+    this.alive = null; // bit per slot: still in the set
+    this.has = null; // per target, bit per slot: its state has that target
+  }
+
+  /** Adds state `nodes[idx]`. */
+  add(nodes, idx) {
+    const slot = this.slots.length;
+    this.slots.push(idx);
+    if (this.alive) this.index(slot, nodes[idx].mask);
+    else if (this.slots.length >= this.indexFrom) {
+      // Starts the index with the states still in the set.
+      this.alive = new Uint32Array(1);
+      this.has = Array.from({ length: this.targets }, () => new Uint32Array(1));
+      this.slots.forEach((i, s) => {
+        if (i >= 0) this.index(s, nodes[i].mask);
+      });
+    }
+  }
+
+  index(slot, mask) {
+    const w = slot >>> 5;
+    if (w >= this.alive.length) {
+      this.alive = doubled(this.alive);
+      this.has = this.has.map(doubled);
+    }
+    const bit = 1 << (slot & 31);
+    this.alive[w] |= bit;
+    for (const t of targetsOf(mask)) this.has[t][w] |= bit;
+  }
+
+  /** True if some state of the set dominates `node` (priority `pr`). */
+  dominated(nodes, node, pr) {
+    const { slots } = this;
+    if (!this.alive) {
+      for (const idx of slots) if (idx >= 0 && dominates(nodes[idx], nodes[idx].pr, node, pr)) return true;
+      return false;
+    }
+    const need = targetsOf(node.mask).map((t) => this.has[t]);
+    return this.someIn(need, false, (idx) => dominates(nodes[idx], nodes[idx].pr, node, pr));
+  }
+
+  /**
+   * Drops the states `node` (priority `pr`) dominates. One still waiting in
+   * the heap is dropped from `nodes` too (nothing points to it yet); one
+   * already expanded stays there: its successors point to it.
+   */
+  dropDominatedBy(nodes, node, pr) {
+    const { slots } = this;
+    const drop = (slot) => {
+      const idx = slots[slot];
+      if (!dominates(node, pr, nodes[idx], nodes[idx].pr)) return;
+      if (!nodes[idx].done) nodes[idx] = null;
+      slots[slot] = -1;
+      if (this.alive) this.alive[slot >>> 5] &= ~(1 << (slot & 31));
+    };
+    if (!this.alive) {
+      for (let slot = 0; slot < slots.length; slot++) if (slots[slot] >= 0) drop(slot);
+      return;
+    }
+    const inMask = new Set(targetsOf(node.mask));
+    const lacking = this.has.filter((_, t) => !inMask.has(t));
+    this.someIn(lacking, true, (idx, slot) => drop(slot));
+  }
+
+  /**
+   * Calls `check(idx, slot)` on every state still in the set that has all the
+   * targets of `bits` (or, with `without`, none of them) until it returns true.
+   */
+  someIn(bits, without, check) {
+    const words = (this.slots.length + 31) >>> 5;
+    for (let w = 0; w < words; w++) {
+      let x = this.alive[w];
+      for (let i = 0; x && i < bits.length; i++) x &= without ? ~bits[i][w] : bits[i][w];
+      while (x) {
+        const low = x & -x;
+        const slot = (w << 5) + 31 - Math.clz32(low);
+        x ^= low;
+        if (check(this.slots[slot], slot)) return true;
+      }
+    }
+    return false;
+  }
 }
 
 /**
@@ -241,7 +359,7 @@ function priceOf(type, state) {
  * rares), targets obtained (bitmask, any number of targets), tickets left,
  * one-shot discounts left and the current time slot.
  */
-function findRoute(ctx, objectiveKey, { enforceBudget }) {
+function findRoute(ctx, objectiveKey, { enforceBudget, indexFrom = INDEX_FROM }) {
   const { sim, events, targets, inventory, discounts, protect } = ctx;
   const objective = OBJECTIVES[objectiveKey];
   const priorityOf = (node) => objective.priority(node, ctx);
@@ -252,7 +370,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   });
 
   const nodes = [];
-  const labels = new Map(); // baseKey -> indexes (in `nodes`) of the non-dominated states there
+  const labels = new Map(); // baseKey -> LabelSet of the non-dominated states there
   const heap = new MinHeap();
 
   // The last cat only matters if it could be duplicated by the very next roll,
@@ -266,21 +384,13 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     node.last = canonicalLast(node);
     const key = baseKey(node);
     const pr = priorityOf(node);
-    let list = labels.get(key);
-    if (!list) labels.set(key, (list = []));
-    for (const l of list) if (dominates(nodes[l], nodes[l].pr, node, pr)) return;
-    const kept = [];
-    for (const l of list) {
-      // A beaten state still waiting in the heap is dropped (nothing points
-      // to it yet); one already expanded stays: its successors point to it.
-      if (dominates(node, pr, nodes[l], nodes[l].pr)) {
-        if (!nodes[l].done) nodes[l] = null;
-      } else kept.push(l);
-    }
+    let set = labels.get(key);
+    if (!set) labels.set(key, (set = new LabelSet(targets.length, indexFrom)));
+    if (set.dominated(nodes, node, pr)) return;
+    set.dropDominatedBy(nodes, node, pr);
     node.pr = pr;
     nodes.push(node);
-    kept.push(nodes.length - 1);
-    labels.set(key, kept);
+    set.add(nodes, nodes.length - 1);
     heap.push(pr, nodes.length - 1);
   };
   const withCats = (node, roll) => {
@@ -326,12 +436,13 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
         food: node.food - prev.food,
       };
     }
-    return { path, expansions, ...flags };
+    return { path, expansions, budgetCut, ...flags };
   };
   const unspent = () => done(firstComplete, { complete: true, unspent: true });
 
   let bestPartial = 0;
   let expansions = 0;
+  let budgetCut = false; // some roll was left out for costing more Cat Food than there is
   while (heap.size) {
     const idx = heap.pop();
     const node = nodes[idx];
@@ -377,6 +488,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
           pr: null, done: false,
         };
         if (!enforceBudget || next.food <= inventory.food) push(next);
+        else budgetCut = true;
       }
     }
   }
@@ -636,24 +748,34 @@ function prepareContext(ctx) {
   return ctx;
 }
 
+/**
+ * The route of one objective: { result, overBudget }. Within the Cat Food
+ * there is, or over it if that gets more targets (or all of them).
+ */
+function search(ctx, key) {
+  const result = findRoute(ctx, key, { enforceBudget: true });
+  // Without the budget the search only differs if the budget left some roll out.
+  if (result.complete || result.exhausted || !result.budgetCut) return { result, overBudget: false };
+  const unlimited = findRoute(ctx, key, { enforceBudget: false });
+  // Prefer a complete route over budget to an affordable partial one.
+  if (unlimited.complete || unlimited.path.at(-1).found > result.path.at(-1).found) return { result: unlimited, overBudget: true };
+  return { result, overBudget: false };
+}
+
 /** Runs every objective and returns the routes, the recommended one first. */
 function optimizeRoutes(ctx) {
   prepareContext(ctx);
 
   const routes = [];
+  // Without Rare Tickets no route spends any, so the shown objectives order
+  // every pair of states alike: the same search, done once.
+  const searches = new Map();
   for (const [i, key] of SHOWN_ROUTES.entries()) {
     ctx.onProgress?.({ phase: 'route', index: i + 1, total: SHOWN_ROUTES.length, label: OBJECTIVES[key].label });
     const t0 = Date.now();
-    let result = findRoute(ctx, key, { enforceBudget: true });
-    let overBudget = false;
-    if (!result.complete && !result.exhausted) {
-      const unlimited = findRoute(ctx, key, { enforceBudget: false });
-      // Prefer a complete route over budget to an affordable partial one.
-      if (unlimited.complete || unlimited.path.at(-1).found > result.path.at(-1).found) {
-        result = unlimited;
-        overBudget = true;
-      }
-    }
+    const same = ctx.inventory.tickets === 0 ? 'noTickets' : key;
+    if (!searches.has(same)) searches.set(same, search(ctx, key));
+    const { result, overBudget } = searches.get(same);
     const base = {
       key,
       label: OBJECTIVES[key].label,
