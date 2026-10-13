@@ -25,6 +25,17 @@ const isoDate = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayIso = () => isoDate(new Date());
 
+// Browsers can block site data (strict privacy settings): localStorage then
+// throws. The page must work the same; it just does not remember anything.
+function store(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {
+    /* storage blocked */
+  }
+}
+
 const KIND_LABEL = {
   standard: 'Simples y 11-draw',
   guaranteed: 'Garantizado 11',
@@ -102,7 +113,7 @@ function readForm() {
     if (!el.name) continue;
     data[el.name] = el.type === 'checkbox' ? el.checked : el.value;
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  store(STORAGE_KEY, JSON.stringify(data));
   return { ...data, targets: picker.value(), today: todayIso() };
 }
 
@@ -737,7 +748,7 @@ function applyTheme(theme) {
 }
 $('#theme-toggle').addEventListener('click', () => {
   const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem(THEME_KEY, next);
+  store(THEME_KEY, next);
   applyTheme(next);
 });
 applyTheme(document.documentElement.dataset.theme || 'light');
@@ -909,8 +920,8 @@ $('#report-link').addEventListener('click', (e) => {
 });
 
 $('#forget-data').addEventListener('click', () => {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(THEME_KEY);
+  store(STORAGE_KEY, null);
+  store(THEME_KEY, null);
   location.reload();
 });
 

@@ -407,7 +407,8 @@ por última vez contra godfat.
   envía Do Not Track o Global Privacy Control, no se cuenta nada.
 - Tu navegador guarda el último formulario y el tema claro u oscuro (botón junto al título) para
   que no tengas que repetirlos. Puedes borrarlos con «Borrar datos guardados»,
-  al pie de la página.
+  al pie de la página. Si tu navegador bloquea los datos del sitio, la web funciona igual,
+  solo que no recuerda nada.
 - Más detalles en la página [Créditos, licencias y privacidad](https://tonajzp.github.io/TBC-Seed-Router/credits.html).
 
 ---
