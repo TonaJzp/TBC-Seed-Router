@@ -748,6 +748,12 @@ td.r, th.r { text-align: right; }
 }
 .notice.alert b { display: block; margin-bottom: 3px; font-size: 14px; color: var(--bad); }
 .notice.alert p { margin: 0; color: var(--ink); line-height: 1.45; }
+.notice.upcoming { max-width: 860px; padding: 12px 14px; border-radius: 0 4px 4px 0; }
+.notice.upcoming b { display: block; margin-bottom: 4px; font-size: 14px; color: var(--warn); }
+.notice.upcoming ul { margin: 0 0 6px; padding-left: 18px; }
+.notice.upcoming li { margin: 2px 0; line-height: 1.45; overflow-wrap: anywhere; }
+.notice.upcoming p { margin: 0; color: var(--ink); line-height: 1.45; }
+.steps .banner small.upcoming { color: var(--warn); font-weight: 600; }
 .detail-head p.why { max-width: 860px; margin-top: 6px; color: var(--ink); }
 .figures { display: flex; flex-wrap: wrap; margin: 14px 0; border: 1px solid var(--line); border-radius: 4px; }
 .figures div { padding: 8px 16px; border-right: 1px solid var(--line); }
@@ -1100,6 +1106,7 @@ body.doc { display: block; }
   .steps .banner a::after { content: " ↗"; font-size: 12px; }
   .steps .banner .active-range { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
   .steps .banner small { display: inline-block; margin-top: 4px; }
+  .steps .banner small + small { margin-left: 8px; }
   .steps .pos { grid-area: pos; font-size: 12px; }
   .steps .pos::before { content: "Posición "; font-family: var(--sans); color: var(--ink-3); }
   .steps .pos .jump { display: inline; margin-left: 6px; }

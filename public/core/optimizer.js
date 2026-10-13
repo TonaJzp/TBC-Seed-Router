@@ -400,6 +400,9 @@ function describeRoute(ctx, result) {
       to,
       trackSwitch: prev.track !== node.track,
       dupeSwitch: cats.some((c) => c.rerolled),
+      // Not started yet when calculating: a game update before it opens can add
+      // cats to it, which changes the cells of their rarity (owner, 2026-10-13).
+      upcoming: startsAt(ev) > (ctx.now ?? ctx.startSlot),
       // godfat would show the first roll otherwise: link the table from this cell, with `last`.
       godfatFromLast: needsLastLink(ev, prev.n, prev.track, prev.last),
       payment: paymentLabel(node.step),
@@ -487,6 +490,13 @@ function describeRoute(ctx, result) {
       step: obtainedAt.has(ti) ? stepOfAction.get(obtainedAt.get(ti)) : null,
     })),
     steps: merged,
+    // Banners the route rolls before they open, with the step where it first does.
+    upcoming: merged
+      .filter((s, i) => s.upcoming && merged.findIndex((x) => x.eventId === s.eventId) === i)
+      .map((s) => {
+        const ev = events.find((e) => e.id === s.eventId);
+        return { eventId: s.eventId, eventName: s.eventName, start: ev.start, startTime: ev.startTime, step: s.index };
+      }),
     totals: {
       ticketsUsed: end.tickets,
       foodUsed: end.food,

@@ -489,3 +489,22 @@ test('every step says whether godfat shows its first roll as the route rolls it'
   const step = other.routes.find((x) => x.key === 'saveTickets').steps.find((s) => s.godfatFromLast);
   assert.deepEqual([step.from, step.eventId, step.cats[0].name, step.cats[0].rerolled], ['25A', '2026-10-16_979', 'Gardener Cat', false]);
 });
+
+test('a route lists the banners it rolls before they open, and marks their steps', () => {
+  // A game update before a banner opens can add cats to it, which changes the
+  // cells of their rarity (confirmed by the owner, 2026-10-13).
+  const body = { url: 'https://bc.godfat.org/?seed=1234567', targets: ['851', '34', '35', '36', '37'], from: '2026-10-16', to: '2026-10-20', rolls: 200, food: 30000, tickets: 20 };
+  const morning = planner(body, gachaData, { now: new Date(2026, 9, 16, 8, 0) }).routes.find((x) => x.key === 'optimal');
+  assert.deepEqual(morning.upcoming.map((u) => [u.eventId, u.start, u.step]), [
+    ['2026-10-16_986', '2026-10-16', 7],
+    ['2026-10-18_1043', '2026-10-18', 10],
+  ]);
+  assert.deepEqual(morning.steps.map((s) => s.upcoming), [false, false, false, false, false, false, true, true, true, true]);
+  // At noon the banners of the 16th are open: only the one of the 18th is still to come.
+  const noon = planner(body, gachaData, { now: new Date(2026, 9, 16, 12, 0) }).routes.find((x) => x.key === 'optimal');
+  assert.deepEqual(noon.upcoming.map((u) => u.eventId), ['2026-10-18_1043']);
+  assert.ok(noon.steps.filter((s) => s.eventId === '2026-10-16_986').every((s) => !s.upcoming));
+  // Nothing to come: nothing listed.
+  const later = planner({ ...body, from: '2026-10-18', to: '2026-10-19' }, gachaData, { now: new Date(2026, 9, 18, 12, 0) });
+  assert.ok(later.routes.filter((x) => x.found).every((x) => x.upcoming.length === 0 && x.steps.every((s) => !s.upcoming)));
+});

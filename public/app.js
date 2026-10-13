@@ -707,6 +707,7 @@ function renderDetail(data) {
       ${why}
     </div>
     ${budget}
+    ${renderUpcoming(r)}
     ${warnings.length ? `<div class="notice">${warnings.map((w) => `<p>${w}</p>`).join('')}</div>` : ''}
     <dl class="figures">
       <div><dt>Coste total</dt><dd>${fmt(t.totalCost)}</dd></div>
@@ -755,6 +756,24 @@ function linkTitle(s, shifted) {
   return `Ver en godfat: la tabla empieza en ${esc(s.from)}, que allí aparece como 1A${why}`;
 }
 
+/**
+ * Banners the route rolls before they open. An update before then can add
+ * cats to them, which changes the cells of those cats' rarity (and, for a
+ * rare, its duplicates and the rest of the route): recalculate when they open.
+ */
+function renderUpcoming(r) {
+  if (!r.upcoming?.length) return '';
+  const one = r.upcoming.length === 1;
+  const items = r.upcoming
+    .map((u) => `<li>Desde el paso ${u.step}: <span class="banner-name">«${esc(u.eventName)}»</span>, empieza el ${esc(shortWithHour(u.start, u.startTime))}.</li>`)
+    .join('');
+  return `<div class="notice upcoming" role="note">
+      <b>${one ? 'Parte de esta ruta es en un banner que aún no ha empezado' : 'Parte de esta ruta es en banners que aún no han empezado'}</b>
+      <ul>${items}</ul>
+      <p>Si antes llega una actualización del juego que ${one ? 'le' : 'les'} añade gatos nuevos (casi siempre ubers), cambian las casillas de la rareza de esos gatos y la ruta puede cambiar desde ese paso. Cuando empiece, vuelve a calcular con tu semilla actualizada antes de tirar en ${one ? 'él' : 'cada uno'}.</p>
+    </div>`;
+}
+
 function renderStep(s, data, prev, lastHit = Infinity) {
   // The table as godfat draws it after the cat rolled just before this step.
   const last = prev ? prev.cats[prev.cats.length - 1].id : data.last;
@@ -785,7 +804,7 @@ function renderStep(s, data, prev, lastHit = Infinity) {
     <td class="idx num">${s.index}</td>
     <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${s.closesAt ? closingNote(s, ev) : ''}</td>
     <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${linkTitle(s, shifted)}">${esc(s.eventName)}</a>
-      ${ev ? `<span class="active-range">Activo del ${esc(shortWithHour(ev.start, ev.startTime))} al ${esc(shortWithHour(ev.end, ev.endTime))}</span>` : ''}${change ? `<small>${change.replace(/^ · /, '')}</small>` : ''}</td>
+      ${ev ? `<span class="active-range">Activo del ${esc(shortWithHour(ev.start, ev.startTime))} al ${esc(shortWithHour(ev.end, ev.endTime))}</span>` : ''}${change ? `<small>${change.replace(/^ · /, '')}</small>` : ''}${s.upcoming ? '<small class="upcoming" title="Si una actualización le añade gatos antes de que empiece, este paso puede cambiar: vuelve a calcular cuando empiece">Aún no ha empezado</small>' : ''}</td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>
