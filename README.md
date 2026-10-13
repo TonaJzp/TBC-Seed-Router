@@ -295,7 +295,8 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
   empiezas en 17B, el Uber sale en 27B y sigues en 28A). Es lo que godfat muestra como «-> 25B» o
   «<- 28A». Ojo: si entre esas 10 tiradas hay un rare duplicado, ese ya te cambió de pista, y el Uber
   te devuelve a la pista en la que empezaste. En el step-up funciona igual, tras sus 14 tiradas.
-- **Step-up** (eventos Busters y algunas colaboraciones; sustituye al 11-draw): paso 1 = 3 tiros por
+- **Step-up** (solo en los eventos que lo traen activado en los datos del juego, como muchos Busters
+  pero no todos; ahí sustituye al 11-draw): paso 1 = 3 tiros por
   300, paso 2 = 5 por 750, paso 3 = 7 por 1050 con uber garantizado en el 7.º. La ruta puede quedarse
   en el paso 1 o en el 2 (el paso 1 sale a 100 Cat Food por tiro). La oferta vuelve al paso 1 30
   minutos después de comprar el paso 1, o al acabar el paso 3: si la ruta repite el step-up, el paso
