@@ -888,7 +888,7 @@ $('#report-link').addEventListener('click', (e) => {
     `Fechas: ${day(f.from.value)} – ${day(f.to.value)}`,
     `Tiros revisados: ${f.rolls.value || '—'}`,
     `Rare Tickets: ${f.tickets.value || 0} · Cat Food: ${f.food.value || 0}`,
-    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)}${f.discount11.checked ? ` (gastarlo sí o sí: ${yes(f.spend11.checked)})` : ''} · tiro simple a 50 ${yes(f.discount1.checked)}`,
+    `Descuentos: 11-draw a 750 ${yes(f.discount11.checked)}${f.discount11.checked ? ` (incluirlo siempre: ${yes(f.spend11.checked)})` : ''} · tiro simple a 50 ${yes(f.discount1.checked)}`,
     `Proteger casillas: moradas ${yes(f.avoidLegend.checked)} · lilas ${yes(f.avoidLegendFest.checked)}`,
     `Datos de la web: ${gachaData ? `${showDate(gachaData.generatedAt)} (${gachaData.source.commit.slice(0, 8)})` : 'sin cargar'}`,
   ].join('\n');
@@ -903,7 +903,7 @@ $('#forget-data').addEventListener('click', () => {
 
 initStats();
 restoreForm();
-// «Gastarlo sí o sí» belongs to the 11-draw discount: shown only with it.
+// «Incluirlo siempre en la ruta» belongs to the 11-draw discount: shown only with it.
 const syncSpendOption = () => {
   $('#spend11-row').hidden = !form.discount11.checked;
 };

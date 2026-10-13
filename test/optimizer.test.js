@@ -426,7 +426,7 @@ test('a legendary of another banner is "without leaving the route" only if the r
   assert.deepEqual(inDraw.legends.map((l) => [l.name, l.sameRoute]), [['Lumina', false]]);
 });
 
-// --- «Gastar el 11-draw a 750 sí o sí» -----------------------------------------
+// --- «Incluirlo siempre en la ruta» (11-draw at 750) ---------------------------
 
 test('spending the 11-draw discount in any case: every route uses it, at the lowest cost for its criterion', () => {
   const targets = someUbers(1);

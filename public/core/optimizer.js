@@ -11,7 +11,7 @@ const COST = {
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
 const MAX_EXPANSIONS = 2_000_000;
-// With «gastar el descuento sí o sí», how far the search goes on after the
+// With «Incluirlo siempre en la ruta», how far the search goes on after the
 // first complete route looking for one that also spends it.
 const SPEND_SEARCH = 400_000;
 
@@ -273,7 +273,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
   });
 
-  // «Gastar el 11-draw a 750 sí o sí»: the game does not stack this discount
+  // «Incluirlo siempre en la ruta» (11-draw at 750): the game does not stack this discount
   // (a new one replaces the one you still have), so the route only counts as
   // finished once it has spent it. If no route can, the first complete one
   // is kept and the page says why the discount was not used.

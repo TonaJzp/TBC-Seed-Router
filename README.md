@@ -105,7 +105,7 @@ filas solo alargan un poco el cálculo.
   recomienda la que menos te pide y se indica cuánto te falta (ver [Cuál se recomienda](#cuál-se-recomienda)).
 - **Descuentos disponibles**: marca solo los que tengas activos en tu cuenta (el primer 11-draw a
   750 Cat Food y el primer tiro simple a 50). El plan decide si le conviene usarlos.
-  - **Gastarlo sí o sí en la ruta** (bajo el 11-draw a 750, marcada por defecto): el juego no acumula
+  - **Incluirlo siempre en la ruta** (bajo el 11-draw a 750, marcada por defecto): el juego no acumula
     este descuento, así que si te da otro antes de que uses el que tienes, pierdes uno. Con la casilla
     marcada, todas las rutas lo gastan, de la forma más barata para cada una (normalmente dentro de
     los tiros que harías igualmente). Si no se puede (por ejemplo, no te llega la Cat Food para pagarlo),
