@@ -277,3 +277,13 @@ test('godfat being briefly unreachable is tolerated; for days, it is reported', 
   assert.match(findProblems(ok, { ok: true, warnings: [] }, old, now).join(), /No se puede comprobar.*2026-10-05.*HTTP 502/s);
   assert.match(findProblems(ok, { ok: true, warnings: [] }, null, now).join(), /no llegó a ejecutarse/);
 });
+
+test('a banner is a step-up only when its own data says so, whatever its name', () => {
+  // Not every Busters event has the step-up (78 of 118 in godfat's data on 2026-10-13).
+  const raw = yamlLike();
+  const ev = raw.events['2026-10-01_100'];
+  ev.name = 'Metal baddies? No sweat for the METAL BUSTERS!';
+  assert.equal(transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) }).data.events.find((e) => e.id === '2026-10-01_100').guaranteed, 0);
+  ev.step_up = true;
+  assert.equal(transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) }).data.events.find((e) => e.id === '2026-10-01_100').guaranteed, 15);
+});
