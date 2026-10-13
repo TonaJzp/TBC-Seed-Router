@@ -21,6 +21,7 @@ import { fileURLToPath } from 'url';
 import { GODFAT, parseYaml, transform, eventHours } from './lib/godfat-data.js';
 import { buildIcons, missingIcons } from './lib/wiki-icons.js';
 import { USER_AGENT } from './lib/identity.js';
+import { fetchRetrying } from './lib/http.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'public', 'data', 'gacha.json');
@@ -36,13 +37,13 @@ const arg = (name) => {
 };
 
 async function getJson(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchRetrying(url, { headers: { 'User-Agent': USER_AGENT } });
   if (!res.ok) throw new Error(`${url} respondió HTTP ${res.status}`);
   return res.json();
 }
 
 async function getRaw(commit, file) {
-  const res = await fetch(`${GODFAT.project}/-/raw/${commit}/${file}`, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchRetrying(`${GODFAT.project}/-/raw/${commit}/${file}`, { headers: { 'User-Agent': USER_AGENT } });
   if (!res.ok) throw new Error(`No se pudo descargar ${file} (HTTP ${res.status}).`);
   return res.text();
 }
@@ -54,7 +55,7 @@ async function getRaw(commit, file) {
  */
 async function downloadGodfat() {
   const url = `${GITLAB_API}/files/${encodeURIComponent(GODFAT.file)}?ref=${GODFAT_BRANCH}`;
-  const res = await fetch(url, { method: 'HEAD', headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchRetrying(url, { method: 'HEAD', headers: { 'User-Agent': USER_AGENT } });
   if (!res.ok) throw new Error(`${url} respondió HTTP ${res.status}`);
   const id = res.headers.get('x-gitlab-last-commit-id');
   if (!id) throw new Error('GitLab no devolvió el último commit de los datos de godfat.');
