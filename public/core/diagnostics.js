@@ -176,7 +176,13 @@ class Diagnoser {
         g.links = [...g.links, ...item.links.filter((l) => !g.links.some((x) => x.url === l.url))].slice(0, MAX_LINKS);
       }
     }
-    return items.map(({ group, perTarget, groupHeadline, ...item }) => ({ ...item, target: item.targets ? list(item.targets) : item.target }));
+    // `target` reads as text («A, B y C»); `targets` keeps each name, so the
+    // page can link every missing cat to its own explanation.
+    return items.map(({ group, perTarget, groupHeadline, ...item }) => ({
+      ...item,
+      targets: item.targets || (item.target ? [item.target] : []),
+      target: item.targets ? list(item.targets) : item.target,
+    }));
   }
 
   diagnose(target) {

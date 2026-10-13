@@ -377,6 +377,15 @@ function disclosure(section, title, count, body) {
 
 const COLOR_DOT = { morada: 'legend', lila: 'legend-fest' };
 
+/** Id of the diagnostic card that explains each missing cat, by its name. */
+function reasonIds(data) {
+  const ids = new Map();
+  (data.diagnostics || []).forEach((d, i) => {
+    for (const name of d.targets?.length ? d.targets : [d.target]) if (name && !ids.has(name)) ids.set(name, `diag-${i}`);
+  });
+  return ids;
+}
+
 /** Legendaries a legend cell can give, each with a button to add it as a target. */
 function legendOptions(cell) {
   if (!cell.legends.length) return '<span class="muted">ningún banner de tus fechas da legendario aquí (sale un uber)</span>';
@@ -470,7 +479,7 @@ function renderDiagnostics(data) {
     : 'La ruta recomendada no consigue todos los gatos elegidos. Estos son los motivos:';
   const cards = items
     .map(
-      (d) => `<article class="diag">
+      (d, i) => `<article class="diag" id="diag-${i}" tabindex="-1">
         <h4>${esc(d.headline)}</h4>
         ${d.target ? `<p class="diag-target">Afecta a: <b>${esc(d.target)}</b></p>` : ''}
         <ul>${d.details.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
@@ -484,7 +493,7 @@ function renderDiagnostics(data) {
       </article>`
     )
     .join('');
-  return `<section class="diagnostics">
+  return `<section class="diagnostics" id="diagnostics">
     <h3 class="section-title">Por qué no se puede conseguir todo</h3>
     <p class="diag-intro">${intro}</p>
     ${cards}
@@ -595,13 +604,17 @@ function renderDetail(data) {
     )
     .join('');
 
+  // A missing cat links straight to the card that explains it.
+  const reasons = reasonIds(data);
+  const missing = (name) =>
+    `<li class="missing"><span>${esc(name)}</span><a class="where why-link" href="#${reasons.get(name) || 'diagnostics'}">Ver motivo <span aria-hidden="true">↑</span></a></li>`;
   const targets = r.targets
     .map((x) =>
       x.obtained
         ? `<li><span>${esc(x.names.join(' / '))}</span><span class="where">paso ${x.step}</span></li>`
-        : `<li class="missing"><span>${esc(x.names.join(' / '))}</span><span class="where">ver motivo arriba</span></li>`
+        : missing(x.names.join(' / '))
     )
-    .concat((data.unplanned || []).map((name) => `<li class="missing"><span>${esc(name)}</span><span class="where">ver motivo arriba</span></li>`))
+    .concat((data.unplanned || []).map(missing))
     .join('');
 
   const cheapest = data.routes.find((x) => x.key === 'optimal');
@@ -671,6 +684,9 @@ function renderStep(s, data, prev) {
     .join(' + ');
   const note = /descuento/.test(s.payment) ? '<small>con descuento</small>' : '';
   const jump = s.dupeSwitch ? '<span class="jump">cruce por duplicado</span>' : '';
+  // On phones the card says which targets the step gets (the table marks the cats).
+  const got = s.cats.filter((c) => c.newTarget).map((c) => `<b>${esc(c.name)}</b>`);
+  const gotLine = got.length ? `<p class="step-got">Consigues ${got.join(', ')}</p>` : '';
   const cats = s.cats
     .map((c) => {
       const cls = ['cat', c.rarity === 'rare' ? '' : c.rarity, c.target ? 'target' : ''].filter(Boolean).join(' ');
@@ -688,7 +704,7 @@ function renderStep(s, data, prev) {
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>
     <td class="r pay num">${pay || '0'}</td>
-    <td class="cats-cell"><div class="cats">${cats}</div></td>
+    <td class="cats-cell">${gotLine}<div class="cats">${cats}</div></td>
   </tr>`;
 }
 
@@ -889,6 +905,40 @@ form.to.addEventListener('change', syncDateLimits);
 form.addEventListener('input', recheckField);
 form.addEventListener('change', recheckField);
 form.addEventListener('submit', submit);
+
+// "Ver motivo": a quick smooth scroll to the card that explains the missing
+// cat, which lights up for a moment so it is clear which one it is.
+function scrollToCard(card) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const margin = 16;
+  const from = window.scrollY;
+  const to = Math.max(0, from + card.getBoundingClientRect().top - margin);
+  const distance = to - from;
+  const duration = reduce ? 0 : Math.min(450, Math.max(250, Math.abs(distance) / 6));
+  const start = performance.now();
+  const ease = (t) => 1 - (1 - t) ** 3;
+  const stepTo = (now) => {
+    const t = duration ? Math.min(1, (now - start) / duration) : 1;
+    window.scrollTo(0, from + distance * ease(t));
+    if (t < 1) requestAnimationFrame(stepTo);
+    else {
+      card.focus({ preventScroll: true });
+      card.classList.remove('flash');
+      void card.offsetWidth; // restart the animation if it is already lit
+      card.classList.add('flash');
+    }
+  };
+  requestAnimationFrame(stepTo);
+}
+
+$('#results').addEventListener('click', (e) => {
+  const link = e.target.closest('a.why-link');
+  if (!link) return;
+  const card = document.getElementById(link.getAttribute('href').slice(1));
+  if (!card) return;
+  e.preventDefault();
+  scrollToCard(card);
+});
 
 // "Añadir a objetivos y recalcular" on a legendary suggested in the results.
 $('#results').addEventListener('click', (e) => {
