@@ -1,4 +1,5 @@
-import { plan, parseRequest, catalogOf, UserError } from './core/planner.js';
+import { parseRequest, catalogOf, UserError } from './core/planner.js';
+import { createCalculator, CancelledError } from './calc-client.js';
 import { TargetPicker } from './picker.js';
 import { godfatLink } from './core/godfat-link.js';
 import { BASE, LEGEND_FEST_SCORE } from './core/gacha.js';
@@ -235,6 +236,37 @@ function setBusy(label) {
   $('#submit').textContent = label || 'Calcular rutas';
 }
 
+// --- Calculation ----------------------------------------------------------
+// It runs off the page (calc-client.js), so the page keeps responding: the
+// progress says the phase and the seconds, and «Cancelar» stops it. There is
+// no time limit: the analysis always ends whole, the same on any device.
+const calculator = createCalculator();
+const SLOW_HINT_S = 15; // from here on, a wait looks like a failure: say what can be done
+const PHASE_TEXT = {
+  prepare: () => 'Preparando las tiradas de tu semilla…',
+  route: (p) => `Buscando la ruta ${p.index} de ${p.total} («${p.label}»)…`,
+  diagnose: () => 'Buscando por qué falta algún gato…',
+};
+
+/** Counts the seconds under the progress; returns the function that stops it. */
+function startClock() {
+  const t0 = Date.now();
+  const tick = () => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    $('#elapsed').textContent = ` · ${s} s`;
+    $('#progress-hint').hidden = s < SLOW_HINT_S;
+  };
+  tick();
+  const timer = setInterval(tick, 250);
+  return () => {
+    clearInterval(timer);
+    $('#elapsed').textContent = '';
+    $('#progress-hint').hidden = true;
+  };
+}
+
+$('#cancel').addEventListener('click', () => calculator.cancel());
+
 // Every press of "Calcular rutas" ends somewhere you can see: the progress and
 // then the results, the field to fix, or the error, never a silent no-op.
 async function submit(event) {
@@ -268,24 +300,32 @@ async function submit(event) {
   }
   setBusy('Calculando…');
   $('#error').hidden = true;
+  $('#cancelled').hidden = true;
   $('#progress').textContent = 'Calculando las tiradas de tu semilla y las mejores rutas…';
+  $('#cancel').hidden = false;
   show('status');
-  // Let the page paint the progress (and finish scrolling to it, on phones the
-  // results are below the form) before the synchronous calculation.
-  const scrolled = bringIntoView($('#status'));
-  await new Promise((resolve) => setTimeout(resolve, scrolled ? 450 : 30));
+  bringIntoView($('#status'));
+  const stopClock = startClock();
   let gotResult = false;
+  let cancelled = false;
   let fieldError = null;
   countEvent('calcular-ruta', 'Rutas calculadas');
   try {
-    const result = plan(body, gachaData);
+    const result = await calculator.run(body, {
+      data: gachaData,
+      now: new Date(),
+      onProgress: (p) => {
+        if (PHASE_TEXT[p.phase]) $('#progress').textContent = PHASE_TEXT[p.phase](p);
+      },
+    });
     gotResult = true;
     current = { data: result, selected: result.routes.findIndex((r) => r.found) };
     render();
     if (current.selected >= 0) mascot.play(); // a route found: the cat celebrates
     else countEvent('sin-ruta', 'Cálculos sin ninguna ruta posible');
   } catch (err) {
-    if (err instanceof UserError && err.field) fieldError = err; // e.g. the day changed meanwhile
+    if (err instanceof CancelledError) cancelled = true;
+    else if (err instanceof UserError && err.field) fieldError = err; // e.g. the day changed meanwhile
     else if (err instanceof UserError) showError(err.message);
     else {
       console.error(err);
@@ -295,10 +335,21 @@ async function submit(event) {
       );
     }
   } finally {
+    stopClock();
+    $('#cancel').hidden = true;
     setBusy(null);
-    show(gotResult ? 'results' : 'empty');
-    if (fieldError) showFieldError(fieldError.field, fieldError.message);
-    else bringIntoView($(gotResult ? '#results' : '#error'));
+    if (cancelled) {
+      // Back to what there was, the form as it is.
+      show(current ? 'results' : 'empty');
+      $('#cancelled').textContent = current ? 'Cálculo cancelado. Siguen los resultados anteriores.' : 'Cálculo cancelado.';
+      $('#cancelled').hidden = false;
+      $('#submit').focus({ preventScroll: true }); // the focused «Cancelar» is gone
+      bringIntoView($('#cancelled'));
+    } else {
+      show(gotResult ? 'results' : 'empty');
+      if (fieldError) showFieldError(fieldError.field, fieldError.message);
+      else bringIntoView($(gotResult ? '#results' : '#error'));
+    }
   }
 }
 

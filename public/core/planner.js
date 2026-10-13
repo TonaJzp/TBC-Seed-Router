@@ -347,9 +347,12 @@ function selectEvents(data, { from, to, today, now = localMinute(today) }) {
 /**
  * Runs the analysis for the form values `body` with the banner data `data`.
  * Returns the result shown by the page; throws UserError for invalid input.
+ * `onProgress` hears each phase as it starts: { phase: 'prepare' }, then
+ * { phase: 'route', index, total, label } per route, then { phase: 'diagnose' }.
  */
-function plan(body, data, { now = new Date() } = {}) {
+function plan(body, data, { now = new Date(), onProgress = () => {} } = {}) {
   const input = parseRequest(body, now);
+  onProgress({ phase: 'prepare' });
   const { seed } = input.seed;
   const { start, last, lastUnknown } = startOf(input.seed, data);
   const { selected, skipped, upcoming } = selectEvents(data, input);
@@ -389,12 +392,14 @@ function plan(body, data, { now = new Date() } = {}) {
     from: input.from,
     now: input.now,
     to: input.to,
+    onProgress,
   };
   let routes = [];
   let diagnostics = unavailableItems;
   if (resolved.length) {
     routes = optimizeRoutes(ctx);
     if (routes.some((r) => r.recommended && (!r.found || !r.complete || r.exhausted))) {
+      onProgress({ phase: 'diagnose' });
       diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed })];
     }
   }

@@ -244,6 +244,7 @@
   <main class="content">
     <section id="data-notice" class="notice warn" hidden></section>
     <section id="error" class="notice error" role="alert" hidden></section>
+    <p id="cancelled" class="notice warn" role="status" hidden></p>
     <section id="empty" class="empty">
       <h2>Sin resultados todavía</h2>
       <p>Pega la URL actual de tu semilla, indica los gatos que quieres y pulsa <b>Calcular rutas</b>.</p>
@@ -258,7 +259,9 @@
 
     <section id="status" class="status" hidden>
       <div class="bar"><span></span></div>
-      <p id="progress" role="status"></p>
+      <p class="progress-line"><span id="progress" role="status"></span><span id="elapsed" aria-hidden="true"></span></p>
+      <p id="progress-hint" class="progress-hint" hidden>Está tardando más de lo normal. Si no quieres esperar, cancela y reduce las fechas, los tiros a revisar o los gatos objetivo.</p>
+      <button type="button" id="cancel" class="secondary" hidden>Cancelar</button>
     </section>
 
     <section id="results" hidden></section>

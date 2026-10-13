@@ -548,7 +548,8 @@ function optimizeRoutes(ctx) {
   prepareContext(ctx);
 
   const routes = [];
-  for (const key of SHOWN_ROUTES) {
+  for (const [i, key] of SHOWN_ROUTES.entries()) {
+    ctx.onProgress?.({ phase: 'route', index: i + 1, total: SHOWN_ROUTES.length, label: OBJECTIVES[key].label });
     const t0 = Date.now();
     let result = findRoute(ctx, key, { enforceBudget: true });
     let overBudget = false;

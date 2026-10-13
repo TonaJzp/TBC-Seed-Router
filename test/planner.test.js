@@ -175,6 +175,26 @@ test('plan() runs the whole analysis in the browser from the banner data', () =>
   assert.ok(morning.events.some((e) => e.id === '2026-10-09_1077'));
 });
 
+test('plan() tells each phase as it starts, and the result does not depend on listening', () => {
+  const now = new Date(2026, 9, 16, 12, 0);
+  const body = { url: `https://bc.godfat.org/?seed=${fixture.seed}`, targets: ['851'], from: '2026-10-16', to: '2026-10-20', rolls: 200, food: 30000, tickets: 5 };
+  const phases = [];
+  const heard = plan(body, gachaData, { now, onProgress: (p) => phases.push(p) });
+  assert.deepEqual(phases, [
+    { phase: 'prepare' },
+    { phase: 'route', index: 1, total: 3, label: 'Menor coste total' },
+    { phase: 'route', index: 2, total: 3, label: heard.routes.find((r) => r.key === 'saveFood').label },
+    { phase: 'route', index: 3, total: 3, label: heard.routes.find((r) => r.key === 'saveTickets').label },
+  ]);
+  const strip = (r) => ({ ...r, routes: r.routes.map(({ ms, ...route }) => route) }); // timings differ
+  assert.deepEqual(strip(heard), strip(plan(body, gachaData, { now })));
+
+  // Too few rolls for every cat: the diagnostics run last, and say so.
+  const short = [];
+  plan({ ...body, targets: ['851', '34', '35', '36', '37'], rolls: 20 }, gachaData, { now, onProgress: (p) => short.push(p.phase) });
+  assert.deepEqual(short, ['prepare', 'route', 'route', 'route', 'diagnose']);
+});
+
 test('plan() reports invalid input as UserError, never as a crash', () => {
   const now = new Date(2026, 9, 16, 12, 0);
   const ok = { url: '1', targets: ['851'], from: '2026-10-16', to: '2026-10-20' };

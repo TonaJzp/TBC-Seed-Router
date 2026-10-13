@@ -122,7 +122,10 @@ hace falta. Más filas solo alargan un poco el cálculo.
 
 ### 6. Pulsa «Calcular rutas»
 
-En unos segundos verás tres rutas, con la recomendada en primer lugar. Lo que escribes se guarda en tu
+En unos segundos verás tres rutas, con la recomendada en primer lugar. Mientras calcula, la página sigue
+respondiendo: verás qué ruta está buscando y los segundos que lleva, y puedes pulsar «Cancelar» (vuelve
+lo que había antes). El análisis nunca se corta a medias: si tarda más de 15 segundos, la página te
+sugiere reducir las fechas, los tiros o los gatos. Lo que escribes se guarda en tu
 navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y-datos-guardados)).
 
 ---

@@ -504,7 +504,7 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 /* The results adapt to the room they have (container queries at the end):
    tables when they fit, cards when not, whatever the screen. */
 .content { padding: 24px 32px 64px; min-width: 0; container: content / inline-size; }
-#status, #error, #results { scroll-margin-top: 16px; }
+#status, #error, #cancelled, #results { scroll-margin-top: 16px; }
 
 .empty { max-width: 620px; color: var(--ink-2); }
 .empty h2 { font-size: 16px; color: var(--ink); margin-bottom: 6px; }
@@ -515,7 +515,22 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 .bar { height: 2px; background: var(--line); overflow: hidden; margin-bottom: 12px; }
 .bar span { display: block; width: 30%; height: 100%; background: var(--accent); animation: slide 1.2s ease-in-out infinite; }
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
-#progress { margin: 0; font-size: 13px; color: var(--ink-2); }
+.progress-line { margin: 0; font-size: 13px; color: var(--ink-2); }
+#elapsed { font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; }
+.progress-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.secondary {
+  min-height: 32px;
+  margin-top: 12px;
+  padding: 4px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+@media (hover: hover) {
+  .secondary:hover { border-color: var(--ink-3); }
+}
 
 .notice {
   padding: 10px 12px;
