@@ -455,3 +455,37 @@ test('if the 11-draw discount cannot be paid, the route is still given and says 
     assert.match(route.discounts.multi.reason, /no se ha podido gastar/);
   }
 });
+
+test('a step is linked from its own cell when godfat would draw its first roll otherwise', async () => {
+  // godfat draws re-rolls along its own table (ev.alt) and takes `last` only
+  // at 1A. Checked on bc.godfat.org on 2026-10-13: seed 2286, 12A of
+  // 2026-10-16_979 after a guaranteed uber (800) drew «Wushu Cat -> re-roll»,
+  // which the route does not do; the table from 12A as 1A, with last=800, did not.
+  const { needsLastLink } = await import('../public/core/optimizer.js');
+  const ev = {
+    raw: { '1A': { id: 10 }, '1B': { id: 10 }, '5A': { id: 10 }, '7A': { id: 11 }, '9B': { id: 20 } },
+    alt: { '5A': { id: 12 } }, // godfat draws a re-roll at 5A
+    rarityOf: new Map([[10, 'rare'], [11, 'rare'], [20, 'uber']]),
+  };
+  assert.equal(needsLastLink(ev, 5, 'A', 10), false, 'both re-roll it');
+  assert.equal(needsLastLink(ev, 5, 'A', 99), true, 'godfat draws a re-roll the route does not do');
+  assert.equal(needsLastLink(ev, 7, 'A', 11), true, 'the route re-rolls it, godfat does not draw it');
+  assert.equal(needsLastLink(ev, 7, 'A', 99), false, 'neither re-rolls it');
+  assert.equal(needsLastLink(ev, 9, 'B', 20), false, 'only rares re-roll');
+  assert.equal(needsLastLink(ev, 1, 'B', 10), true, '1B: godfat takes `last` only at 1A');
+  assert.equal(needsLastLink(ev, 1, 'A', 10), false, 'at 1A the link already passes `last`');
+});
+
+test('every step says whether godfat shows its first roll as the route rolls it', () => {
+  const now = new Date(2026, 9, 16, 12, 0);
+  const r = planner({ url: 'https://bc.godfat.org/?seed=1234567', targets: ['851', '34', '35', '36', '37'], from: '2026-10-16', to: '2026-10-20', rolls: 200, food: 30000, tickets: 20 }, gachaData, { now });
+  const steps = r.routes.filter((x) => x.found).flatMap((x) => x.steps);
+  assert.ok(steps.length > 0);
+  assert.ok(steps.every((s) => typeof s.godfatFromLast === 'boolean'));
+  assert.ok(steps.filter((s) => s.from === '1A').every((s) => !s.godfatFromLast));
+  // Seed 409: step 4 of «saveTickets» rolls Gardener Cat at 25A of 2026-10-16_979
+  // without a re-roll, where godfat's own table draws one.
+  const other = planner({ url: '409', targets: ['68', '148', '408'], from: '2026-10-16', to: '2026-10-20', rolls: 100, food: 30000, tickets: 20 }, gachaData, { now });
+  const step = other.routes.find((x) => x.key === 'saveTickets').steps.find((s) => s.godfatFromLast);
+  assert.deepEqual([step.from, step.eventId, step.cats[0].name, step.cats[0].rerolled], ['25A', '2026-10-16_979', 'Gardener Cat', false]);
+});

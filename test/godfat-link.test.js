@@ -20,3 +20,15 @@ test('beyond the 300 rows godfat shows, the table starts at the cell, as godfat 
   const b = godfatLink({ seed: 4087567560, eventId: 'e', key: '119B', untilRow: 301 });
   assert.match(b.url, /^https:\/\/bc\.godfat\.org\/\?seed=2999275225&event=e&count=193#N1A$/);
 });
+
+test('a step godfat would show otherwise starts the table at its cell, with the last cat', () => {
+  // Short of 300 rows, but godfat's own 34A would not show the duplicate the
+  // route rolls there: the link opens the table at 34A, shown as 1A, with `last`.
+  const direct = godfatLink({ seed: 4087567560, eventId: 'e', key: '53A', untilRow: 60, last: 42 });
+  assert.equal(direct.shifted, false);
+  const fromLast = godfatLink({ seed: 4087567560, eventId: 'e', key: '53A', untilRow: 60, last: 42, fromLast: true });
+  assert.equal(fromLast.shifted, true);
+  assert.equal(fromLast.url, 'https://bc.godfat.org/?seed=1497618628&last=42&event=e&count=100#N1A');
+  // 1A already takes `last` on godfat: nothing to move.
+  assert.equal(godfatLink({ seed: 1, eventId: 'e', key: '1A', last: 42, fromLast: true }).shifted, false);
+});

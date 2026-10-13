@@ -749,11 +749,17 @@ function closingNote(s, ev) {
   return `<small>antes de las ${esc(s.closesAt)}; luego sigue igual hasta el ${esc(shortWithHour(next.end, next.endTime))}</small>`;
 }
 
+function linkTitle(s, shifted) {
+  if (!shifted) return 'Ver esta tabla en godfat';
+  const why = s.godfatFromLast ? ', con tu último gato, para que la primera tirada salga como en la ruta' : '';
+  return `Ver en godfat: la tabla empieza en ${esc(s.from)}, que allí aparece como 1A${why}`;
+}
+
 function renderStep(s, data, prev, lastHit = Infinity) {
   // The table as godfat draws it after the cat rolled just before this step.
   const last = prev ? prev.cats[prev.cats.length - 1].id : data.last;
   const untilRow = Math.max(Number.parseInt(s.from, 10), Number.parseInt(s.to, 10));
-  const { url: link, shifted } = godfatLink({ seed: data.seed, eventId: s.eventId, key: s.from, untilRow, last });
+  const { url: link, shifted } = godfatLink({ seed: data.seed, eventId: s.eventId, key: s.from, untilRow, last, fromLast: s.godfatFromLast });
   const ev = data.events.find((e) => e.id === s.eventId);
   const change = prev && prev.eventId !== s.eventId ? ' · <b>cambio de banner</b>' : '';
   const pay = [s.ticketsSpent && `${s.ticketsSpent} ticket${s.ticketsSpent > 1 ? 's' : ''}`, s.foodSpent && `${fmt(s.foodSpent)} CF`]
@@ -778,7 +784,7 @@ function renderStep(s, data, prev, lastHit = Infinity) {
   return `<tr class="${s.cats.some((c) => c.newTarget) ? 'hit' : ''}">
     <td class="idx num">${s.index}</td>
     <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${s.closesAt ? closingNote(s, ev) : ''}</td>
-    <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${shifted ? `Ver en godfat: allí la casilla ${esc(s.from)} aparece como 1A` : 'Ver esta tabla en godfat'}">${esc(s.eventName)}</a>
+    <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${linkTitle(s, shifted)}">${esc(s.eventName)}</a>
       ${ev ? `<span class="active-range">Activo del ${esc(shortWithHour(ev.start, ev.startTime))} al ${esc(shortWithHour(ev.end, ev.endTime))}</span>` : ''}${change ? `<small>${change.replace(/^ · /, '')}</small>` : ''}</td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>
     <td class="pos">${esc(s.from)} → ${esc(s.to)}${jump}</td>

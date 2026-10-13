@@ -217,7 +217,7 @@ La ruta, paso a paso, en el orden en que debes hacerlos.
 |---------|------------|
 | # | Número de paso. |
 | Día | Desde qué día puedes hacerlo. «desde las 11:00» si el banner abre ese día; «antes de las 11:00» si cierra ese día, y entonces es tu último momento. Si el mismo banner continúa justo después, se indica hasta cuándo puedes seguir usándolo. |
-| Banner | Dónde tirar, con sus fechas. Si cambia respecto al paso anterior, se marca «cambio de banner». **El nombre abre esa misma tabla en godfat**, en la casilla donde empieza el paso, para que compruebes los gatos antes de tirar. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa casilla, que allí aparece como 1A. |
+| Banner | Dónde tirar, con sus fechas. Si cambia respecto al paso anterior, se marca «cambio de banner». **El nombre abre esa misma tabla en godfat**, en la casilla donde empieza el paso, para que compruebes los gatos antes de tirar. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa casilla, que allí aparece como 1A. También empieza ahí, con tu último gato, cuando godfat dibujaría la primera tirada del paso de otra forma: por ejemplo, un rare repetido que en tu ruta no se repite porque vienes de otro banner o de un garantizado. |
 | Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up. «con descuento» si usa uno; «solo para gastar el descuento» si es un 11-draw que la ruta hace después de conseguir todos los objetivos, únicamente para no perder el descuento. |
 | Posición | De qué casilla a qué casilla va el paso. «cruce por duplicado» si dentro del paso hay un cambio de pista por rare duplicado. |
 | Pago | Rare Tickets y Cat Food (CF) que cuesta el paso. |

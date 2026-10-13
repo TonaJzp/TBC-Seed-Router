@@ -336,6 +336,22 @@ function paymentLabel(step) {
   return `${step.food} Cat Food${extra}`;
 }
 
+/**
+ * Whether the link to the roll at (n, track) after cat `last` must start
+ * godfat's table at that cell, with `last`. godfat draws re-rolls along its
+ * own table (`ev.alt`: a rare under a copy of itself, or where a re-roll
+ * lands on one) and takes `last` only at 1A. After a guaranteed uber, a cat
+ * from another banner or the start of a `pos` URL, it may draw a re-roll the
+ * route does not do, or miss one it does.
+ */
+function needsLastLink(ev, n, track, last) {
+  if (n === 1 && track === 'A') return false;
+  const key = keyOf(n, track);
+  const raw = ev.raw[key];
+  const rerolls = !!raw && raw.id === last && ev.rarityOf.get(raw.id) === 'rare';
+  return rerolls !== !!ev.alt[key];
+}
+
 function describeRoute(ctx, result) {
   const { sim, events, targets, inventory } = ctx;
   const chain = [];
@@ -384,6 +400,8 @@ function describeRoute(ctx, result) {
       to,
       trackSwitch: prev.track !== node.track,
       dupeSwitch: cats.some((c) => c.rerolled),
+      // godfat would show the first roll otherwise: link the table from this cell, with `last`.
+      godfatFromLast: needsLastLink(ev, prev.n, prev.track, prev.last),
       payment: paymentLabel(node.step),
       ticketsSpent: node.step.useTicket ? 1 : 0,
       foodSpent: node.step.food,
@@ -626,6 +644,7 @@ function pickRecommended(routes) {
 
 export {
   optimizeRoutes,
+  needsLastLink,
   prepareContext,
   findRoute,
   performAction,
