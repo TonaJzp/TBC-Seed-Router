@@ -16,6 +16,9 @@ const COST = {
 // The step-up goes back to step 1 thirty minutes after step 1 is bought (or
 // once step 3 is done): only then can the next step-up start.
 const STEP_RESET_MINUTES = 30;
+// `su` when no step-up has to wait: any time is later (a small integer keeps
+// the state compact, where -Infinity would need a boxed number per state).
+const NO_WAIT = 0;
 const isStepUp = (type) => type.startsWith('stepup');
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
@@ -249,7 +252,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   });
 
   const nodes = [];
-  const labels = new Map(); // baseKey -> [{ mask, pr, idx }] non-dominated states
+  const labels = new Map(); // baseKey -> indexes (in `nodes`) of the non-dominated states there
   const heap = new MinHeap();
 
   // The last cat only matters if it could be duplicated by the very next roll,
@@ -265,14 +268,18 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     const pr = priorityOf(node);
     let list = labels.get(key);
     if (!list) labels.set(key, (list = []));
-    for (const l of list) if (dominates(l, l.pr, node, pr)) return;
+    for (const l of list) if (dominates(nodes[l], nodes[l].pr, node, pr)) return;
     const kept = [];
     for (const l of list) {
-      if (dominates(node, pr, l, l.pr)) nodes[l.idx].dead = true;
-      else kept.push(l);
+      // A beaten state still waiting in the heap is dropped (nothing points
+      // to it yet); one already expanded stays: its successors point to it.
+      if (dominates(node, pr, nodes[l], nodes[l].pr)) {
+        if (!nodes[l].done) nodes[l] = null;
+      } else kept.push(l);
     }
+    node.pr = pr;
     nodes.push(node);
-    kept.push({ mask: node.mask, ev: node.ev, pr, idx: nodes.length - 1 });
+    kept.push(nodes.length - 1);
     labels.set(key, kept);
     heap.push(pr, nodes.length - 1);
   };
@@ -287,7 +294,8 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   push({
     n: sim.start.n, track: sim.start.track, last: inventory.lastCat, mask: 0n, found: 0,
     tl: inventory.tickets, d11: discounts.guaranteed, d1: discounts.single,
-    su: -Infinity, slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
+    su: NO_WAIT, slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, type: null,
+    pr: null, done: false,
   });
 
   // «Incluirlo siempre en la ruta» (11-draw at 750): the game does not stack this discount
@@ -297,16 +305,40 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   const mustSpend = !!(discounts.guaranteed && discounts.spendMulti);
   let firstComplete = -1;
   let completeAt = 0;
-  const unspent = () => ({ node: firstComplete, nodes, expansions, complete: true, unspent: true });
+  // The result keeps only the path to the chosen node: the hundreds of
+  // thousands of states explored are freed as soon as the search returns.
+  const done = (idx, flags = {}) => {
+    const path = [];
+    for (let i = idx; i >= 0; i = nodes[i].parent) path.push(nodes[i]);
+    path.reverse();
+    // Each explored state keeps only its action; the path rebuilds the rest
+    // of each step from the state before it.
+    path[0].step = null;
+    for (let i = 1; i < path.length; i++) {
+      const node = path[i];
+      const prev = path[i - 1];
+      const multi = node.type === 'multi' || node.type === 'guaranteed';
+      node.step = {
+        ei: node.ev,
+        type: node.type,
+        useTicket: node.tickets > prev.tickets,
+        useDiscount: (node.type === 'single' && prev.d1 && !node.d1) || (multi && prev.d11 && !node.d11),
+        food: node.food - prev.food,
+      };
+    }
+    return { path, expansions, ...flags };
+  };
+  const unspent = () => done(firstComplete, { complete: true, unspent: true });
 
   let bestPartial = 0;
   let expansions = 0;
   while (heap.size) {
     const idx = heap.pop();
     const node = nodes[idx];
-    if (node.dead) continue;
+    if (!node) continue; // beaten while it waited
+    node.done = true;
     if (node.mask === fullMask) {
-      if (!mustSpend || !node.d11) return { node: idx, nodes, expansions, complete: true };
+      if (!mustSpend || !node.d11) return done(idx, { complete: true });
       if (firstComplete < 0) {
         firstComplete = idx;
         completeAt = expansions;
@@ -314,7 +346,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     }
     // Dijkstra pops in cost order: the first node reaching a new count is the cheapest one.
     if (node.found > nodes[bestPartial].found) bestPartial = idx;
-    if (++expansions > MAX_EXPANSIONS) return firstComplete >= 0 ? unspent() : { node: bestPartial, nodes, expansions, exhausted: true };
+    if (++expansions > MAX_EXPANSIONS) return firstComplete >= 0 ? unspent() : done(bestPartial, { exhausted: true });
     if (firstComplete >= 0 && expansions - completeAt > SPEND_SEARCH) return unspent();
 
     // Try the banner already in use first so equal-cost ties keep it.
@@ -336,19 +368,20 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
           tl: price.ticket ? node.tl - 1 : node.tl,
           d11: (type === 'multi' || type === 'guaranteed') && price.discount ? false : node.d11,
           d1: type === 'single' && price.discount ? false : node.d1,
-          su: type === 'stepup1' || type === 'stepup12' ? slot + STEP_RESET_MINUTES : type === 'stepup' ? -Infinity : node.su,
+          su: type === 'stepup1' || type === 'stepup12' ? slot + STEP_RESET_MINUTES : type === 'stepup' ? NO_WAIT : node.su,
           slot, food: node.food + price.food, tickets: node.tickets + (price.ticket ? 1 : 0),
           pulls: node.pulls + roll.cats.length,
           switches: node.switches + (node.ev >= 0 && node.ev !== ei ? 1 : 0),
           ev: ei, parent: idx,
-          step: { ei, type, useTicket: price.ticket, useDiscount: price.discount, food: price.food },
+          type,
+          pr: null, done: false,
         };
         if (!enforceBudget || next.food <= inventory.food) push(next);
       }
     }
   }
   if (firstComplete >= 0) return unspent();
-  return { node: bestPartial, nodes, expansions };
+  return done(bestPartial);
 }
 
 function paymentLabel(step) {
@@ -375,14 +408,12 @@ function needsLastLink(ev, n, track, last) {
 
 function describeRoute(ctx, result) {
   const { sim, events, targets, inventory } = ctx;
-  const chain = [];
-  // nodes[0] is always the start node of the search.
-  for (let i = result.node; i > 0; i = result.nodes[i].parent) chain.push(result.nodes[i]);
-  chain.reverse();
+  // path[0] is always the start node of the search.
+  const chain = result.path.slice(1);
 
   const obtainedAt = new Map(); // target index -> action number
   const crossings = []; // legend cells the route rolls on
-  let prev = result.nodes[0];
+  let prev = result.path[0];
   const steps = chain.map((node, i) => {
     const ev = events[node.step.ei];
     const roll = performAction(sim, ev, node.step.type, prev);
@@ -444,7 +475,7 @@ function describeRoute(ctx, result) {
   const stepOfAction = new Map();
   for (const s of merged) for (const a of s.actions) stepOfAction.set(a, s.index);
 
-  const end = result.nodes[result.node];
+  const end = result.path[result.path.length - 1];
   const count = (type) => steps.filter((s) => s.type === type).length;
   const discountStep = (types) => {
     const s = steps.find((x) => types.includes(x.type) && x.discount);
@@ -462,7 +493,7 @@ function describeRoute(ctx, result) {
   // action gives the same cats to the same cell (simulated, not assumed).
   const keepsRoute = (i, alt) => {
     const node = chain[i];
-    const before = i === 0 ? result.nodes[0] : chain[i - 1];
+    const before = i === 0 ? result.path[0] : chain[i - 1];
     const s = sim.single(alt, before.n, before.track, before.last);
     if (!s || s.next.n !== node.n || s.next.track !== node.track) return false;
     const after = chain[i + 1];
@@ -618,7 +649,7 @@ function optimizeRoutes(ctx) {
     if (!result.complete && !result.exhausted) {
       const unlimited = findRoute(ctx, key, { enforceBudget: false });
       // Prefer a complete route over budget to an affordable partial one.
-      if (unlimited.complete || unlimited.nodes[unlimited.node].found > result.nodes[result.node].found) {
+      if (unlimited.complete || unlimited.path.at(-1).found > result.path.at(-1).found) {
         result = unlimited;
         overBudget = true;
       }
@@ -628,7 +659,7 @@ function optimizeRoutes(ctx) {
       label: OBJECTIVES[key].label,
       description: OBJECTIVES[key].description,
     };
-    if (result.node <= 0) {
+    if (result.path.length <= 1) {
       routes.push({
         ...base,
         found: false,
@@ -642,7 +673,7 @@ function optimizeRoutes(ctx) {
       ...base,
       found: true,
       exhausted: !!result.exhausted,
-      overBudget: overBudget && result.nodes[result.node].food > ctx.inventory.food,
+      overBudget: overBudget && result.path.at(-1).food > ctx.inventory.food,
       ...describeRoute(ctx, result),
       ms: Date.now() - t0,
     };
