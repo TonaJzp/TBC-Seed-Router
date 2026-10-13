@@ -398,7 +398,9 @@ function plan(body, data, { now = new Date(), onProgress = () => {} } = {}) {
   let diagnostics = unavailableItems;
   if (resolved.length) {
     routes = optimizeRoutes(ctx);
-    if (routes.some((r) => r.recommended && (!r.found || !r.complete || r.exhausted))) {
+    // Explain what is missing when the recommended route (if any) does not get it all.
+    const recommended = routes.find((r) => r.recommended);
+    if (!recommended || !recommended.complete || recommended.exhausted) {
       onProgress({ phase: 'diagnose' });
       diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed })];
     }

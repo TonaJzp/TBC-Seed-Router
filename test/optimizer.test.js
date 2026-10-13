@@ -555,3 +555,29 @@ test('a route lists the banners it rolls before they open, and marks their steps
   const later = planner({ ...body, from: '2026-10-18', to: '2026-10-19' }, gachaData, { now: new Date(2026, 9, 18, 12, 0) });
   assert.ok(later.routes.filter((x) => x.found).every((x) => x.upcoming.length === 0 && x.steps.every((s) => !s.upcoming)));
 });
+
+test('a step says by a field, not by its wording, whether it takes a discount', () => {
+  const both = { guaranteed: true, single: true };
+  const { routes } = plan(someUbers(2), { inventory: { tickets: 0, food: 80000 }, discounts: both });
+  for (const r of routes.filter((x) => x.found)) {
+    for (const s of r.steps) assert.equal(typeof s.discount, 'boolean', `${r.key} step ${s.index}`);
+    const discounted = r.steps.filter((s) => s.discount);
+    assert.ok(discounted.length > 0, `${r.key} uses a discount`);
+    // The discount summary points at the steps that carry the field.
+    for (const d of [r.discounts.multi, r.discounts.single]) if (d?.step) assert.ok(r.steps[d.step - 1].discount, `${r.key} step ${d.step}`);
+  }
+});
+
+test('the recommended route is always one that was found', async () => {
+  const { pickRecommended } = await import('../public/core/optimizer.js');
+  const route = (key, found, extra = {}) => ({ key, found, targets: [{ obtained: found }], totals: { affordable: true, foodUsed: 0 }, ...extra });
+  // The cheapest search ran out without a route; another one found it.
+  const routes = [route('optimal', false), route('saveFood', true), route('saveTickets', true)];
+  const [first] = pickRecommended(routes);
+  assert.equal(first.key, 'saveFood');
+  assert.ok(first.recommended && !routes[0].recommended);
+  // Nothing found anywhere: nothing is recommended.
+  const none = [route('optimal', false), route('saveFood', false), route('saveTickets', false)];
+  pickRecommended(none);
+  assert.ok(none.every((r) => !r.recommended));
+});

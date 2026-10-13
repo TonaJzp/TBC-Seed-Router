@@ -431,6 +431,7 @@ function describeRoute(ctx, result) {
       // godfat would show the first roll otherwise: link the table from this cell, with `last`.
       godfatFromLast: needsLastLink(ev, prev.n, prev.track, prev.last),
       payment: paymentLabel(node.step),
+      discount: !!node.step.useDiscount,
       ticketsSpent: node.step.useTicket ? 1 : 0,
       foodSpent: node.step.food,
       cats,
@@ -446,7 +447,7 @@ function describeRoute(ctx, result) {
   const end = result.nodes[result.node];
   const count = (type) => steps.filter((s) => s.type === type).length;
   const discountStep = (types) => {
-    const s = steps.find((x) => types.includes(x.type) && x.payment.includes('descuento'));
+    const s = steps.find((x) => types.includes(x.type) && x.discount);
     return s ? stepOfAction.get(s.action) : null;
   };
   const multiStep = discountStep(['multi', 'guaranteed']);
@@ -679,14 +680,18 @@ function pickRecommended(routes) {
     cheapest?.found && !cheapest.totals.affordable &&
     leanest?.found && got(leanest) >= got(cheapest) &&
     leanest.totals.foodUsed < cheapest.totals.foodUsed;
-  const pick = switchToLeanest ? leanest : cheapest;
+  // Never a route that was not found: if the cheapest search ran out, the
+  // first one found; if none was, none is recommended.
+  let pick = switchToLeanest ? leanest : cheapest;
+  if (!pick?.found) pick = routes.find((r) => r.found) || null;
   for (const r of routes) r.recommended = r === pick;
-  if (pick) pick.recommendedFor = switchToLeanest ? 'leastFood' : 'cheapest';
+  if (pick) pick.recommendedFor = switchToLeanest ? 'leastFood' : pick === cheapest ? 'cheapest' : 'found';
   return [pick, ...routes.filter((r) => r !== pick)].filter(Boolean);
 }
 
 export {
   optimizeRoutes,
+  pickRecommended,
   needsLastLink,
   prepareContext,
   findRoute,

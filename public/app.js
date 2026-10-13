@@ -792,7 +792,7 @@ function renderStep(s, data, prev, lastHit = Infinity) {
   const pay = [s.ticketsSpent && `${s.ticketsSpent} ticket${s.ticketsSpent > 1 ? 's' : ''}`, s.foodSpent && `${fmt(s.foodSpent)} CF`]
     .filter(Boolean)
     .join(' + ');
-  const discounted = /descuento/.test(s.payment);
+  const discounted = s.discount;
   const spendOnly = discounted && s.type !== 'single' && s.index > lastHit;
   const note = spendOnly ? '<small>solo para gastar el descuento</small>' : discounted ? '<small>con descuento</small>' : '';
   const jump = s.dupeSwitch ? '<span class="jump">cruce por duplicado</span>' : '';
