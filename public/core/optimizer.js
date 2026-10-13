@@ -6,8 +6,17 @@ const COST = {
   singleDiscount: 30,
   multi: 1500, // 11-draw, guaranteed or not
   multiDiscount: 750,
+  // Step-up (official EN poster «Increasing Capsules»): step 1 = 3 draws for
+  // 300, step 2 = 5 for 750, step 3 = 7 for 1050 with an uber as the 7th. The
+  // route may stop after step 1 or 2; Rare Tickets cannot pay for steps.
+  stepup1: 300,
+  stepup12: 1050, // 300 + 750
   stepup: 2100, // 300 + 750 + 1050
 };
+// The step-up goes back to step 1 thirty minutes after step 1 is bought (or
+// once step 3 is done): only then can the next step-up start.
+const STEP_RESET_MINUTES = 30;
+const isStepUp = (type) => type.startsWith('stepup');
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
 const MAX_EXPANSIONS = 2_000_000;
@@ -124,7 +133,8 @@ function popcount(mask) {
 
 // The targets mask is left out: states sharing everything else are compared by
 // dominance instead (see push in findRoute).
-const baseKey = (s) => `${s.n}${s.track}|${s.last}|${s.tl}|${+s.d11}${+s.d1}|${s.slot}`;
+// `su`: when the next step-up can start, if that is still to come.
+const baseKey = (s) => `${s.n}${s.track}|${s.last}|${s.tl}|${+s.d11}${+s.d1}|${s.slot}|${s.su > s.slot ? s.su : ''}`;
 const isSubset = (a, b) => (a & b) === a;
 
 /**
@@ -169,6 +179,10 @@ function performAction(sim, ev, type, state) {
     }
     case 'multi':
       return sim.multi(ev, n, track, last, MULTI_SIZE);
+    case 'stepup1':
+      return sim.multi(ev, n, track, last, 3);
+    case 'stepup12':
+      return sim.multi(ev, n, track, last, 8);
     case 'guaranteed':
     case 'stepup': {
       const g = sim.guaranteed(ev, n, track, last);
@@ -187,7 +201,8 @@ function actionsFor(ev) {
     case BANNER.guaranteed:
       return ['single', 'guaranteed'];
     case BANNER.stepup:
-      return ['stepup'];
+      // The step-up replaces the 11-draw; single draws stay.
+      return ['single', 'stepup1', 'stepup12', 'stepup'];
     default:
       return [];
   }
@@ -206,8 +221,10 @@ function priceOf(type, state) {
       return state.d11
         ? { food: COST.multiDiscount, ticket: false, discount: true }
         : { food: COST.multi, ticket: false, discount: false };
+    case 'stepup1':
+    case 'stepup12':
     case 'stepup':
-      return { food: COST.stepup, ticket: false, discount: false };
+      return { food: COST[type], ticket: false, discount: false };
     default:
       throw new Error(`Acción desconocida: ${type}`);
   }
@@ -270,7 +287,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
   push({
     n: sim.start.n, track: sim.start.track, last: inventory.lastCat, mask: 0n, found: 0,
     tl: inventory.tickets, d11: discounts.guaranteed, d1: discounts.single,
-    slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
+    su: -Infinity, slot: ctx.startSlot, food: 0, tickets: 0, pulls: 0, switches: 0, ev: -1, parent: -1, step: null,
   });
 
   // «Incluirlo siempre en la ruta» (11-draw at 750): the game does not stack this discount
@@ -304,9 +321,12 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
     const order = node.ev >= 0 ? [node.ev, ...events.keys()].filter((e, i, a) => a.indexOf(e) === i) : [...events.keys()];
     for (const ei of order) {
       const ev = events[ei];
-      const slot = rollSlot(node.slot, ev, ctx.endSlot);
-      if (slot === null) continue;
+      const now = rollSlot(node.slot, ev, ctx.endSlot);
+      if (now === null) continue;
       for (const type of actionsFor(ev)) {
+        // A step-up may have to wait until the previous one is back at step 1.
+        const slot = isStepUp(type) && node.su > node.slot ? rollSlot(node.su, ev, ctx.endSlot) : now;
+        if (slot === null) continue;
         const roll = performAction(sim, ev, type, node);
         if (!roll) continue;
         const price = priceOf(type, node);
@@ -316,6 +336,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
           tl: price.ticket ? node.tl - 1 : node.tl,
           d11: (type === 'multi' || type === 'guaranteed') && price.discount ? false : node.d11,
           d1: type === 'single' && price.discount ? false : node.d1,
+          su: type === 'stepup1' || type === 'stepup12' ? slot + STEP_RESET_MINUTES : type === 'stepup' ? -Infinity : node.su,
           slot, food: node.food + price.food, tickets: node.tickets + (price.ticket ? 1 : 0),
           pulls: node.pulls + roll.cats.length,
           switches: node.switches + (node.ev >= 0 && node.ev !== ei ? 1 : 0),
@@ -332,7 +353,7 @@ function findRoute(ctx, objectiveKey, { enforceBudget }) {
 
 function paymentLabel(step) {
   if (step.useTicket) return '1 Rare Ticket';
-  const extra = step.useDiscount ? ' (descuento)' : step.type === 'stepup' ? ' (300+750+1050)' : '';
+  const extra = step.useDiscount ? ' (descuento)' : { stepup: ' (300+750+1050)', stepup12: ' (300+750)', stepup1: ' (paso 1)' }[step.type] || '';
   return `${step.food} Cat Food${extra}`;
 }
 
@@ -392,6 +413,10 @@ function describeRoute(ctx, result) {
       action: i,
       date: at.date,
       opensAt: node.slot === ev.firstSlot && node.slot > ctx.startSlot ? at.time : null,
+      // Waits for the step-up to go back to step 1 (30 minutes after the previous step 1).
+      stepUpFrom: isStepUp(node.step.type) && prev.su > prev.slot ? at.time : null,
+      slot: node.slot,
+      time: at.time,
       closesAt: gone.date === at.date ? gone.time : null,
       eventId: ev.id,
       eventName: ev.name,
@@ -506,6 +531,7 @@ function describeRoute(ctx, result) {
       singles: count('single'),
       multiDraws: count('multi'),
       guaranteedDraws: count('guaranteed') + count('stepup'),
+      stepUpParts: count('stepup1') + count('stepup12'),
       ticketsLeft: inventory.tickets - end.tickets,
       foodLeft: inventory.food - end.food,
       affordable: end.food <= inventory.food,
@@ -518,24 +544,31 @@ function describeRoute(ctx, result) {
 }
 
 // Consecutive singles on the same banner without any jump read better as one block.
+// Repeated singles, and repeated steps 1 of a step-up (one every 30 minutes),
+// are one row: «3 tiros simples», «paso 1, 4 veces». A row ends where it gets
+// a target, so the page shows which roll gives it.
 function mergeConsecutiveSingles(steps) {
   const out = [];
   for (const s of steps) {
     const last = out[out.length - 1];
     if (
-      last && last.type === 'single' && s.type === 'single' &&
+      last && (s.type === 'single' || s.type === 'stepup1') && last.type === s.type &&
       last.eventId === s.eventId && last.date === s.date && !last.trackSwitch && !s.trackSwitch &&
-      !last.cats.some((c) => c.newTarget) && last.payment === s.payment
+      !last.cats.some((c) => c.newTarget) && last.payment === s.payment &&
+      (s.type === 'single' || s.slot === last.lastSlot + STEP_RESET_MINUTES)
     ) {
       last.to = s.to;
       last.count += 1;
+      last.lastSlot = s.slot;
+      last.untilTime = s.time;
+      last.dupeSwitch ||= s.dupeSwitch;
       last.ticketsSpent += s.ticketsSpent;
       last.foodSpent += s.foodSpent;
       last.cats.push(...s.cats);
       last.actions.push(s.action);
       continue;
     }
-    out.push({ ...s, count: 1, actions: [s.action] });
+    out.push({ ...s, count: 1, actions: [s.action], lastSlot: s.slot, untilTime: null });
   }
   out.forEach((s, i) => (s.index = i + 1));
   return out;

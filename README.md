@@ -180,7 +180,7 @@ lugar de repetirla, y si llevan a otra ruta con las mismas cifras, «Mismo coste
 | Rare Tickets / Cat Food | Lo que gasta de cada recurso. |
 | Coste total | Cat Food + 150 por cada Rare Ticket, como en el juego. Es lo que compara «Menor coste total». |
 | Tiros | Número total de tiradas. |
-| 11-draws | Cuántos 11-draws hace la ruta y, debajo, cuántos de ellos son garantizados (o step-up). El resto son tiros simples. |
+| 11-draws | Cuántos 11-draws o step-ups hace la ruta y, debajo, cuántos son garantizados (o step-up completos) y cuántos step-up se quedan en el paso 1 o 2. El resto son tiros simples. |
 | ¿Te alcanza? | «Sí» si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta. Los Rare Tickets nunca faltan: cada ruta solo usa los que tienes y paga el resto con Cat Food. |
 
 #### Cuál se recomienda
@@ -218,7 +218,7 @@ La ruta, paso a paso, en el orden en que debes hacerlos.
 | # | Número de paso. |
 | Día | Desde qué día puedes hacerlo. «desde las 11:00» si el banner abre ese día; «antes de las 11:00» si cierra ese día, y entonces es tu último momento. Si el mismo banner continúa justo después, se indica hasta cuándo puedes seguir usándolo. |
 | Banner | Dónde tirar, con sus fechas. Si cambia respecto al paso anterior, se marca «cambio de banner». **El nombre abre esa misma tabla en godfat**, en la casilla donde empieza el paso, para que compruebes los gatos antes de tirar. Si el paso está más allá de las 300 filas que muestra godfat, el enlace empieza la tabla en esa casilla, que allí aparece como 1A. También empieza ahí, con tu último gato, cuando godfat dibujaría la primera tirada del paso de otra forma: por ejemplo, un rare repetido que en tu ruta no se repite porque vienes de otro banner o de un garantizado. Si el banner **aún no ha empezado**, el paso lo indica y un aviso arriba lo explica: si antes llega una actualización que le añade gatos, cambian las casillas de la rareza de esos gatos (casi siempre ubers) y la ruta puede cambiar desde ese paso; vuelve a calcular cuando empiece. |
-| Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up. «con descuento» si usa uno; «solo para gastar el descuento» si es un 11-draw que la ruta hace después de conseguir todos los objetivos, únicamente para no perder el descuento. |
+| Acción | Tiro simple (o varios seguidos), 11-draw, 11-draw garantizado o step-up (paso 1, pasos 1 y 2, o completo). «con descuento» si usa uno; «solo para gastar el descuento» si es un 11-draw que la ruta hace después de conseguir todos los objetivos, únicamente para no perder el descuento. |
 | Posición | De qué casilla a qué casilla va el paso. «cruce por duplicado» si dentro del paso hay un cambio de pista por rare duplicado. |
 | Pago | Rare Tickets y Cat Food (CF) que cuesta el paso. |
 | Gatos | Todo lo que sacas en ese paso. |
@@ -283,7 +283,7 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
 |------|----------|
 | Normal | tiro simple; 11-draw (11 tiros) por 1500 Cat Food |
 | Garantizado | tiro simple; 11-draw garantizado (10 tiros + uber) por 1500 Cat Food |
-| Step-up 3+5+7 | solo el step-up completo: 14 tiros + uber por 2100 Cat Food |
+| Step-up 3+5+7 | tiro simple; paso 1 (3 tiros) por 300 Cat Food; pasos 1 y 2 (8 tiros) por 1050; step-up completo (14 tiros + uber) por 2100 |
 | Platinum / Legend | no se usan: se pagan con sus propios tickets (Platinum Ticket y Legend Ticket), no con Rare Tickets ni Cat Food |
 
 - **Tiro simple**: usa un Rare Ticket mientras te queden; después, 150 Cat Food (30 con el descuento
@@ -295,6 +295,12 @@ uno que empieza más tarde, los que ya han terminado dejan de estar disponibles.
   empiezas en 17B, el Uber sale en 27B y sigues en 28A). Es lo que godfat muestra como «-> 25B» o
   «<- 28A». Ojo: si entre esas 10 tiradas hay un rare duplicado, ese ya te cambió de pista, y el Uber
   te devuelve a la pista en la que empezaste. En el step-up funciona igual, tras sus 14 tiradas.
+- **Step-up** (eventos Busters y algunas colaboraciones; sustituye al 11-draw): paso 1 = 3 tiros por
+  300, paso 2 = 5 por 750, paso 3 = 7 por 1050 con uber garantizado en el 7.º. La ruta puede quedarse
+  en el paso 1 o en el 2 (el paso 1 sale a 100 Cat Food por tiro). La oferta vuelve al paso 1 30
+  minutos después de comprar el paso 1, o al acabar el paso 3: si la ruta repite el step-up, el paso
+  dice desde qué hora. Los pasos van seguidos, sin tiros simples en medio, y no se pagan con Rare
+  Tickets. Fuente: el cartel oficial del evento («Increasing Capsules»).
 - Para comparar rutas, **1 Rare Ticket = 150 Cat Food**, que es lo que cuesta un tiro simple.
 
 ### Casillas de legendario

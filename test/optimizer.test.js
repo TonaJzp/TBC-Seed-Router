@@ -245,7 +245,7 @@ test('each marked discount reports where it is used or why not', () => {
   for (const r of none.routes.filter((x) => x.found)) assert.deepEqual(r.discounts, { multi: false, single: false });
 });
 
-test('step-up banners are used only as full 3+5+7 step-ups (2100 Cat Food)', () => {
+test('a step-up banner still gives its guaranteed uber through the full 3+5+7 (2100 Cat Food)', () => {
   const window = { start: '2026-10-16', end: '2026-10-20' };
   const events = () => standardOnly().concat(loadVariant(15, window));
   const sim = makeSim(events());
@@ -262,7 +262,54 @@ test('step-up banners are used only as full 3+5+7 step-ups (2100 Cat Food)', () 
   const r = byKey(routes).optimal;
   assert.ok(r.complete);
   assert.ok(countByType(r).stepup >= 1, 'the step-up is used to reach its uber');
-  assert.ok(r.steps.every((s) => s.type === 'stepup' || s.eventId !== stepup.id));
+});
+
+// The step-up banner alone, rolled from 1A: Mer-Cat is the 1st cat, Rocker Cat
+// the 3rd, Psychocat the 4th and Nerd Cat the 9th (none earlier, none on B).
+const stepUpOnly = () => [loadVariant(15, { start: '2026-10-16', end: '2026-10-20' })];
+const stepUpRoute = (name, inventory, key = 'optimal') => {
+  const { ctx, routes } = plan([name], { events: stepUpOnly(), inventory: { tickets: 0, food: 50000, ...inventory } });
+  for (const route of routes.filter((r) => r.found)) replayRoute(assert, ctx, route);
+  const r = byKey(routes)[key];
+  assert.ok(r.complete, name);
+  return r;
+};
+const shape = (r) => r.steps.map((s) => (s.count > 1 || s.type === 'single' ? `${s.type}×${s.count}` : s.type));
+
+test('step 1 of a step-up alone (3 draws for 300) when it is the cheapest way', () => {
+  // Official EN poster «Increasing Capsules»: step 1 = 3 draws for 300 Cat Food.
+  const rocker = stepUpRoute('Rocker Cat');
+  assert.deepEqual(shape(rocker), ['stepup1']);
+  assert.equal(rocker.totals.foodUsed, 300);
+  assert.equal(rocker.steps[0].payment, '300 Cat Food (paso 1)');
+  // One draw is enough: a single, not a step.
+  assert.deepEqual(shape(stepUpRoute('Mer-Cat')), ['single×1']);
+  // Four draws: step 1 and a single (450, either order), not two steps 1 (600) nor four singles (600).
+  const psycho = stepUpRoute('Psychocat');
+  assert.deepEqual(shape(psycho).sort(), ['single×1', 'stepup1']);
+  assert.equal(psycho.totals.foodUsed, 450);
+});
+
+test('after step 1 alone, the next step-up waits 30 minutes, until it is back at step 1', () => {
+  const nerd = stepUpRoute('Nerd Cat');
+  // 9 draws: three steps 1 (900) beat steps 1-2 and a single (1200) and nine singles (1350),
+  // shown as one row: step 1, three times, one every 30 minutes.
+  assert.deepEqual(shape(nerd), ['stepup1×3']);
+  assert.equal(nerd.totals.foodUsed, 900);
+  const [row] = nerd.steps;
+  assert.equal(row.cats.length, 9);
+  assert.equal(row.lastSlot - row.slot, 60);
+  assert.equal(row.stepUpFrom, null, 'nothing to wait for at first');
+  assert.ok(row.untilTime, 'the time of the last one is told');
+});
+
+test('Rare Tickets pay singles on a step-up banner, never its steps', () => {
+  // Saving Cat Food: 3 tickets as singles, then two steps 1 for the other 6 draws.
+  const nerd = stepUpRoute('Nerd Cat', { tickets: 3 }, 'saveFood');
+  assert.equal(nerd.totals.ticketsUsed, 3);
+  assert.equal(nerd.totals.foodUsed, 600);
+  assert.ok(nerd.steps.filter((s) => s.type.startsWith('stepup')).every((s) => s.ticketsSpent === 0));
+  assert.ok(nerd.steps.some((s) => s.type === 'single' && s.ticketsSpent > 0));
 });
 
 test('many targets (more than 32) are supported', () => {

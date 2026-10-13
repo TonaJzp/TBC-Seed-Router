@@ -46,7 +46,12 @@ const ACTION_LABEL = {
   single: (s) => (s.count > 1 ? `${s.count} tiros simples` : 'Tiro simple'),
   multi: () => '11-draw',
   guaranteed: () => '11-draw garantizado',
-  stepup: () => 'Step-up 3+5+7',
+  stepup1: (s) =>
+    s.count > 1
+      ? `<span title="El paso 1 del step-up (3 tiros por 300 Cat Food), ${s.count} veces">Step-up: paso 1 × ${s.count}</span>`
+      : '<span title="Solo el paso 1 del step-up: 3 tiros por 300 Cat Food">Step-up: paso 1</span>',
+  stepup12: () => '<span title="Pasos 1 y 2 del step-up: 8 tiros por 1050 Cat Food">Step-up: pasos 1 y 2</span>',
+  stepup: () => '<span title="Los 3 pasos del step-up: 15 tiros, el último un uber garantizado, por 2100 Cat Food">Step-up completo</span>',
 };
 
 let current = null; // last result, to re-render when another route is selected
@@ -606,8 +611,11 @@ function renderRoutesTable(data) {
       const got = r.targets.filter((x) => x.obtained).length;
       const requested = r.targets.length + (data.unplanned || []).length;
       const g = t.guaranteedDraws;
-      const draws = t.multiDraws + g
-        ? `${t.multiDraws + g}${g ? `<span class="sub">${g} garantizado${g > 1 ? 's' : ''}</span>` : ''}`
+      const parts = t.stepUpParts || 0;
+      const draws = t.multiDraws + g + parts
+        ? `${t.multiDraws + g + parts}${g ? `<span class="sub">${g} garantizado${g > 1 ? 's' : ''}</span>` : ''}${
+            parts ? `<span class="sub">${parts} step-up a medias</span>` : ''
+          }`
         : '—';
       const note = r.sameAs
         ? `Misma ruta que ${routeName(data, r.sameAs)}.`
@@ -640,7 +648,7 @@ function renderRoutesTable(data) {
       <thead><tr>
         <th><span class="sr-only">Ruta</span></th><th class="r">Objetivos</th><th class="r">Rare Tickets</th><th class="r">Cat Food</th>
         <th class="r">Coste total</th><th class="r">Tiros</th>
-        <th class="r" title="Cuántos 11-draws hace la ruta (1500 Cat Food cada uno). Debajo, cuántos de ellos son garantizados o step-up.">11-draws</th>
+        <th class="r" title="Cuántos 11-draws o step-ups hace la ruta. Debajo, cuántos son garantizados (o step-up completos) y cuántos step-up se quedan en el paso 1 o 2.">11-draws</th>
         <th class="r" title="Si la Cat Food que tienes basta para hacer la ruta entera; si no, cuánta te falta.">¿Te alcanza?</th>
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -802,7 +810,13 @@ function renderStep(s, data, prev, lastHit = Infinity) {
     .join('');
   return `<tr class="${s.cats.some((c) => c.newTarget) ? 'hit' : ''}">
     <td class="idx num">${s.index}</td>
-    <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${s.closesAt ? closingNote(s, ev) : ''}</td>
+    <td class="num day"><span class="nowrap">${esc(shortDate(s.date))}</span>${s.opensAt ? `<small>desde las ${esc(s.opensAt)}</small>` : ''}${
+      s.stepUpFrom ? `<small title="El step-up vuelve al paso 1 30 minutos después de comprar el paso 1">desde las ${esc(s.stepUpFrom)} (vuelve al paso 1)</small>` : ''
+    }${
+      s.count > 1 && s.type === 'stepup1'
+        ? `<small title="Tras cada paso 1, el step-up tarda 30 minutos en volver al paso 1">uno cada 30 min (el último, ${esc(s.untilTime)})</small>`
+        : ''
+    }${s.closesAt ? closingNote(s, ev) : ''}</td>
     <td class="banner"><a href="${esc(link)}" target="_blank" rel="noopener" title="${linkTitle(s, shifted)}">${esc(s.eventName)}</a>
       ${ev ? `<span class="active-range">Activo del ${esc(shortWithHour(ev.start, ev.startTime))} al ${esc(shortWithHour(ev.end, ev.endTime))}</span>` : ''}${change ? `<small>${change.replace(/^ · /, '')}</small>` : ''}${s.upcoming ? '<small class="upcoming" title="Si una actualización le añade gatos antes de que empiece, este paso puede cambiar: vuelve a calcular cuando empiece">Aún no ha empezado</small>' : ''}</td>
     <td class="action">${ACTION_LABEL[s.type](s)}${note}</td>

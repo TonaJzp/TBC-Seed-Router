@@ -63,6 +63,7 @@ function replayRoute(assert, ctx, route) {
   let d1 = discounts.single;
   let d11 = discounts.guaranteed;
   let slot = ctx.startSlot;
+  let stepUpReady = -Infinity; // a step-up goes back to step 1 30 minutes after step 1
   let food = 0;
   let ticketsUsed = 0;
   const obtained = new Set();
@@ -82,11 +83,15 @@ function replayRoute(assert, ctx, route) {
     // Time only moves forward and the banner must be active at that time.
     const w = eventWindow(ev);
     slot = Math.max(slot, w.first);
+    if (step.type.startsWith('stepup')) {
+      assert.equal(ev.kind, 'stepup', `step ${step.index}: step-ups only on step-up banners`);
+      slot = Math.max(slot, stepUpReady);
+    }
     assert.ok(slot <= w.last && slot <= ctx.endSlot, `step ${step.index}: ${ev.name} is not active`);
+    assert.equal(step.slot, slot, `step ${step.index}: done at the right time`);
 
     const rolled = [];
     if (step.type === 'single') {
-      assert.notEqual(ev.kind, 'stepup', 'step-up banners only allow the full step-up');
       for (let i = 0; i < step.count; i++) {
         const s = sim.single(ev, pos.n, pos.track, last);
         assert.ok(s, `step ${step.index}: single roll must exist`);
@@ -106,7 +111,28 @@ function replayRoute(assert, ctx, route) {
       }
     } else {
       let r;
-      if (step.type === 'multi') {
+      if (step.type === 'stepup1' || step.type === 'stepup12') {
+        // A row may repeat step 1, each one when the step-up is back at step 1.
+        const size = step.type === 'stepup1' ? 3 : 8;
+        assert.equal(step.ticketsSpent, 0, 'Rare Tickets cannot pay for step-up steps');
+        r = { cats: [], landed: [], next: pos };
+        let at = pos;
+        let l = last;
+        for (let i = 0; i < step.count; i++) {
+          if (i > 0) slot = Math.max(slot, stepUpReady);
+          assert.ok(slot <= w.last && slot <= ctx.endSlot, `step ${step.index}: ${ev.name} is not active`);
+          const part = sim.multi(ev, at.n, at.track, l, size);
+          assert.ok(part, `step ${step.index}: ${size} draws must exist`);
+          r.cats.push(...part.cats);
+          r.landed.push(...part.landed);
+          at = part.next;
+          l = part.cats[part.cats.length - 1].id;
+          food += COST[step.type];
+          stepUpReady = slot + 30;
+        }
+        r.next = at;
+        assert.equal(step.lastSlot, slot, `step ${step.index}: the last one at the right time`);
+      } else if (step.type === 'multi') {
         assert.equal(ev.kind, 'standard', 'plain 11-draws only on banners without guaranteed');
         r = sim.multi(ev, pos.n, pos.track, last, 11);
         assert.ok(r, `step ${step.index}: 11-draw must exist`);
@@ -121,6 +147,7 @@ function replayRoute(assert, ctx, route) {
         if (step.type === 'stepup') {
           assert.equal(r.cats.length, 15);
           food += COST.stepup;
+          stepUpReady = -Infinity; // done: back to step 1 at once
         } else {
           assert.equal(r.cats.length, 11);
           food += d11 ? COST.multiDiscount : COST.multi;
