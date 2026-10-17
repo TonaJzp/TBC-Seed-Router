@@ -1,7 +1,9 @@
 // Runs the calculation in a Web Worker, so the page keeps responding while it
-// works, and can cancel it. A browser that cannot start the worker gets the
-// same calculation on the page itself: it freezes meanwhile, as it used to,
-// but the result is the same.
+// works, and can cancel it. A worker that does not start is tried once more
+// at once (the server or the network may have failed just then); if that one
+// does not start either, that calculation runs on the page itself: it
+// freezes meanwhile, as it used to, but the result is the same. The next
+// calculation tries a worker again.
 
 import { runJob } from './core/calc-job.js';
 import { UserError } from './core/planner.js';
@@ -20,10 +22,10 @@ const PAINT_MS = 30; // on the page, let it paint the progress before freezing
 
 /** One calculation at a time: run(body, { data, now, onProgress }) and cancel(). */
 export function createCalculator() {
-  let usable = typeof Worker === 'function'; // false once a worker fails to start
+  let usable = typeof Worker === 'function'; // false without workers, or if creating one throws
   let worker = null;
   let workerData = null; // the banner data this worker already has
-  let job = null; // { request, data, onProgress, resolve, reject }
+  let job = null; // { request, data, onProgress, resolve, reject, retried }
 
   function handle(msg) {
     if (!job) return; // cancelled meanwhile
@@ -66,13 +68,33 @@ export function createCalculator() {
         const { reject } = job;
         job = null;
         reject(new Error(CRASHED));
+      } else if (!job.retried) {
+        // It never started: one more try at once with a new one.
+        job.retried = true;
+        launch(job);
       } else {
-        // It never started (e.g. no module workers): the page does it.
-        usable = false;
+        // Twice: this calculation is done on the page; the next one tries again.
         runHere(job);
       }
     };
     return w;
+  }
+
+  /** Sends `current` to the worker, starting one (with the banner data) if there is none. */
+  function launch(current) {
+    if (!worker) {
+      try {
+        worker = startWorker();
+      } catch {
+        usable = false;
+        return runHere(current);
+      }
+    }
+    if (workerData !== current.data) {
+      worker.postMessage({ type: 'data', data: current.data });
+      workerData = current.data;
+    }
+    worker.postMessage({ type: 'run', ...current.request });
   }
 
   function cancel() {
@@ -86,20 +108,9 @@ export function createCalculator() {
   function run(body, { data, now = new Date(), onProgress = () => {} } = {}) {
     cancel();
     return new Promise((resolve, reject) => {
-      job = { request: { body, now }, data, onProgress, resolve, reject };
-      if (usable && !worker) {
-        try {
-          worker = startWorker();
-        } catch {
-          usable = false;
-        }
-      }
+      job = { request: { body, now }, data, onProgress, resolve, reject, retried: false };
       if (!usable) return runHere(job);
-      if (workerData !== data) {
-        worker.postMessage({ type: 'data', data });
-        workerData = data;
-      }
-      worker.postMessage({ type: 'run', ...job.request });
+      launch(job);
     });
   }
 

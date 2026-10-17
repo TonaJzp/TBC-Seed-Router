@@ -27,11 +27,11 @@ const quietly = (fn) => {
 // asynchronously, like the real one; it can fail to load or crash mid-job.
 class FakeWorker {
   static made = [];
-  static mode = 'ok'; // 'ok' | 'no-load' | 'crash'
+  static mode = 'ok'; // 'ok' | 'no-load' | 'no-load-once' (only the first one) | 'crash'
   constructor(url, options) {
     assert.equal(options.type, 'module');
     assert.match(String(url), /calc-worker\.js$/);
-    this.mode = FakeWorker.mode;
+    this.mode = FakeWorker.mode === 'no-load-once' ? (FakeWorker.made.length ? 'ok' : 'no-load') : FakeWorker.mode;
     this.posted = [];
     this.terminated = false;
     this.data = null;
@@ -121,14 +121,29 @@ test('cancelling stops the worker at once, and the next run starts a fresh one',
   calc.cancel(); // nothing running: nothing happens
 }));
 
-test('a worker that cannot load leaves the calculation to the page, with the same result', withWorker('no-load', async () => {
+// A worker that does not start is not taken for a browser without workers:
+// the server or the network may have failed just then (2026-10-17: one such
+// failure left every later calculation freezing the page until reloading).
+test('a worker that fails to start once is replaced by a new one, and the page never calculates', withWorker('no-load-once', async () => {
+  const calc = createCalculator();
+  const result = await calc.run(body, { data: gachaData, now });
+  assert.deepEqual(strip(result), expected);
+  assert.equal(FakeWorker.made.length, 2, 'one more try at once');
+  assert.deepEqual(FakeWorker.made[1].posted, ['data', 'run'], 'the new worker gets the banner data and the job');
+  await calc.run(body, { data: gachaData, now });
+  assert.equal(FakeWorker.made.length, 2, 'the working one is kept');
+  assert.deepEqual(FakeWorker.made[1].posted, ['data', 'run', 'run']);
+}));
+
+test('a worker that cannot start leaves that calculation to the page, and the next one tries a worker again', withWorker('no-load', async () => {
   const calc = createCalculator();
   const phases = [];
   const result = await calc.run(body, { data: gachaData, now, onProgress: (p) => phases.push(p.phase) });
   assert.deepEqual(strip(result), expected);
   assert.ok(phases.includes('route'));
-  await calc.run(body, { data: gachaData, now });
-  assert.equal(FakeWorker.made.length, 1, 'no second try with a worker');
+  assert.equal(FakeWorker.made.length, 2, 'two tries before calculating on the page');
+  assert.deepEqual(strip(await calc.run(body, { data: gachaData, now })), expected);
+  assert.equal(FakeWorker.made.length, 4, 'the next calculation tries a worker again');
 }));
 
 test('without Worker at all, the page calculates', withWorker('none', async () => {
