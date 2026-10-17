@@ -26,7 +26,9 @@ concurrency:
 
 jobs:
   web:
-    runs-on: ubuntu-latest
+    # A fixed image, not ubuntu-latest: it moves to Ubuntu 26 from 2026-10-19,
+    # and the daily run should only change when we decide to.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:
       name: github-pages
@@ -47,6 +49,18 @@ jobs:
       - name: Tests
         id: tests
         run: npm test
+
+      # The tests check 400 fixed cases; each run also explores 3000 new ones
+      # (its run id as the seed). A finding opens an issue, never stops the
+      # publication.
+      - name: Rutas óptimas (exploración)
+        id: optimality
+        if: steps.tests.outcome == 'success'
+        continue-on-error: true
+        env:
+          OPTIMALITY_CASES: 3000
+          OPTIMALITY_SEED: ${{ github.run_id }}
+        run: node --test test/optimality.test.js
 
       - name: Iconos en caché
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -92,6 +106,9 @@ jobs:
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
           DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          OPTIMALITY_OUTCOME: ${{ steps.optimality.outcome }}
+          OPTIMALITY_SEED: ${{ github.run_id }}
+          OPTIMALITY_CASES: 3000
         run: node scripts/notify.js
 
       # GitHub pauses scheduled workflows after 60 days without activity in the

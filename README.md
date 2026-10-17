@@ -407,16 +407,23 @@ ruta y paso no coincide lo que salió. Una captura ayuda mucho.
 
 Una tarea automática de GitHub hace esto **cada día**:
 
-1. Ejecuta todos los tests.
-2. Descarga la última versión de los datos de godfat y comprueba cada campo. Si aparece algo que la
+1. Ejecuta todos los tests. Uno de ellos comprueba que cada ruta que muestra la app es la más barata
+   posible: la compara con una búsqueda exhaustiva, escrita aparte del planificador, que prueba
+   todas las combinaciones de tiros en 400 casos pequeños.
+2. **Explora 3.000 casos nuevos** con esa misma búsqueda exhaustiva, distintos cada día. Si en alguno
+   la app mostrara una ruta más cara que la mejor posible, lo avisa (sin frenar la publicación).
+3. Descarga la última versión de los datos de godfat y comprueba cada campo. Si aparece algo que la
    app no conoce (un campo nuevo, una probabilidad imposible, un gato que falta…), lo avisa en vez
    de suponerlo.
-3. **Compara la app con bc.godfat.org** con una semilla aleatoria: la lista de banners y sus fechas
+4. **Compara la app con bc.godfat.org** con una semilla aleatoria: la lista de banners y sus fechas
    y, en cada banner, los 300 primeros tiros de las dos pistas. Mira qué gato sale en cada casilla,
    los colores de legendario, las repeticiones de rare y los garantizados, y adónde lleva cada uno.
-   Con los banners habituales son más de 10.000 casillas al día.
-4. Publica la web con los datos nuevos.
-5. Si algo falla, no coincide o falta el icono de algún gato de los banners, **abre una incidencia en
+   Con los banners habituales son más de 10.000 casillas al día. A veces bc.godfat.org enseña banners
+   nuevos unas horas antes de que lleguen a los datos abiertos de godfat: la web lo dice (esos
+   banners aún no entran en las rutas), y solo se avisa al dueño si siguen faltando 2 días después o
+   si el banner empieza ya.
+5. Publica la web con los datos nuevos.
+6. Si algo falla, no coincide o falta el icono de algún gato de los banners, **abre una incidencia en
    el repositorio** (GitHub avisa por email al dueño). Si afecta a los cálculos, la web muestra
    además un aviso a los usuarios hasta que se resuelva. Cuando todo vuelve a estar en orden, la
    incidencia se cierra sola.
