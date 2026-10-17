@@ -5,7 +5,7 @@
 // at, so the run is also marked as failed.
 //
 // Environment (set by the workflow): GITHUB_TOKEN, GITHUB_REPOSITORY,
-// RUN_URL, TESTS_OUTCOME, BUILD_OUTCOME, DEPLOY_OUTCOME, and OPTIMALITY_OUTCOME,
+// RUN_URL, TESTS_OUTCOME (lint and tests), BUILD_OUTCOME, DEPLOY_OUTCOME, and OPTIMALITY_OUTCOME,
 // OPTIMALITY_SEED, OPTIMALITY_CASES (the daily exploration of optimal routes).
 
 import fs from 'fs';
@@ -36,7 +36,7 @@ const readJson = (file) => {
 function findProblems(env, build, verify, now = new Date()) {
   const problems = [];
   if (env.TESTS_OUTCOME && env.TESTS_OUTCOME !== 'success') {
-    problems.push('### Han fallado los tests (o la instalación)\nNo se ha publicado nada: la web sigue con la versión anterior. Mira el registro de la ejecución.');
+    problems.push('### Han fallado los tests, el lint o la instalación\nNo se ha publicado nada: la web sigue con la versión anterior. Mira el registro de la ejecución.');
     return problems;
   }
   if (env.BUILD_OUTCOME !== 'success' || !build?.ok) {

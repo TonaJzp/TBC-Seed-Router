@@ -3,7 +3,7 @@
 // Policy can forbid inline scripts.
 (function () {
   var t = null;
-  try { t = localStorage.getItem('bc-seed-router-theme'); } catch (e) {}
+  try { t = localStorage.getItem('bc-seed-router-theme'); } catch { /* site data blocked: the system theme */ }
   if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   document.documentElement.dataset.theme = t;
   // The phone's browser bar takes the colour of the page header.

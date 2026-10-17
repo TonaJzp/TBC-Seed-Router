@@ -46,9 +46,12 @@ jobs:
 
       - run: npm ci --ignore-scripts
 
-      - name: Tests
+      # ESLint's recommended rules (a warning fails too), then the tests.
+      - name: Lint y tests
         id: tests
-        run: npm test
+        run: |
+          npm run lint
+          npm test
 
       # The tests check 400 fixed cases; each run also explores 3000 new ones
       # (its run id as the seed). A finding opens an issue, never stops the

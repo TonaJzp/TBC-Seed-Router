@@ -414,9 +414,10 @@ ruta y paso no coincide lo que salió. Una captura ayuda mucho.
 
 Una tarea automática de GitHub hace esto **cada día**:
 
-1. Ejecuta todos los tests. Uno de ellos comprueba que cada ruta que muestra la app es la más barata
-   posible: la compara con una búsqueda exhaustiva, escrita aparte del planificador, que prueba
-   todas las combinaciones de tiros en 400 casos pequeños y en varios casos difíciles fijos.
+1. Revisa el código con un linter (ESLint) y ejecuta todos los tests. Uno de ellos comprueba que
+   cada ruta que muestra la app es la más barata posible: la compara con una búsqueda exhaustiva,
+   escrita aparte del planificador, que prueba todas las combinaciones de tiros en 400 casos
+   pequeños y en varios casos difíciles fijos.
 2. **Explora 3.000 casos nuevos** con esa misma búsqueda exhaustiva, distintos cada día. Si en alguno
    la app mostrara una ruta más cara que la mejor posible, lo avisa (sin frenar la publicación).
 3. Descarga la última versión de los datos de godfat y comprueba cada campo. Si aparece algo que la
