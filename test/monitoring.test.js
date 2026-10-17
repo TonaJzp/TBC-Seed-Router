@@ -127,13 +127,21 @@ test('anything unexpected in the data file is reported, never guessed', () => {
     mutate(raw);
     return transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) });
   };
+  // A banner the app cannot read is left out, said why, and the rest is kept.
+  const leftOut = (result, id, reason) => {
+    assert.deepEqual(result.errors, []);
+    assert.ok(!result.data.events.some((e) => e.id === id), `${id} left out`);
+    assert.match(result.data.skipped.find((s) => s.id === id)?.reason || '', reason);
+    assert.match(result.warnings.join(), new RegExp(`${id}.*se ha dejado fuera`));
+  };
   assert.match(check((r) => (r.events['2026-10-01_100'].new_mechanic = 1)).warnings.join(), /campos nuevos.*new_mechanic/);
-  assert.match(check((r) => (r.events['2026-10-01_100'].rare = 9000)).errors.join(), /probabilidades no válidas/);
+  leftOut(check((r) => (r.events['2026-10-01_100'].rare = 9000)), '2026-10-01_100', /probabilidades no válidas/);
   assert.match(check((r) => (r.events['2026-10-01_100'].legend = 60)).warnings.join(), /no cuadra/);
-  assert.match(check((r) => (r.events['2026-10-10_100'].step_up = true)).errors.join(), /garantizado y step-up/);
-  assert.match(check((r) => r.gacha[100].cats.push(999)).errors.join(), /faltan o no son de gacha.*999/);
-  assert.match(check((r) => (r.events['2026-10-01_100'].start_on = '2026-13-01')).errors.join(), /fechas no válidas/);
+  leftOut(check((r) => (r.events['2026-10-10_100'].step_up = true)), '2026-10-10_100', /garantizado y step-up/);
+  leftOut(check((r) => (r.events['2026-10-01_100'].start_on = '2026-13-01')), '2026-10-01_100', /fechas no válidas/);
   assert.match(check((r) => (r.events['2026-10-05_101'].platinum = 'diamond')).warnings.join(), /ticket desconocido/);
+  // A broken list of cats takes out both banners of that gacha: 2 of 3, too many.
+  assert.match(check((r) => r.gacha[100].cats.push(999)).errors.join(), /más de la mitad.*faltan o no son de gacha.*999/s);
   assert.match(check((r) => delete r.gacha).errors.join(), /no tiene las secciones/);
   // Hours: missing or not matching the event file is reported, with 11:00 meanwhile.
   const noFile = transform(yamlLike(), { today: '2026-10-08', hours: null });
@@ -145,6 +153,26 @@ test('anything unexpected in the data file is reported, never guessed', () => {
   assert.match(check((r) => (r.events['2026-10-10_100'].end_on = '2026-10-26')).warnings.join(), /2026-10-10_100: la fecha de fin no coincide/);
   const stale = transform(yamlLike(), { today: '2026-10-24', hours: eventHours(tsvLike()) });
   assert.match(stale.warnings.join(), /No hay banners anunciados/);
+});
+
+// Deep audit, finding 4: one broken banner used to stop the whole update, so
+// the site kept old data and missed every new banner.
+test('one banner the app cannot read does not hold back the others', () => {
+  const raw = yamlLike();
+  raw.events['2026-10-10_100'].rare = -1;
+  const { data, errors, warnings } = transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) });
+  assert.deepEqual(errors, [], 'the data is published');
+  assert.deepEqual(data.events.map((e) => e.id), ['2026-10-01_100', '2026-10-05_101']);
+  assert.deepEqual(data.skipped, [{ id: '2026-10-10_100', name: 'A again', start: '2026-10-10', end: '2026-10-25', reason: 'probabilidades no válidas (rare -1, supa 2500, uber 500)' }]);
+  assert.match(warnings.join(), /Banner 2026-10-10_100: probabilidades no válidas.*se ha dejado fuera de la app/);
+});
+
+test('when most banners cannot be read, nothing is published: godfat may have changed its format', () => {
+  const raw = yamlLike();
+  for (const e of Object.values(raw.events)) delete e.name;
+  const { errors } = transform(raw, { today: '2026-10-08', hours: eventHours(tsvLike()) });
+  assert.match(errors.join('\n'), /Ningún banner se ha podido leer/);
+  assert.match(errors.join('\n'), /falta el id o el nombre/);
 });
 
 // --- Wiki icons ----------------------------------------------------------------------

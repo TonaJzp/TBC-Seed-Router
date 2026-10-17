@@ -414,7 +414,9 @@ Una tarea automática de GitHub hace esto **cada día**:
    la app mostrara una ruta más cara que la mejor posible, lo avisa (sin frenar la publicación).
 3. Descarga la última versión de los datos de godfat y comprueba cada campo. Si aparece algo que la
    app no conoce (un campo nuevo, una probabilidad imposible, un gato que falta…), lo avisa en vez
-   de suponerlo.
+   de suponerlo. Un banner con datos que no se pueden leer se deja fuera, la web lo dice y los demás
+   se publican igual; si fallan la mayoría (señal de que godfat ha cambiado el formato), no se
+   publica nada y la web sigue con los datos anteriores.
 4. **Compara la app con bc.godfat.org** con una semilla aleatoria: la lista de banners y sus fechas
    y, en cada banner, los 300 primeros tiros de las dos pistas. Mira qué gato sale en cada casilla,
    los colores de legendario, las repeticiones de rare y los garantizados, y adónde lleva cada uno.

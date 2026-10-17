@@ -101,7 +101,7 @@ function transform(raw, { today, source = {}, hours = null }) {
   const allCats = {};
   for (const [id, c] of Object.entries(raw.cats)) {
     if (!isInt(Number(id)) || !Array.isArray(c?.name) || !c.name.length || !isInt(c.rarity) || c.rarity < 0 || c.rarity > 5) {
-      errors.push(`Gato ${id}: formato inesperado (se esperaba name: [...] y rarity 0-5).`);
+      warnings.push(`Gato ${id}: formato inesperado (se esperaba name: [...] y rarity 0-5); se ha dejado fuera de la app.`);
       continue;
     }
     allCats[id] = { names: c.name.map((n) => (typeof n === 'string' ? n : '')), rarity: c.rarity };
@@ -125,29 +125,32 @@ function transform(raw, { today, source = {}, hours = null }) {
   };
   const events = [];
   const gacha = {};
+  // Banners the app cannot read: left out, said why, the rest kept.
+  const skipped = [];
   for (const [key, e] of Object.entries(raw.events)) {
     if (typeof e?.end_on !== 'string' || endOf.get(key).date < from) continue;
     const where = `Banner ${key}`;
+    const skip = (reason) => skipped.push({ id: key, name: typeof e.name === 'string' ? e.name : '', start: e.start_on ?? null, end: e.end_on ?? null, reason });
     const unknown = Object.keys(e).filter((k) => !KNOWN_EVENT_KEYS.has(k));
     if (unknown.length) warnings.push(`${where}: campos nuevos en los datos de godfat (${unknown.join(', ')}); puede ser una mecánica nueva que la app no conoce.`);
     if (!ISO_DATE.test(e.start_on) || !ISO_DATE.test(e.end_on) || e.start_on > e.end_on) {
-      errors.push(`${where}: fechas no válidas (${e.start_on} ~ ${e.end_on}).`);
+      skip(`fechas no válidas (${e.start_on} ~ ${e.end_on})`);
       continue;
     }
     if (!isInt(e.id) || typeof e.name !== 'string') {
-      errors.push(`${where}: falta el id o el nombre.`);
+      skip('falta el id o el nombre');
       continue;
     }
     const rates = [e.rare, e.supa, e.uber];
     if (!rates.every((r) => isInt(r) && r >= 0) || e.rare + e.supa + e.uber > 10000) {
-      errors.push(`${where}: probabilidades no válidas (rare ${e.rare}, supa ${e.supa}, uber ${e.uber}).`);
+      skip(`probabilidades no válidas (rare ${e.rare}, supa ${e.supa}, uber ${e.uber})`);
       continue;
     }
     if (e.legend !== undefined && e.legend !== 10000 - e.rare - e.supa - e.uber) {
       warnings.push(`${where}: la probabilidad de legend (${e.legend}) no cuadra con el resto (${10000 - e.rare - e.supa - e.uber}).`);
     }
     if (e.guaranteed && e.step_up) {
-      errors.push(`${where}: marcado a la vez como garantizado y step-up.`);
+      skip('marcado a la vez como garantizado y step-up');
       continue;
     }
     if (e.platinum !== undefined && !KNOWN_TICKETS.has(e.platinum)) {
@@ -155,12 +158,12 @@ function transform(raw, { today, source = {}, hours = null }) {
     }
     const cats = raw.gacha[e.id]?.cats;
     if (!Array.isArray(cats) || !cats.length) {
-      errors.push(`${where}: no hay lista de gatos para el gacha ${e.id}.`);
+      skip(`no hay lista de gatos para el gacha ${e.id}`);
       continue;
     }
     const bad = cats.filter((id) => !allCats[id] || (!e.platinum && !GACHA_RARITIES.has(allCats[id].rarity)));
     if (bad.length) {
-      errors.push(`${where}: gatos que faltan o no son de gacha en su lista: ${bad.slice(0, 5).join(', ')}.`);
+      skip(`gatos que faltan o no son de gacha en su lista: ${bad.slice(0, 5).join(', ')}`);
       continue;
     }
     gacha[e.id] = cats;
@@ -186,6 +189,17 @@ function transform(raw, { today, source = {}, hours = null }) {
     });
   }
   events.sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id));
+  for (const sk of skipped) warnings.push(`Banner ${sk.id}: ${sk.reason}; se ha dejado fuera de la app.`);
+  // Most banners unreadable is not a broken banner but a new format: then
+  // nothing is published and the site keeps the previous data.
+  if (skipped.length && (!events.length || skipped.length > events.length)) {
+    errors.push(
+      events.length
+        ? `No se publica nada: más de la mitad de los banners no se han podido leer (${skipped.length} de ${skipped.length + events.length}); puede que godfat haya cambiado el formato.`
+        : 'Ningún banner se ha podido leer; puede que godfat haya cambiado el formato.',
+      ...skipped.map((sk) => `Banner ${sk.id}: ${sk.reason}.`),
+    );
+  }
 
   const plannableAhead = events.filter((e) => !e.ticket && e.end >= addDays(today, FRESH_DAYS));
   if (!plannableAhead.length) {
@@ -198,7 +212,7 @@ function transform(raw, { today, source = {}, hours = null }) {
   }
 
   return {
-    data: { version: 1, generatedAt: new Date().toISOString(), source: { ...GODFAT, ...source }, events, gacha, cats },
+    data: { version: 1, generatedAt: new Date().toISOString(), source: { ...GODFAT, ...source }, events, gacha, cats, skipped },
     errors,
     warnings,
   };

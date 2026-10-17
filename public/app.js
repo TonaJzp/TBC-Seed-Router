@@ -1009,6 +1009,15 @@ function dataNotices(data, status, now = Date.now()) {
       `bc.godfat.org ya anuncia ${pending.length === 1 ? 'un banner que aún no está' : `${pending.length} banners que aún no están`} en los datos de la app (desde el ${first}). Las rutas no los tienen en cuenta: se añadirán en la actualización diaria en cuanto godfat los publique en sus datos abiertos.`
     );
   }
+  // Banners of godfat's data the app could not read: left out of the routes.
+  const day = (iso) => iso.split('-').reverse().slice(0, 2).join('/');
+  const left = (data.skipped || []).filter((s) => s.end && s.end >= todayIso());
+  if (left.length) {
+    const names = left.map((s) => `«${s.name || s.id}»${s.start ? ` (${day(s.start)}–${day(s.end)})` : ''}`).join(', ');
+    notices.push(
+      `${left.length === 1 ? 'Un banner de los datos de godfat no se ha podido leer y no entra' : `${left.length} banners de los datos de godfat no se han podido leer y no entran`} en las rutas: ${names}. Ya se está revisando.`
+    );
+  }
   if (now - Date.parse(data.generatedAt) > STALE_DATA_DAYS * DAY_MS) {
     notices.push(`Los datos de los banners no se actualizan desde el ${showDate(data.generatedAt)}: puede que falten banners anunciados después.`);
   }
