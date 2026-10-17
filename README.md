@@ -87,7 +87,8 @@ Enter).
 - Si dos gatos se llaman igual, a su lado aparece la rareza para distinguirlos.
 - Puedes pegar una lista de nombres separados por comas o en líneas distintas: se añaden todos los que
   se reconozcan y se avisa de los que no.
-- No hay límite de gatos. Puedes quitar uno con la × o todos con «Quitar todos».
+- No hay límite de gatos. Puedes quitar uno con la × o todos con «Quitar todos». Lo que cuesta
+  analizar tu lista lo ves sobre el botón «Calcular rutas» (ver [Carga del análisis](#carga-del-análisis)).
 
 ### 3. Elige las fechas
 
@@ -122,11 +123,27 @@ hace falta. Más filas solo alargan un poco el cálculo.
 
 ### 6. Pulsa «Calcular rutas»
 
-En unos segundos verás tres rutas, con la recomendada en primer lugar. Mientras calcula, la página sigue
-respondiendo: verás qué ruta está buscando y los segundos que lleva, y puedes pulsar «Cancelar» (vuelve
-lo que había antes). El análisis nunca se corta a medias: si tarda más de 15 segundos, la página te
-sugiere reducir las fechas, los tiros o los gatos. Lo que escribes se guarda en tu
+Verás tres rutas, con la recomendada en primer lugar. Mientras calcula, la página sigue respondiendo:
+verás qué ruta está buscando, el tiempo que lleva y lo que suele tardar un análisis así, y puedes pulsar
+«Cancelar» en cualquier momento (vuelve lo que había antes). Si la carga es pesada, o si pasan 10
+segundos, la página te explica de qué depende el tiempo y cómo reducirlo. Lo que escribes se guarda en tu
 navegador para la próxima vez (ver [Privacidad y datos guardados](#privacidad-y-datos-guardados)).
+
+#### Carga del análisis
+
+Sobre el botón «Calcular rutas» ves cuánto pesará el análisis: **ligero**, **medio**, **pesado** o
+**muy pesado**, con el tiempo que suele tardar en un ordenador (en un móvil, varias veces más). Se
+actualiza al cambiar los gatos, las fechas, los tiros o los tickets.
+
+- Lo que más pesa son los **ubers y legendarios**: cada uno cuenta como tres o cuatro superraros o raros
+  (tres si tus fechas tienen más de cinco banners).
+  Puedes pedir casi todos los superraros y raros de tus banners sin que el análisis se note.
+- Más tiros a revisar y tener Rare Tickets también alargan el análisis.
+- Hasta **pesado**, la ruta que ves está garantizada como la mejor.
+- **Muy pesado**: antes de empezar se te pide confirmación. Puede tardar muchos minutos y, si llega al
+  límite de seguridad del cálculo (que evita que la página se quede sin memoria), verás la mejor ruta
+  encontrada con un aviso arriba: **«Ruta no garantizada como la mejor»**. Para una garantizada, quita
+  algunos ubers o legendarios, o revisa menos tiros.
 
 ---
 
@@ -355,8 +372,10 @@ muestran como excluidos) o no estar anunciado todavía: solo aparecen los banner
 publicado.
 
 **¿Puedo pedir muchos gatos a la vez?**
-Sí, no hay límite. Con muchos objetivos el cálculo tarda algo más y es más fácil que alguno choque
-con otro; en ese caso se explica cuál.
+Sí, no hay límite. Lo que más alarga el cálculo son los ubers y legendarios (con los 200 tiros de
+siempre, 14 ya son «muy pesado»); superraros y raros apenas cuentan. Antes de calcular
+ves la carga, y si es muy pesada se te pide confirmación (ver [Carga del análisis](#carga-del-análisis)).
+Con muchos objetivos también es más fácil que alguno choque con otro; en ese caso se explica cuál.
 
 **La app me avisa de que algo no coincide con godfat. ¿Qué hago?**
 Comprueba cada paso en godfat antes de tirar. El aviso desaparece cuando el problema se corrige.

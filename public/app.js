@@ -5,6 +5,7 @@ import { godfatLink } from './core/godfat-link.js';
 import { BASE, LEGEND_FEST_SCORE } from './core/gacha.js';
 import { initMascot } from './mascot.js';
 import { initStats, countEvent } from './stats.js';
+import { analysisLoad } from './core/load.js';
 
 const $ = (sel) => document.querySelector(sel);
 const form = $('#route-form');
@@ -241,25 +242,89 @@ function setBusy(label) {
   $('#submit').textContent = label || 'Calcular rutas';
 }
 
+// --- Load -----------------------------------------------------------------
+// How heavy the analysis of the form will be (core/load.js), shown above the
+// button as the form changes. The heaviest level asks to be confirmed.
+
+let load = null;
+
+function updateLoad() {
+  const f = form.elements;
+  load = analysisLoad({
+    data: gachaData,
+    targets: picker.value(),
+    from: f.from.value,
+    to: f.to.value,
+    rolls: Number(f.rolls.value),
+    tickets: Number(f.tickets.value) || 0,
+    now: new Date(),
+  });
+  const box = $('#load');
+  box.hidden = !load;
+  if (!load) return;
+  box.dataset.level = load.level;
+  $('#load-level').textContent = load.label;
+  $('#load-fill').style.width = `${Math.round(load.share * 100)}%`;
+  $('#load-time').textContent = load.guaranteed
+    ? `Suele tardar ${load.range} en un ordenador; en un móvil, más. Es una estimación.`
+    : `Puede tardar ${load.range} en un ordenador, y más en un móvil. Te pediremos confirmación.`;
+}
+
+/** Asks before a very heavy analysis; resolves true to go ahead. */
+function confirmHeavy(l) {
+  const dialog = $('#heavy-dialog');
+  $('#heavy-range').textContent = l.range;
+  if (typeof dialog.showModal !== 'function') {
+    // A browser without <dialog>: the plain question, same choice.
+    return Promise.resolve(window.confirm(`Análisis muy pesado: puede tardar ${l.range} en un ordenador, y más en un móvil. Si llega al límite de seguridad, la ruta no estará garantizada como la mejor. ¿Calcular de todas formas?`));
+  }
+  return new Promise((resolve) => {
+    dialog.returnValue = '';
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'go'), { once: true });
+    dialog.showModal();
+  });
+}
+$('#heavy-go').addEventListener('click', () => $('#heavy-dialog').close('go'));
+$('#heavy-back').addEventListener('click', () => $('#heavy-dialog').close('back'));
+
 // --- Calculation ----------------------------------------------------------
 // It runs off the page (calc-client.js), so the page keeps responding: the
-// progress says the phase and the seconds, and «Cancelar» stops it. There is
-// no time limit: the analysis always ends whole, the same on any device.
+// progress says the phase, the time it has taken and what such an analysis
+// usually takes, and «Cancelar» stops it. There is no time limit; the search
+// has a size limit (optimizer.js MAX_STATES) so memory never runs out.
 const calculator = createCalculator();
-const SLOW_HINT_S = 15; // from here on, a wait looks like a failure: say what can be done
+const HINT_S = 10; // from here on a wait starts to look like a failure: say why and what can be done
+// The estimate is for a computer: a phone (coarse pointer) gets this much more
+// before the wait is called longer than estimated.
+const PHONE_FACTOR = 4;
 const PHASE_TEXT = {
   prepare: () => 'Preparando las tiradas de tu semilla…',
   route: (p) => `Buscando la ruta ${p.index} de ${p.total} («${p.label}»)…`,
   diagnose: () => 'Buscando por qué falta algún gato…',
 };
 
-/** Counts the seconds under the progress; returns the function that stops it. */
-function startClock() {
+const clock = (s) => (s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`);
+
+/**
+ * Counts the time under the progress, with the estimate of `l` (the load, or
+ * null); returns the function that stops it. The hint says why it takes time:
+ * from the start when the load is heavy, else after HINT_S seconds, and says
+ * so once the estimate is passed.
+ */
+function startClock(l) {
   const t0 = Date.now();
+  const estimate = $('#progress-estimate');
+  estimate.hidden = !l;
+  if (l) estimate.textContent = `Estimación: ${l.range} en un ordenador; en un móvil puede tardar varias veces más. Es orientativa, no exacta.`;
+  const hintFrom = l?.level === 'heavy' || l?.level === 'veryHeavy' ? 0 : HINT_S;
+  const overAt = l ? l.maxS * (window.matchMedia('(pointer: coarse)').matches ? PHONE_FACTOR : 1) : Infinity;
   const tick = () => {
     const s = Math.floor((Date.now() - t0) / 1000);
-    $('#elapsed').textContent = ` · ${s} s`;
-    $('#progress-hint').hidden = s < SLOW_HINT_S;
+    const over = s > overAt;
+    $('#elapsed').textContent = ` · ${clock(s)}`;
+    $('#progress-hint').hidden = s < hintFrom && !over;
+    $('#progress-hint').classList.toggle('over', over);
+    $('#progress-over').hidden = !over;
   };
   tick();
   const timer = setInterval(tick, 250);
@@ -267,6 +332,7 @@ function startClock() {
     clearInterval(timer);
     $('#elapsed').textContent = '';
     $('#progress-hint').hidden = true;
+    estimate.hidden = true;
   };
 }
 
@@ -303,6 +369,9 @@ async function submit(event) {
     showFieldError(wrong.field, wrong.message);
     return;
   }
+  updateLoad(); // the time may have moved on since the last change
+  const heavy = load;
+  if (heavy && !heavy.guaranteed && !(await confirmHeavy(heavy))) return;
   setBusy('Calculando…');
   $('#error').hidden = true;
   $('#cancelled').hidden = true;
@@ -310,7 +379,7 @@ async function submit(event) {
   $('#cancel').hidden = false;
   show('status');
   bringIntoView($('#status'));
-  const stopClock = startClock();
+  const stopClock = startClock(heavy);
   let gotResult = false;
   let cancelled = false;
   let fieldError = null;
@@ -377,6 +446,7 @@ function render() {
   // Picking another route re-renders everything: keep the open rows open.
   const open = new Set([...document.querySelectorAll('#results details[open][data-section]')].map((d) => d.dataset.section));
   $('#results').innerHTML = [
+    renderUnproven(data),
     data.routes.some((r) => r.found) ? renderSupport() : '', // only when it has just been useful
     renderContext(data),
     renderDiagnostics(data),
@@ -390,6 +460,23 @@ function render() {
       render();
     });
   }
+}
+
+// A route found when the search reached its safety limit is the best one it
+// saw, not one proven the best: said on top, before anything else.
+function renderUnproven(data) {
+  const cut = data.routes.filter((r) => r.found && r.exhausted);
+  if (!cut.length) return '';
+  const names = cut.map((r) => `«${esc(r.label)}»`).join(', ');
+  const which = cut.some((r) => r.recommended)
+    ? cut.length > 1 ? `la ruta recomendada y otras (${names})` : 'la ruta recomendada'
+    : `${cut.length > 1 ? 'las rutas' : 'la ruta'} ${names}`;
+  return `<section class="notice alert unproven" role="note">
+    <b>Ruta no garantizada como la mejor</b>
+    <p>El análisis era tan grande que llegó al límite de seguridad del cálculo, que evita que la página se
+      quede sin memoria. Afecta a ${which}: es la mejor que encontró, pero puede existir otra mejor.</p>
+    <p>Para obtener una ruta garantizada, quita algunos ubers o legendarios, o revisa menos tiros.</p>
+  </section>`;
 }
 
 const SUPPORT_URL = 'https://ko-fi.com/tonajzp';
@@ -978,6 +1065,7 @@ async function loadData() {
   const icons = new Set(gachaData.icons || []);
   const cats = catalogOf(gachaData).map((c) => ({ ...c, image: icons.has(c.id) ? `icons/${c.id}.png` : null }));
   picker.load(cats, gachaData.generatedAt);
+  updateLoad(); // picker.load restores the saved cats before the data is set
   renderDataInfo(gachaData, status);
   renderTimeNote(gachaData);
 }
@@ -1028,6 +1116,10 @@ form.from.addEventListener('change', syncDateLimits);
 form.to.addEventListener('change', syncDateLimits);
 form.addEventListener('input', recheckField);
 form.addEventListener('change', recheckField);
+// The load follows the cats, dates, rolls and tickets as they change.
+form.addEventListener('input', updateLoad);
+form.addEventListener('change', updateLoad);
+$('#picker').addEventListener('targetschange', updateLoad);
 form.addEventListener('submit', submit);
 
 // "Ver motivo": a quick smooth scroll to the card that explains the missing

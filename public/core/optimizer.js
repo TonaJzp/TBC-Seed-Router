@@ -23,6 +23,10 @@ const isStepUp = (type) => type.startsWith('stepup');
 // As in the game, a Rare Ticket replaces exactly one 150 Cat Food single.
 const TICKET_VALUE = COST.single;
 const MAX_EXPANSIONS = 2_000_000;
+// States one search may store. Memory grows with them (~0.35 KB each), and
+// 1.2 M of them end within a 450 MB heap, as on a phone: past it, the search
+// stops and says its route is not proven the best (02-DOCS, analysis-load T1).
+const MAX_STATES = 1_200_000;
 // With «Incluirlo siempre en la ruta», how far the search goes on after the
 // first complete route looking for one that also spends it.
 const SPEND_SEARCH = 400_000;
@@ -358,9 +362,13 @@ function priceOf(type, state) {
  * A node is the game state: seed position, last cat (only matters for duplicate
  * rares), targets obtained (bitmask, any number of targets), tickets left,
  * one-shot discounts left and the current time slot.
+ *
+ * `ctx.maxStates` (MAX_STATES by default) bounds the states stored: past it,
+ * the search ends `exhausted`, like past MAX_EXPANSIONS.
  */
 function findRoute(ctx, objectiveKey, { enforceBudget, indexFrom = INDEX_FROM }) {
   const { sim, events, targets, inventory, discounts, protect } = ctx;
+  const maxStates = ctx.maxStates ?? MAX_STATES;
   const objective = OBJECTIVES[objectiveKey];
   const priorityOf = (node) => objective.priority(node, ctx);
   const fullMask = (1n << BigInt(targets.length)) - 1n;
@@ -457,7 +465,9 @@ function findRoute(ctx, objectiveKey, { enforceBudget, indexFrom = INDEX_FROM })
     }
     // Dijkstra pops in cost order: the first node reaching a new count is the cheapest one.
     if (node.found > nodes[bestPartial].found) bestPartial = idx;
-    if (++expansions > MAX_EXPANSIONS) return firstComplete >= 0 ? unspent() : done(bestPartial, { exhausted: true });
+    if (++expansions > MAX_EXPANSIONS || nodes.length > maxStates) {
+      return firstComplete >= 0 ? unspent() : done(bestPartial, { exhausted: true });
+    }
     if (firstComplete >= 0 && expansions - completeAt > SPEND_SEARCH) return unspent();
 
     // Try the banner already in use first so equal-cost ties keep it.
@@ -856,6 +866,7 @@ export {
   rollSlot,
   totalCost,
   COST,
+  MAX_STATES,
   OBJECTIVES,
   TICKET_VALUE,
 };

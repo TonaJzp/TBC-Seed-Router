@@ -219,6 +219,15 @@
       </section>
 
       <div class="actions">
+        <!-- How heavy the analysis will be, from the cats, dates, rolls and
+             tickets (core/load.js): updated as the form changes. -->
+        <div class="load" id="load" hidden>
+          <p class="load-head"><span>Carga del análisis</span><b id="load-level"></b></p>
+          <div class="load-bar" aria-hidden="true"><span id="load-fill"></span></div>
+          <p class="load-time" id="load-time"></p>
+          <p class="load-note">Los ubers y legendarios pesan mucho más que los superraros y raros. Más gatos objetivo o más
+            tiros, más tiempo.</p>
+        </div>
         <button type="submit" id="submit" class="primary">Calcular rutas</button>
       </div>
     </form>
@@ -260,9 +269,33 @@
     <section id="status" class="status" hidden>
       <div class="bar"><span></span></div>
       <p class="progress-line"><span id="progress" role="status"></span><span id="elapsed" aria-hidden="true"></span></p>
-      <p id="progress-hint" class="progress-hint" hidden>Está tardando más de lo normal. Si no quieres esperar, cancela y reduce las fechas, los tiros a revisar o los gatos objetivo.</p>
+      <p id="progress-estimate" class="progress-estimate" hidden></p>
+      <div id="progress-hint" class="progress-hint" hidden>
+        <p id="progress-over" hidden><b>Está tardando más de lo estimado.</b></p>
+        <p>El tiempo depende sobre todo de los gatos objetivo (los ubers y legendarios pesan mucho más) y de los tiros a
+          revisar: menos objetivos o menos tiros, menos tiempo. Si no quieres esperar, cancela y ajústalos.</p>
+      </div>
       <button type="button" id="cancel" class="secondary" hidden>Cancelar</button>
     </section>
+
+    <!-- Asked before a very heavy analysis starts (zona avanzada). -->
+    <dialog id="heavy-dialog" class="heavy-dialog" aria-labelledby="heavy-title" aria-describedby="heavy-body">
+      <h2 id="heavy-title">Análisis muy pesado</h2>
+      <div id="heavy-body">
+        <p>Con estos gatos objetivo y estos tiros, el análisis puede tardar <b id="heavy-range">varios minutos</b> en un
+          ordenador, y bastante más en un móvil.</p>
+        <ul>
+          <li>Puedes cancelarlo en cualquier momento.</li>
+          <li>Si es tan grande que llega al límite de seguridad del cálculo, verás la mejor ruta que encuentre, pero no
+            estará garantizada como la mejor.</li>
+          <li>Para un análisis más rápido y garantizado, quita algunos ubers o legendarios, o revisa menos tiros.</li>
+        </ul>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="secondary" id="heavy-back" autofocus>Volver a ajustar</button>
+        <button type="button" class="primary" id="heavy-go">Calcular de todas formas</button>
+      </div>
+    </dialog>
 
     <section id="results" hidden></section>
   </main>

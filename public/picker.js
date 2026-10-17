@@ -368,5 +368,7 @@ export class TargetPicker {
     this.count.textContent = `${n} gato${n === 1 ? '' : 's'} elegido${n === 1 ? '' : 's'}`;
     this.footCount.textContent = n ? this.count.textContent : 'Ningún gato elegido todavía';
     this.status.innerHTML = message ? `<span class="bad">${TargetPicker.esc(message)}</span>` : TargetPicker.esc(this.statusText);
+    // Whoever depends on the list (the analysis load) hears every change.
+    this.root.dispatchEvent(new CustomEvent('targetschange', { bubbles: true }));
   }
 }

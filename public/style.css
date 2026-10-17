@@ -517,7 +517,63 @@ input.invalid, textarea.invalid { border-color: var(--bad); }
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 .progress-line { margin: 0; font-size: 13px; color: var(--ink-2); }
 #elapsed { font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; }
-.progress-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.progress-estimate { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.progress-hint {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  border-left: 3px solid var(--line-2);
+  background: var(--panel);
+}
+.progress-hint p { margin: 0; }
+.progress-hint p + p { margin-top: 4px; }
+.progress-hint.over { border-left-color: var(--warn); background: var(--warn-soft); }
+.progress-hint.over b { color: var(--warn); }
+
+/* Load of the analysis, above «Calcular rutas»: a level, a thin bar and the
+   usual time. The bar is set by width (core/load.js `share`), never a number. */
+.load { margin: 0 0 12px; }
+.load p { margin: 0; }
+.load-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink-2); }
+.load-head b { font-size: 12.5px; color: var(--ink); }
+.load-bar { height: 4px; margin: 6px 0 5px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.load-bar span { display: block; width: 0; height: 100%; background: var(--ok); border-radius: 2px; transition: width 0.2s ease; }
+.load-time { font-size: 11.5px; color: var(--ink-2); line-height: 1.4; }
+.load p.load-note { margin-top: 4px; font-size: 11.5px; color: var(--ink-3); line-height: 1.4; }
+.load[data-level="medium"] .load-bar span { background: var(--ink-2); }
+.load[data-level="heavy"] .load-bar span { background: var(--warn); }
+.load[data-level="heavy"] .load-head b { color: var(--warn); }
+.load[data-level="veryHeavy"] .load-bar span { background: var(--bad); }
+.load[data-level="veryHeavy"] .load-head b { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) {
+  .load-bar span { transition: none; }
+}
+
+/* Confirmation before a very heavy analysis. */
+.heavy-dialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 20px 22px;
+  color: var(--ink);
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+.heavy-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.heavy-dialog h2 { margin: 0 0 8px; font-size: 16px; color: var(--bad); }
+.heavy-dialog p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; }
+.heavy-dialog ul { margin: 0 0 4px; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.heavy-dialog li { margin: 3px 0; }
+.dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.dialog-actions .secondary { margin-top: 0; }
+.dialog-actions .primary { width: auto; }
+@media (max-width: 420px) {
+  .dialog-actions { flex-direction: column-reverse; }
+  .dialog-actions button { width: 100%; }
+}
 .secondary {
   min-height: 32px;
   margin-top: 12px;
@@ -748,6 +804,8 @@ td.r, th.r { text-align: right; }
 }
 .notice.alert b { display: block; margin-bottom: 3px; font-size: 14px; color: var(--bad); }
 .notice.alert p { margin: 0; color: var(--ink); line-height: 1.45; }
+.notice.unproven { max-width: 860px; }
+.notice.unproven p + p { margin-top: 6px; }
 .notice.upcoming { max-width: 860px; padding: 12px 14px; border-radius: 0 4px 4px 0; }
 .notice.upcoming b { display: block; margin-bottom: 4px; font-size: 14px; color: var(--warn); }
 .notice.upcoming ul { margin: 0 0 6px; padding-left: 18px; }
