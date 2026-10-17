@@ -308,7 +308,7 @@ function renderRoutesTable(data) {
         <td class="r num" data-label="Cat Food">${fmt(t.foodUsed)}</td>
         <td class="r num" data-label="Coste total"><b>${fmt(t.totalCost)}</b></td>
         <td class="r num" data-label="Tiros">${fmt(t.pulls)}</td>
-        <td class="r num nowrap" data-label="11-draws">${draws}</td>
+        <td class="r num nowrap draws" data-label="11-draws">${draws}</td>
         <td class="r nowrap afford" data-label="¿Te alcanza?">${t.affordable ? '<span class="ok">Sí</span>' : `<span class="bad">Faltan ${fmt(t.shortfall)} CF</span>`}</td>
       </tr>`;
     })
