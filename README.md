@@ -70,7 +70,9 @@ semilla en godfat o número de semilla».
   último gato, así que la herramienta te avisa si eso puede cambiar tu primera tirada. Lo más seguro
   es actualizar la semilla: en godfat, pulsa el nombre del último gato que sacaste y pega la
   dirección a la que te lleva.
-- También vale escribir solo el número de semilla (sin `last`).
+- También vale escribir solo el número de semilla. Ni el número ni el enlace que da el buscador de
+  semillas de godfat («your last seed is…») dicen cuál fue tu último gato: si la ruta empieza con un
+  rare, la herramienta te avisa de qué gato la cambiaría si fuera el último que sacaste.
 - Solo sirve para la versión en inglés (la global): las direcciones de otras versiones (`lang=jp`,
   `lang=tw` o `lang=kr`) se rechazan.
 

@@ -405,6 +405,18 @@ function plan(body, data, { now = new Date(), onProgress = () => {} } = {}) {
       diagnostics = [...unavailableItems, ...diagnose(ctx, routes, { seed })];
     }
   }
+  // No `last` (a plain seed, or godfat's link after seeking the seed): if a
+  // route starts with a rare, the player's last cat may be that very rare, and
+  // the game would give another one there, changing the whole route.
+  if (!input.seed.pos && !last) {
+    const firsts = [...new Set(routes.filter((r) => r.found).map((r) => r.steps[0].cats[0]).filter((c) => c.rarity === 'rare').map((c) => c.name))];
+    if (firsts.length) {
+      const names = firsts.join(' o ');
+      notices.push(
+        `Tu semilla no dice cuál fue tu último gato («last» en la URL de godfat). La ruta empieza sacando ${names} en ${startKey}: si tu último gato fue ${names}, el juego te dará otro rare en su lugar y la ruta cambiará desde el primer paso. ${UPDATE_SEED_HINT}`
+      );
+    }
+  }
 
   return {
     seed,

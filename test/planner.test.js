@@ -324,6 +324,29 @@ test('a pos URL warns that the last cat is unknown only where a rare could dupli
   assert.deepEqual(noticesAt(without), []);
 });
 
+test('without the last cat, a route that starts with a rare says that cat could change it', () => {
+  // A plain seed, or godfat's link after seeking the seed, has no `last`.
+  const body = (url) => ({ url, targets: ['870'], from: '2026-10-16', to: '2026-10-20', rolls: '60', tickets: '0', food: '100000' });
+  const run = (url) => plan(body(url), gachaData, { now: START_NOW });
+  const plain = run('1');
+  const first = plain.routes[0].steps[0].cats[0];
+  assert.deepEqual([first.cell, first.name, first.rarity], ['1A', 'Bishop Cat', 'rare'], 'fixture: the route starts with a rare');
+  const warned = plain.notices.filter((n) => /último gato/.test(n));
+  assert.equal(warned.length, 1);
+  assert.match(warned[0], /Bishop Cat/);
+  assert.match(warned[0], /1A/);
+  assert.deepEqual(run('https://bc.godfat.org/?seed=1').notices, plain.notices, 'a URL without last, the same');
+  // The warning is true: with that cat as the last one, the first roll is another cat.
+  const withThat = run(`https://bc.godfat.org/?seed=1&last=${first.id}`);
+  assert.deepEqual(withThat.notices, [], 'with last there is nothing to warn about');
+  assert.notEqual(withThat.routes[0].steps[0].cats[0].name, 'Bishop Cat');
+  assert.equal(withThat.routes[0].steps[0].cats[0].rerolled, true);
+  // A route starting with a super rare (or better) cannot be changed by the last cat.
+  const other = run('3');
+  assert.notEqual(other.routes[0].steps[0].cats[0].rarity, 'rare', 'fixture');
+  assert.deepEqual(other.notices, []);
+});
+
 // --- Lilac cells of banners with an even higher legend rate -------------------
 
 /** A seed with a cell scoring `lo`..`hi` in its first 30 rows: { seed, key }. */
