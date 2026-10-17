@@ -137,7 +137,7 @@ export class TargetPicker {
 
   find(text) {
     // Earlier versions saved wiki page titles, e.g. "Fuma Kotaro (Uber Rare Cat)".
-    const legacy = String(text).replace(/s*([^)]*Cat)s*$/, '');
+    const legacy = String(text).replace(/\s*\([^)]*\bCat\)\s*$/, '');
     return this.byKey.get(TargetPicker.norm(text)) || this.byKey.get(TargetPicker.norm(legacy)) || null;
   }
 
