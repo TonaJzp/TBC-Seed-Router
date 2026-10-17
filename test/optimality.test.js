@@ -11,13 +11,9 @@ import { gachaData, replayRoute } from './helpers.js';
 import { selectEvents, resolveTargets, withAliases, catalogOf } from '../public/core/planner.js';
 import { buildEvents } from '../public/core/gacha.js';
 import { Simulator, parseKey } from '../public/core/simulator.js';
-import { localMinute, minuteOf, nextDayMinute, startsAt, endsAt } from '../public/core/time.js';
+import { minuteOf } from '../public/core/time.js';
 import { optimizeRoutes } from '../public/core/optimizer.js';
-
-// Prices in Cat Food (official EN step-up poster; community wiki for the rest).
-const PRICE = { single: 150, singleDiscount: 30, eleven: 1500, elevenDiscount: 750, step1: 300, step12: 1050, stepFull: 2100 };
-const TICKET = 150; // 1 Rare Ticket = 150 Cat Food, to compare routes
-const STEP_RESET = 30; // minutes until a step-up is back at step 1
+import { exhaustive, expected, CRITERIA } from './oracle.js';
 
 const STEP_UPS = ['2026-10-13_1059', '2026-10-09_1043', '2026-10-18_1021'];
 const data = structuredClone(gachaData);
@@ -89,126 +85,35 @@ function makeCase(rand) {
   const anywhere = [...new Set(events.flatMap((ev) => Object.values(ev.pools).flat()))];
   const queries = Array.from({ length: resources ? int(3, 4) : int(1, 4) }, () => String(rand() < 0.9 ? pick(near) : pick(anywhere)));
   if (avoidLegend && onPurple.length) queries[0] = String(pick(onPurple));
-  const { resolved } = resolveTargets(withAliases([...new Set(queries)], catalog), events, sim.obtainableIds());
   const discount11 = resources || rand() < 0.4;
-  return {
-    sim, events, targets: resolved,
-    inventory: { tickets: resources ? int(2, 5) : pick([0, 0, 1, 2, 4]), food: pick([0, 150, 300, 1500, 3000, 100000]), lastCat: 0 },
-    discounts: { guaranteed: discount11, single: resources || rand() < 0.4, spendMulti: discount11 && rand() < 0.5 },
-    protect: { avoidLegend, avoidLegendFest: false },
-    from, now: minuteOf(now), to,
-  };
+  return contextOf({
+    from, to, now: `${from}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    seed, rows, targets: [...new Set(queries)],
+    tickets: resources ? int(2, 5) : pick([0, 0, 1, 2, 4]), food: pick([0, 150, 300, 1500, 3000, 100000]),
+    discount11, discount1: resources || rand() < 0.4, spend11: discount11 && rand() < 0.5, avoidLegend,
+  });
 }
-
-/** Every state the game allows from the start, each with the least Cat Food that reaches it. */
-function exhaustive(ctx) {
-  const { sim, events, targets, inventory, discounts, protect } = ctx;
-  const startSlot = Math.max(localMinute(ctx.from), ctx.now);
-  const endSlot = nextDayMinute(ctx.to) - 1;
-  const windows = events.map((ev) => ({ first: startsAt(ev), last: Math.max(endsAt(ev) - 1, startsAt(ev)) }));
-  const bitsOf = (cat, cell) => {
-    if ((protect.avoidLegend || protect.avoidLegendFest) && cat.rarity !== 'legendary' && sim.isProtected(cell.n, cell.track, protect)) return 0;
-    let bits = 0;
-    targets.forEach((t, i) => {
-      if (t.ids.has(cat.id)) bits |= 1 << i;
-    });
-    return bits;
-  };
-  // Rolls only move forward along the seed: states are visited in seed order.
-  const order = (s) => 2 * s.n + (s.track === 'B' ? 1 : 0);
-  const keyOf = (s) => [s.n, s.track, s.last, s.mask, s.tl, +s.d11, +s.d1, s.slot, s.su > s.slot ? s.su : 0].join('|');
-  const buckets = [];
-  const best = new Map();
-  const reach = (s) => {
-    const key = keyOf(s);
-    const old = best.get(key);
-    if (old && old.food <= s.food) return;
-    best.set(key, s);
-    (buckets[order(s)] ||= []).push(s);
-  };
-  reach({ n: sim.start.n, track: sim.start.track, last: inventory.lastCat, mask: 0, tl: inventory.tickets, d11: discounts.guaranteed, d1: discounts.single, slot: startSlot, su: 0, food: 0 });
-
-  for (let p = 0; p < buckets.length; p++) {
-    for (const s of buckets[p] || []) {
-      if (best.get(keyOf(s)) !== s) continue; // beaten by a cheaper way to the same state
-      events.forEach((ev, ei) => {
-        const w = windows[ei];
-        const options = [{ kind: 'single' }];
-        if (ev.kind === 'standard') options.push({ kind: 'eleven', rolls: 11 });
-        if (ev.kind === 'guaranteed') options.push({ kind: 'eleven', guaranteed: true });
-        if (ev.kind === 'stepup') options.push({ kind: 'step', rolls: 3, price: PRICE.step1 }, { kind: 'step', rolls: 8, price: PRICE.step12 }, { kind: 'step', guaranteed: true, price: PRICE.stepFull });
-        for (const o of options) {
-          let slot = Math.max(s.slot, w.first);
-          if (o.kind === 'step') slot = Math.max(slot, s.su);
-          if (slot > w.last || slot > endSlot) continue;
-          let roll;
-          if (o.kind === 'single') {
-            const r = sim.single(ev, s.n, s.track, s.last);
-            roll = r && { cats: [r.cat], landed: r.landed, next: r.next };
-          } else if (o.guaranteed) {
-            const g = sim.guaranteed(ev, s.n, s.track, s.last);
-            roll = g && { cats: [...g.cats, g.uber], landed: g.landed, next: g.next };
-          } else roll = sim.multi(ev, s.n, s.track, s.last, o.rolls);
-          if (!roll) continue;
-          const next = { ...s, n: roll.next.n, track: roll.next.track, last: roll.cats.at(-1).id, slot };
-          roll.cats.forEach((c, i) => {
-            next.mask |= bitsOf(c, roll.landed[i]);
-          });
-          if (o.kind === 'single') {
-            // Rare Tickets must be spent before Cat Food on singles.
-            if (s.tl > 0) next.tl--;
-            else if (s.d1) (next.d1 = false), (next.food += PRICE.singleDiscount);
-            else next.food += PRICE.single;
-          } else if (o.kind === 'eleven') {
-            if (s.d11) (next.d11 = false), (next.food += PRICE.elevenDiscount);
-            else next.food += PRICE.eleven;
-          } else {
-            next.food += o.price; // Rare Tickets cannot pay for step-up steps
-            next.su = o.guaranteed ? 0 : slot + STEP_RESET;
-          }
-          reach(next);
-        }
-      });
-    }
-  }
-  return [...best.values()];
-}
-
-const found = (s) => {
-  let n = 0;
-  for (let m = s.mask; m; m >>= 1) n += m & 1;
-  return n;
-};
-const CRITERIA = {
-  optimal: (s, t) => [s.food + t * TICKET, s.food],
-  saveFood: (s, t) => [s.food, t],
-  saveTickets: (s, t) => [t, s.food],
-};
-const lexLess = (a, b) => a[0] - b[0] || a[1] - b[1];
 
 /**
- * What each criterion must show, from first principles: the cheapest route
- * getting every target within the Cat Food there is; else the cheapest one
- * getting them all over it; else the cheapest getting the most targets. With
- * «Incluirlo siempre», a route that also spends the 11-draw discount if any can.
+ * The search context of a case written as plain values (`now` is the local
+ * time, YYYY-MM-DDTHH:MM), so that any case can be printed and kept as it is.
  */
-function expected(ctx, states, criterion) {
-  const full = (1 << ctx.targets.length) - 1;
-  const used = (s) => ctx.inventory.tickets - s.tl;
-  const cost = (s) => CRITERIA[criterion](s, used(s));
-  const cheapest = (list) => list.reduce((a, s) => (!a || lexLess(cost(s), cost(a)) < 0 ? s : a), null);
-  const complete = (list) => {
-    const all = list.filter((s) => s.mask === full);
-    const spent = all.filter((s) => !s.d11);
-    return cheapest(ctx.discounts.spendMulti && spent.length ? spent : all);
+function contextOf(form) {
+  const [date, time] = form.now.split('T');
+  const [y, m, d] = date.split('-').map(Number);
+  const [h, min] = time.split(':').map(Number);
+  const now = minuteOf(new Date(y, m - 1, d, h, min));
+  const { selected } = selectEvents(data, { from: form.from, to: form.to, today: date, now });
+  const events = buildEvents(data, selected, form.seed, form.rows);
+  const sim = new Simulator(form.seed, events, form.rows);
+  const { resolved } = resolveTargets(withAliases(form.targets, catalog), events, sim.obtainableIds());
+  return {
+    form, sim, events, targets: resolved,
+    inventory: { tickets: form.tickets, food: form.food, lastCat: 0 },
+    discounts: { guaranteed: form.discount11, single: form.discount1, spendMulti: form.discount11 && form.spend11 },
+    protect: { avoidLegend: form.avoidLegend, avoidLegendFest: false },
+    from: form.from, now, to: form.to,
   };
-  const affordable = states.filter((s) => s.food <= ctx.inventory.food);
-  const best = complete(affordable) || complete(states);
-  if (best) return { complete: true, found: ctx.targets.length, cost: cost(best) };
-  const most = (list) => Math.max(...list.map(found));
-  const pool = most(states) > most(affordable) ? states : affordable;
-  const top = most(pool);
-  return { complete: false, found: top, cost: top ? cost(cheapest(pool.filter((s) => found(s) === top))) : null };
 }
 
 function cases(seed, count) {
@@ -221,35 +126,74 @@ function cases(seed, count) {
   return out;
 }
 
+/**
+ * Checks every shown route of a case against the exhaustive search. Returns
+ * which kind of answer each criterion had. A failure prints the case as plain
+ * values, ready to be added to HARD_CASES below.
+ */
+function checkCase(ctx, label) {
+  const states = exhaustive(ctx);
+  const routes = optimizeRoutes(ctx);
+  const kinds = [];
+  for (const criterion of Object.keys(CRITERIA)) {
+    const want = expected(ctx, states, criterion);
+    const route = routes.find((r) => r.key === criterion);
+    const where = `${label} ${JSON.stringify(ctx.form)}, ${criterion}`;
+    if (!want.found) {
+      assert.equal(route.found, false, `${where}: no target can be reached`);
+      continue;
+    }
+    assert.ok(route.found && !route.exhausted, `${where}: a route is found`);
+    replayRoute(assert, ctx, route); // the costs it shows are the real ones
+    const t = route.totals;
+    assert.deepEqual(CRITERIA[criterion]({ food: t.foodUsed }, t.ticketsUsed), want.cost, `${where}: cost`);
+    assert.equal(route.complete, want.complete, `${where}: complete`);
+    assert.equal(route.targets.filter((x) => x.obtained).length, want.found, `${where}: targets obtained`);
+    kinds.push(want.complete ? 'complete' : 'partial');
+  }
+  return kinds;
+}
+
 // OPTIMALITY_CASES and OPTIMALITY_SEED run more (or other) cases, for a deeper check by hand.
 const CASES = Number(process.env.OPTIMALITY_CASES) || 400;
 const SEED = Number(process.env.OPTIMALITY_SEED) || 20261017;
 
 test(`every route shown costs exactly the least that the game allows (exhaustive search, ${CASES} cases)`, (t) => {
-  let complete = 0;
-  let partial = 0;
-  for (const [i, ctx] of cases(SEED, CASES).entries()) {
-    const states = exhaustive(ctx);
-    const routes = optimizeRoutes(ctx);
-    for (const criterion of Object.keys(CRITERIA)) {
-      const want = expected(ctx, states, criterion);
-      const route = routes.find((r) => r.key === criterion);
-      const where = `case ${i} (${ctx.events.length} banners, ${ctx.sim.maxN} rows, ${ctx.targets.length} targets, ${JSON.stringify(ctx.inventory)}, ${JSON.stringify(ctx.discounts)}, legend ${ctx.protect.avoidLegend}), ${criterion}`;
-      if (!want.found) {
-        assert.equal(route.found, false, `${where}: no target can be reached`);
-        continue;
-      }
-      assert.ok(route.found && !route.exhausted, `${where}: a route is found`);
-      replayRoute(assert, ctx, route); // the costs it shows are the real ones
-      const t = route.totals;
-      assert.deepEqual(CRITERIA[criterion]({ food: t.foodUsed }, t.ticketsUsed), want.cost, `${where}: cost`);
-      assert.equal(route.complete, want.complete, `${where}: complete`);
-      assert.equal(route.targets.filter((x) => x.obtained).length, want.found, `${where}: targets obtained`);
-      if (want.complete) complete++;
-      else partial++;
-    }
-  }
+  const kinds = cases(SEED, CASES).flatMap((ctx, i) => checkCase(ctx, `case ${i}`));
+  const complete = kinds.filter((k) => k === 'complete').length;
+  const partial = kinds.length - complete;
   t.diagnostic(`${complete} complete and ${partial} partial routes checked`);
   // The cases must exercise both kinds of answer, or the test proves little.
   assert.ok(complete > CASES / 4 && partial > CASES / 4, `complete ${complete}, partial ${partial}`);
+});
+
+// Cases random ones almost never reach, each found by searching for it with
+// the optimizer broken on purpose: the broken one fails it, the real one
+// passes. They stay fixed, whatever the generator above does.
+const HARD_CASES = [
+  // Keeping the 11-draw discount for a later banner. On 15/10 at 20:00, 2
+  // singles and step 1 of the Vornado step-up three times reach 12A; at 11:00
+  // on 16/10 that step-up is gone and three guaranteed banners open: a single
+  // on Mighty Morta-Loncha (Miter Saw Cat), then the discounted guaranteed draw
+  // on Akane Tounji (Lesser Demon Cat), 2100 Cat Food. A search that does not
+  // tell states apart by the discounts left pays 2400.
+  { from: '2026-10-15', to: '2026-10-16', now: '2026-10-15T20:00', seed: 1013904226, rows: 26, targets: ['448', '45'], tickets: 0, food: 100000, discount11: true, discount1: false, spend11: false, avoidLegend: false },
+  { from: '2026-10-15', to: '2026-10-16', now: '2026-10-15T20:00', seed: 3668339987, rows: 26, targets: ['60', '307'], tickets: 0, food: 100000, discount11: true, discount1: false, spend11: false, avoidLegend: false },
+  // Rare Tickets left tell states apart (saving Cat Food: a search that forgets
+  // them keeps a start that spent its tickets and pays singles later).
+  { from: '2026-10-12', to: '2026-10-15', now: '2026-10-12T02:27', seed: 2614206586, rows: 15, targets: ['378', '87', '153', '737'], tickets: 4, food: 1500, discount11: false, discount1: false, spend11: false, avoidLegend: false },
+  // The time tells states apart (a search that forgets it mixes up which
+  // banners are still open).
+  { from: '2026-10-13', to: '2026-10-17', now: '2026-10-13T05:13', seed: 3172493880, rows: 13, targets: ['626', '764', '200'], tickets: 1, food: 1500, discount11: false, discount1: false, spend11: false, avoidLegend: false },
+  // The step-up wait tells states apart: at 10:51 on the day a step-up closes,
+  // step 1 bought now cannot be bought again before 11:00.
+  { from: '2026-10-16', to: '2026-10-19', now: '2026-10-16T10:51', seed: 3465252193, rows: 18, targets: ['661'], tickets: 0, food: 300, discount11: true, discount1: false, spend11: false, avoidLegend: true },
+];
+
+test('the cases found by searching for them are still solved at the least cost', () => {
+  for (const [i, form] of HARD_CASES.entries()) {
+    const ctx = contextOf(form);
+    assert.equal(ctx.targets.length, form.targets.length, `hard case ${i}: every target in the rolls`);
+    checkCase(ctx, `hard case ${i}`);
+  }
 });

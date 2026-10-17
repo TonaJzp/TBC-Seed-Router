@@ -63,7 +63,8 @@ function findProblems(env, build, verify, now = new Date()) {
       '### Una ruta no es la más barata\n' +
         'La exploración diaria compara las rutas con una búsqueda exhaustiva en casos nuevos cada día, y en alguno la app ' +
         'mostró una ruta más cara que la mejor posible (o el test no pudo terminar). La exploración no frena la ' +
-        'publicación. El registro de la ejecución dice qué caso y qué criterio. Para repetirlo:\n\n' +
+        'publicación. El registro de la ejecución da el caso con todos sus valores y el criterio: una vez corregido, ' +
+        'añádelo a HARD_CASES en test/optimality.test.js para que no vuelva a pasar. Para repetirlo:\n\n' +
         `\`OPTIMALITY_SEED=${env.OPTIMALITY_SEED} OPTIMALITY_CASES=${env.OPTIMALITY_CASES || 400} node --test test/optimality.test.js\``
     );
   }
