@@ -991,11 +991,20 @@ function dataNotices(data, status, now = Date.now()) {
   const notices = [];
   if (status?.result === 'mismatch') {
     notices.push(
-      `En la última comprobación (${showDate(status.checkedAt)}) algunos cálculos de la app no coincidían con bc.godfat.org. Ya se está revisando; mientras tanto, comprueba cada paso en godfat (cada paso tiene su enlace) antes de gastar nada.`
+      `En la última comprobación (${showDate(status.checkedAt)}) algunos datos o cálculos de la app no coincidían con bc.godfat.org. Ya se está revisando; mientras tanto, comprueba cada paso en godfat (cada paso tiene su enlace) antes de gastar nada.`
     );
   } else if (!status?.lastOk || now - Date.parse(status.lastOk) > UNVERIFIED_DAYS * DAY_MS) {
     notices.push(
       `No se ha podido comprobar la app contra bc.godfat.org ${status?.lastOk ? `desde el ${showDate(status.lastOk)}` : 'todavía'}. Comprueba los pasos en godfat antes de gastar.`
+    );
+  }
+  // Banners godfat already lists that its open data does not have yet.
+  const pending = status?.pending || [];
+  if (pending.length) {
+    // A plain date (YYYY-MM-DD): read as such, not as midnight UTC.
+    const first = pending.map((p) => p.start).sort()[0].split('-').reverse().join('/');
+    notices.push(
+      `bc.godfat.org ya anuncia ${pending.length === 1 ? 'un banner que aún no está' : `${pending.length} banners que aún no están`} en los datos de la app (desde el ${first}). Las rutas no los tienen en cuenta: se añadirán en la actualización diaria en cuanto godfat los publique en sus datos abiertos.`
     );
   }
   if (now - Date.parse(data.generatedAt) > STALE_DATA_DAYS * DAY_MS) {

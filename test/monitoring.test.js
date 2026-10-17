@@ -11,6 +11,7 @@ import { parseEventList, parseTable, organize } from '../scripts/lib/godfat-html
 import { transform, eventHours } from '../scripts/lib/godfat-data.js';
 import { buildIcons, missingIcons, iconUrls } from '../scripts/lib/wiki-icons.js';
 import { findProblems } from '../scripts/notify.js';
+import { Differences, compareList, trackPending } from '../scripts/lib/compare.js';
 
 const fixtureHtml = fs.readFileSync(new URL('./fixtures/godfat-table.html', import.meta.url), 'utf8');
 
@@ -276,6 +277,67 @@ test('godfat being briefly unreachable is tolerated; for days, it is reported', 
   const old = { result: 'unreachable', lastOk: '2026-10-05T05:00:00Z', error: 'HTTP 502' };
   assert.match(findProblems(ok, { ok: true, warnings: [] }, old, now).join(), /No se puede comprobar.*2026-10-05.*HTTP 502/s);
   assert.match(findProblems(ok, { ok: true, warnings: [] }, null, now).join(), /no llegó a ejecutarse/);
+});
+
+// The real case of 2026-10-16: godfat's page listed banners its open data
+// only got 7 hours later. Nothing computed was different.
+const webBanner = (id, start, end, name = `Banner ${id}`) => ({ id, start, end, name, label: `${start} ~ ${end}: ${name}` });
+const dataBanner = (id, start, end, name = `Banner ${id}`) => ({ id, start, end, name });
+
+test('a banner godfat lists before its open data has it is pending, not a difference', () => {
+  const data = { events: [dataBanner('2026-10-15_1', '2026-10-15', '2026-10-22')] };
+  const web = [webBanner('2026-10-15_1', '2026-10-15', '2026-10-22'), webBanner('2026-10-20_1004', '2026-10-20', '2026-10-27', 'Komori')];
+  const diff = new Differences();
+  const pending = compareList(diff, data, web, '2026-10-16');
+  assert.deepEqual(diff.list, [], 'not a difference');
+  assert.deepEqual(pending, [{ id: '2026-10-20_1004', name: 'Komori', start: '2026-10-20', end: '2026-10-27' }]);
+
+  // Real differences in the list are still differences.
+  const moved = new Differences();
+  compareList(moved, data, [webBanner('2026-10-15_1', '2026-10-15', '2026-10-23')], '2026-10-16');
+  assert.deepEqual(moved.list.map((d) => d.kind), ['Fechas distintas']);
+  const gone = new Differences();
+  assert.deepEqual(compareList(gone, data, [], '2026-10-16'), []);
+  assert.deepEqual(gone.list.map((d) => d.kind), ['Banner de los datos que la web de godfat no muestra']);
+});
+
+test('a pending banner keeps the day it was first seen, from one check to the next', () => {
+  const komori = { id: '2026-10-20_1004', name: 'Komori', start: '2026-10-20', end: '2026-10-27' };
+  const lunos = { id: '2026-10-20_1070', name: 'Lunos', start: '2026-10-20', end: '2026-10-27' };
+  const first = trackPending([komori], null, '2026-10-16');
+  assert.deepEqual(first, [{ ...komori, since: '2026-10-16' }]);
+  const second = trackPending([komori, lunos], first, '2026-10-17');
+  assert.deepEqual(second.map((p) => [p.id, p.since]), [[komori.id, '2026-10-16'], [lunos.id, '2026-10-17']]);
+  // Once in the data it is no longer pending; if it disappears again, it starts over.
+  assert.deepEqual(trackPending([], second, '2026-10-18'), []);
+  assert.equal(trackPending([komori], [], '2026-10-19')[0].since, '2026-10-19');
+});
+
+test('pending banners reach the owner only if they last 2 days or are about to start', () => {
+  const at = new Date('2026-10-16T09:56:00Z');
+  const verify = (pending) => ({ result: 'ok', lastOk: at.toISOString(), differences: [], pending });
+  const komori = { id: '2026-10-20_1004', name: 'Komori', start: '2026-10-20', end: '2026-10-27', since: '2026-10-16' };
+  // 2026-10-16 itself: 4 days before the banner starts, seen today. Nothing to do.
+  assert.deepEqual(findProblems(ok, { ok: true, warnings: [] }, verify([komori]), at), []);
+  // Still pending the next day: godfat may take a day.
+  assert.deepEqual(findProblems(ok, { ok: true, warnings: [] }, verify([komori]), new Date('2026-10-17T12:46:00Z')), []);
+  // Two days later it is not a delay any more.
+  const late = findProblems(ok, { ok: true, warnings: [] }, verify([komori]), new Date('2026-10-18T05:30:00Z')).join();
+  assert.match(late, /Faltan banners que godfat ya muestra.*2026-10-20_1004 «Komori».*desde el 2026-10-16/s);
+  // Starting tomorrow (or already started): users plan it now.
+  const soon = { ...komori, start: '2026-10-17' };
+  assert.match(findProblems(ok, { ok: true, warnings: [] }, verify([soon]), at).join(), /Faltan banners que godfat ya muestra.*empieza el 2026-10-17/s);
+  const started = { ...komori, start: '2026-10-15' };
+  assert.match(findProblems(ok, { ok: true, warnings: [] }, verify([started]), at).join(), /Faltan banners/);
+});
+
+test('a route found not to be the cheapest by the daily exploration reaches the owner, with how to repeat it', () => {
+  const verify = { result: 'ok', lastOk: now.toISOString(), differences: [] };
+  assert.deepEqual(findProblems({ ...ok, OPTIMALITY_OUTCOME: 'success', OPTIMALITY_SEED: '38883732509' }, { ok: true, warnings: [] }, verify, now), []);
+  const found = findProblems({ ...ok, OPTIMALITY_OUTCOME: 'failure', OPTIMALITY_SEED: '38883732509', OPTIMALITY_CASES: '3000' }, { ok: true, warnings: [] }, verify, now).join();
+  assert.match(found, /Una ruta no es la más barata.*OPTIMALITY_SEED=38883732509 OPTIMALITY_CASES=3000 node --test test\/optimality\.test\.js/s);
+  // Skipped (the tests failed first) is not a finding of its own.
+  assert.doesNotMatch(findProblems({ ...ok, OPTIMALITY_OUTCOME: 'skipped' }, { ok: true, warnings: [] }, verify, now).join(), /más barata/);
 });
 
 test('a banner is a step-up only when its own data says so, whatever its name', () => {

@@ -30,11 +30,18 @@ class Differences {
   }
 }
 
+/**
+ * Compares godfat's banner list with the data's. A banner godfat lists that
+ * the data does not have yet is not a difference: godfat's page can show new
+ * banners hours before its open data has them (2026-10-16: 7 hours). Those
+ * are returned as pending ({ id, name, start, end }), for trackPending.
+ */
 function compareList(diff, data, webEvents, today) {
   const ours = new Map(data.events.map((e) => [e.id, e]));
+  const pending = [];
   for (const w of webEvents) {
     const e = ours.get(w.id);
-    if (!e) diff.add('Banner en la web de godfat que no está en los datos', `${w.id} «${w.name}»`);
+    if (!e) pending.push({ id: w.id, name: w.name, start: w.start, end: w.end });
     else if (e.start !== w.start || e.end !== w.end) {
       diff.add('Fechas distintas', `${w.id}: web ${w.start}~${w.end}, datos ${e.start}~${e.end}`);
     } else if (e.name !== w.name) diff.add('Nombre de banner distinto', `${w.id}: web «${w.name}», datos «${e.name}»`);
@@ -44,6 +51,16 @@ function compareList(diff, data, webEvents, today) {
   for (const e of data.events) {
     if (e.end > addDays(today, 1) && !listed.has(e.id)) diff.add('Banner de los datos que la web de godfat no muestra', `${e.id} «${e.name}»`);
   }
+  return pending;
+}
+
+/**
+ * The pending banners of this check, each with the day (YYYY-MM-DD) it was
+ * first seen pending: kept from the previous check's list while it stays.
+ */
+function trackPending(pending, previous, today) {
+  const since = new Map((previous || []).map((p) => [p.id, p.since]));
+  return pending.map((p) => ({ ...p, since: since.get(p.id) || today }));
 }
 
 /**
@@ -143,4 +160,4 @@ function compareEdgeReroll(diff, web, ev, key, wide) {
   return 1;
 }
 
-export { Differences, compareList, compareBanner, compareEdgeReroll, aboveOf };
+export { Differences, compareList, trackPending, compareBanner, compareEdgeReroll, aboveOf };

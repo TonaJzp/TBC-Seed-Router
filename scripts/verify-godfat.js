@@ -18,7 +18,7 @@ import { buildEvents } from '../public/core/gacha.js';
 import { Simulator } from '../public/core/simulator.js';
 import { parseEventList, parseTable, organize, pageUrl, fetchDocument } from './lib/godfat-html.js';
 import { USER_AGENT } from './lib/identity.js';
-import { Differences, compareList, compareBanner, compareEdgeReroll, aboveOf } from './lib/compare.js';
+import { Differences, compareList, trackPending, compareBanner, compareEdgeReroll, aboveOf } from './lib/compare.js';
 import { godfatLink, GODFAT_MAX_ROWS } from '../public/core/godfat-link.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -44,12 +44,13 @@ async function main() {
   let cells = 0;
   let result;
   let error = null;
+  let pending = [];
 
   try {
     const home = await fetchDocument(pageUrl(seed), { userAgent: USER_AGENT });
     const webEvents = parseEventList(home);
     if (!webEvents) throw new Error('la página de godfat no tiene la lista de banners (¿ha cambiado su diseño?)');
-    compareList(diff, data, webEvents, today);
+    pending = trackPending(compareList(diff, data, webEvents, today), previous?.pending, today);
 
     const ours = new Map(data.events.map((e) => [e.id, e]));
     const planned = webEvents.map((w) => ours.get(w.id)).filter((e) => e && !e.ticket);
@@ -97,11 +98,17 @@ async function main() {
     dataCommit: data.source.commit,
     lastOk: result === 'ok' ? checkedAt : previous?.lastOk ?? null,
     problems: diff.list.map((d) => ({ kind: d.kind, count: d.count })),
+    // Banners godfat lists and its open data does not have yet (the site says so).
+    pending,
   };
   fs.writeFileSync(STATUS, JSON.stringify(status));
   fs.mkdirSync(path.dirname(REPORT), { recursive: true });
   fs.writeFileSync(REPORT, JSON.stringify({ ...status, error, differences: diff.list }, null, 2));
 
+  if (pending.length) {
+    console.log(`Banners que godfat muestra y sus datos abiertos aún no tienen (${pending.length}):`);
+    for (const p of pending) console.log(`  ${p.id} «${p.name}», desde el ${p.start} (pendiente desde el ${p.since})`);
+  }
   if (result === 'ok') console.log(`Todo coincide: semilla ${seed}, ${banners} banners, ${cells} casillas comparadas con bc.godfat.org.`);
   else if (result === 'unreachable') console.error(`No se pudo verificar contra godfat: ${error}`);
   else {

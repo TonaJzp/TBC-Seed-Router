@@ -5,7 +5,8 @@
 // at, so the run is also marked as failed.
 //
 // Environment (set by the workflow): GITHUB_TOKEN, GITHUB_REPOSITORY,
-// RUN_URL, TESTS_OUTCOME, BUILD_OUTCOME, DEPLOY_OUTCOME.
+// RUN_URL, TESTS_OUTCOME, BUILD_OUTCOME, DEPLOY_OUTCOME, and OPTIMALITY_OUTCOME,
+// OPTIMALITY_SEED, OPTIMALITY_CASES (the daily exploration of optimal routes).
 
 import fs from 'fs';
 import path from 'path';
@@ -16,6 +17,11 @@ const LABEL = 'vigilancia';
 const TITLE = 'Vigilancia: hay algo que revisar';
 // godfat being down for a while is not our problem; for longer it is.
 const UNVERIFIED_DAYS = 3;
+// godfat's page can list a new banner before its open data has it (hours, on
+// 2026-10-16). Pending for this many calendar days, or starting tomorrow at
+// the latest, it is no longer a delay. Days, not hours: the daily run can
+// start hours late.
+const PENDING_DAYS = 2;
 const MAX_LISTED = 10;
 
 const readJson = (file) => {
@@ -52,6 +58,15 @@ function findProblems(env, build, verify, now = new Date()) {
         list.join('\n')
     );
   }
+  if (env.OPTIMALITY_OUTCOME === 'failure') {
+    problems.push(
+      '### Una ruta no es la más barata\n' +
+        'La exploración diaria compara las rutas con una búsqueda exhaustiva en casos nuevos cada día, y en alguno la app ' +
+        'mostró una ruta más cara que la mejor posible (o el test no pudo terminar). La exploración no frena la ' +
+        'publicación. El registro de la ejecución dice qué caso y qué criterio. Para repetirlo:\n\n' +
+        `\`OPTIMALITY_SEED=${env.OPTIMALITY_SEED} OPTIMALITY_CASES=${env.OPTIMALITY_CASES || 400} node --test test/optimality.test.js\``
+    );
+  }
   if (env.DEPLOY_OUTCOME && env.DEPLOY_OUTCOME !== 'success' && env.BUILD_OUTCOME === 'success') {
     problems.push(
       '### No se ha podido publicar la web\n' +
@@ -66,7 +81,17 @@ function findProblems(env, build, verify, now = new Date()) {
         `Semilla ${verify.seed}, ${verify.banners} banners, ${verify.rolls} tiros. La web muestra un aviso a los usuarios hasta que vuelva a coincidir.\n\n` +
         lines.join('\n')
     );
-  } else if (verify?.result === 'unreachable' || (!verify && env.BUILD_OUTCOME === 'success')) {
+  }
+  const overdue = overduePending(verify?.pending, now);
+  if (overdue.length) {
+    problems.push(
+      '### Faltan banners que godfat ya muestra\n' +
+        'bc.godfat.org los muestra, pero los datos abiertos de godfat no los tienen y la web no puede planificarlos. ' +
+        'Suele ser un retraso de unas horas; esto ya no lo es. Mira si godfat ha dejado de actualizar sus datos o si la web los descarta.\n\n' +
+        overdue.map((p) => `- ${p.id} «${p.name}»: empieza el ${p.start}, pendiente desde el ${p.since}`).join('\n')
+    );
+  }
+  if (verify?.result === 'unreachable' || (!verify && env.BUILD_OUTCOME === 'success')) {
     const lastOk = verify?.lastOk ? new Date(verify.lastOk) : null;
     if (!lastOk || now - lastOk > UNVERIFIED_DAYS * 86_400_000) {
       problems.push(
@@ -76,6 +101,13 @@ function findProblems(env, build, verify, now = new Date()) {
     }
   }
   return problems;
+}
+
+/** Pending banners (verify-godfat) that need the owner: too long pending, or starting by tomorrow. */
+function overduePending(pending, now) {
+  const today = now.toISOString().slice(0, 10);
+  const day = (iso) => Date.parse(`${iso}T00:00:00Z`) / 86_400_000;
+  return (pending || []).filter((p) => day(today) - day(p.since) >= PENDING_DAYS || day(p.start) <= day(today) + 1);
 }
 
 async function github(env, method, endpoint, body) {
