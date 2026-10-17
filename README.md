@@ -267,6 +267,7 @@ puedes hacer y enlaces para comprobarlo en godfat:
 | Las fechas lo impiden | Qué banner hace falta y por qué ya no está activo. |
 | Ninguna combinación de tiros llega | Dónde sale y qué cambios de pista lo impiden. |
 | Choca con otro objetivo | Con qué gato choca: conseguir uno obliga a dejar atrás al otro. |
+| La búsqueda se cortó | Dónde sale el gato y que el cálculo llegó a su límite antes de comprobarlo: no está demostrado que no se pueda. |
 
 ---
 

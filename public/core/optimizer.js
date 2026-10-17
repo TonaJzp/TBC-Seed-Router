@@ -775,7 +775,8 @@ function search(ctx, key) {
   const unlimited = findRoute(ctx, key, { enforceBudget: false });
   // Prefer a complete route over budget to an affordable partial one.
   if (unlimited.complete || unlimited.path.at(-1).found > result.path.at(-1).found) return { result: unlimited, overBudget: true };
-  return { result, overBudget: false };
+  // Cut beyond the budget: a route over it with more targets is not ruled out.
+  return { result: unlimited.exhausted ? { ...result, exhausted: true } : result, overBudget: false };
 }
 
 /** Runs every objective and returns the routes, the recommended one first. */
@@ -801,6 +802,7 @@ function optimizeRoutes(ctx) {
       routes.push({
         ...base,
         found: false,
+        exhausted: !!result.exhausted,
         reason: result.exhausted
           ? 'Búsqueda demasiado grande: reduce el rango de fechas, los tiros a analizar o los gatos objetivo.'
           : 'Ningún gato objetivo es alcanzable con estas restricciones.',

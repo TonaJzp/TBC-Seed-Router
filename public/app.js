@@ -625,6 +625,14 @@ function renderRouteLegendCells(r, data) {
     </table></div>`;
 }
 
+// A cut search proves nothing is impossible: the title does not say it is.
+// With no route at all, any cut search may be why there is none.
+function diagnosticsTitle(data) {
+  const recommended = data.routes.find((r) => r.recommended);
+  if (!recommended) return data.routes.some((r) => r.exhausted) ? 'Por qué no se ha encontrado ninguna ruta' : 'Por qué no se puede conseguir todo';
+  return recommended.exhausted ? 'Por qué la ruta no lo consigue todo' : 'Por qué no se puede conseguir todo';
+}
+
 // Why the plan can't get every cat: one card per cause, with the affected
 // cats, the concrete cells/banners, what to do, and links to check it on godfat.
 function renderDiagnostics(data) {
@@ -650,10 +658,8 @@ function renderDiagnostics(data) {
       </article>`
     )
     .join('');
-  // A cut search proves nothing is impossible: the title does not say it is.
-  const cut = data.routes.some((r) => r.recommended && r.exhausted);
   return `<section class="diagnostics" id="diagnostics">
-    <h3 class="section-title">${cut ? 'Por qué la ruta no lo consigue todo' : 'Por qué no se puede conseguir todo'}</h3>
+    <h3 class="section-title">${diagnosticsTitle(data)}</h3>
     <p class="diag-intro">${intro}</p>
     ${cards}
   </section>`;
@@ -751,10 +757,16 @@ function renderDetail(data) {
   const r = data.routes[current.selected];
   if (!r || !r.found) return '';
   const t = r.totals;
+  // Only a search that ran to the end proves no route gets every target.
+  const whole = data.routes.find((x) => x.found && x.complete);
   const warnings = [
-    !r.complete &&
-    `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «Por qué no se puede conseguir todo».`,
-    r.exhausted && 'La búsqueda alcanzó su límite de tamaño: el resultado puede no ser el óptimo.',
+    r.complete
+      ? r.exhausted && 'La búsqueda alcanzó su límite de tamaño: el resultado puede no ser el óptimo.'
+      : !r.exhausted
+        ? `No existe ninguna ruta que consiga todos los objetivos con estas fechas, protecciones y tiros. Esta consigue el máximo posible; el motivo de cada gato que falta está en «${diagnosticsTitle(data)}».`
+        : whole
+          ? `La búsqueda de esta ruta llegó a su límite de tamaño antes de conseguir todos los objetivos. «${esc(whole.label)}» sí los consigue todos.`
+          : `La búsqueda llegó a su límite de tamaño antes de encontrar una ruta que consiga todos los objetivos: no está demostrado que no exista. Esta es la que más consigue de las que encontró; lo que se sabe de cada gato que falta está en «${diagnosticsTitle(data)}».`,
   ].filter(Boolean);
   // Not enough Cat Food: the most important thing to know about the route.
   const budget = t.affordable

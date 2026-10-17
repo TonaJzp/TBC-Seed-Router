@@ -184,6 +184,45 @@ test('when the reachable cells could not all be explored, no cell is called unre
   assert.match(items.map(text).join(' '), /1B/, 'still says where the cat is');
 });
 
+test('a search cut before it found any route says so, and calls nothing impossible', () => {
+  const events = loadEvents();
+  fake(events[0], '40A', 990005, 'Gato Lejano');
+  const { ctx } = plan(['Gato Lejano'], { events, inventory: { food: 1e6 } });
+  const cut = { ...ctx, maxStates: 50 };
+  const routes = optimizeRoutes(cut);
+  assert.ok(routes.length > 0 && routes.every((r) => !r.found), 'fixture: the cut search finds no route');
+  assert.ok(routes.every((r) => r.exhausted), 'each route says its search was cut');
+  const items = diagnose(cut, routes, META);
+  const all = items.map(text).join(' ');
+  for (const item of items) assert.doesNotMatch(text(item), IMPOSSIBLE, item.headline);
+  assert.doesNotMatch(all, /por separado sí hay ruta|los demás objetivos|La ruta mostrada/);
+  assert.match(all, /se cortó/);
+  assert.match(all, /40A/, 'still says where the cat is');
+  assert.ok(items.some((i) => i.targets.includes('Gato Lejano')), 'the cat is explained');
+  // The whole search finds it.
+  const whole = optimizeRoutes({ ...ctx });
+  assert.ok(whole[0].found && whole[0].complete, 'fixture: a route exists');
+});
+
+test('when the search beyond your Cat Food was cut, nothing over budget is ruled out', () => {
+  const events = loadEvents();
+  fake(events[0], '40A', 990006, 'Gato Caro');
+  // No Cat Food: within budget the search ends at once (nothing is affordable);
+  // the search beyond the budget is the one that gets cut.
+  const { ctx } = plan(['Gato Caro'], { events, inventory: { tickets: 0, food: 0 } });
+  const cut = { ...ctx, maxStates: 50 };
+  const routes = optimizeRoutes(cut);
+  assert.ok(routes.every((r) => !r.found), 'fixture: no route');
+  assert.ok(routes.every((r) => r.exhausted), 'the cut search beyond the budget is said');
+  assert.ok(routes.every((r) => !/Ningún gato objetivo es alcanzable/.test(r.reason)), 'not called unreachable');
+  const items = diagnose(cut, routes, META);
+  for (const item of items) assert.doesNotMatch(text(item), IMPOSSIBLE, item.headline);
+  assert.doesNotMatch(items.map(text).join(' '), /por separado sí hay ruta/);
+  // The whole search finds it, over budget.
+  const whole = optimizeRoutes({ ...ctx });
+  assert.ok(whole[0].found && whole[0].complete && whole[0].overBudget, 'fixture: a route exists over budget');
+});
+
 test('nothing to explain when the recommended route gets every target', () => {
   const { ctx, routes } = plan(someUbers(2), { inventory: { food: 1e6 } });
   assert.ok(routes[0].complete);

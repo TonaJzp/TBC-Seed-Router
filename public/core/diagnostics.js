@@ -146,14 +146,18 @@ class Diagnoser {
   run() {
     const recommended = this.routes.find((r) => r.recommended);
     const items = [];
-    this.cut = !!recommended?.exhausted;
+    // No route at all: any cut search may be why, so nothing is proven out.
+    this.routeless = !recommended;
+    this.cut = recommended ? !!recommended.exhausted : this.routes.some((r) => r.exhausted);
     if (this.cut) {
       items.push({
         target: null,
         headline: 'La búsqueda fue demasiado grande y se cortó antes de terminar.',
         details: [
           'Con tantas combinaciones posibles (banners × tiros × objetivos), el cálculo llegó a su límite de seguridad.',
-          'La ruta mostrada es válida, pero puede no ser la mejor ni la más completa.',
+          this.routeless
+            ? 'Se cortó antes de encontrar ninguna ruta, pero eso no quiere decir que no exista.'
+            : 'La ruta mostrada es válida, pero puede no ser la mejor ni la más completa.',
         ],
         fix: 'Reduce el rango de fechas, los tiros a revisar o el número de gatos objetivo y vuelve a calcular.',
         links: [],
@@ -211,6 +215,21 @@ class Diagnoser {
   unchecked(target, reach) {
     const name = target.names.join(' / ');
     const spots = this.spotsIn(reach, target);
+    if (this.routeless) {
+      return {
+        target: name,
+        group: 'cut',
+        groupHeadline: 'La búsqueda se cortó antes de encontrar una ruta hasta estos gatos.',
+        perTarget: [`${name} sale en: ${this.describeSpots(spots)}.`],
+        headline: `La búsqueda se cortó antes de encontrar una ruta hasta ${name}.`,
+        details: [
+          `${name} sale en: ${this.describeSpots(spots)}.`,
+          'Que no haya ruta no quiere decir que no se pueda: el cálculo llegó a su límite antes de encontrarla.',
+        ],
+        fix: 'Quita algún gato, acorta las fechas o revisa menos tiros y vuelve a calcular: con menos combinaciones la búsqueda termina.',
+        links: this.spotLinks(spots),
+      };
+    }
     return {
       target: name,
       group: 'cut',
