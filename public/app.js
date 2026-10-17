@@ -716,7 +716,7 @@ function renderRoutesTable(data) {
       const note = r.sameAs
         ? `Misma ruta que ${routeName(data, r.sameAs)}.`
         : r.sameCostAs
-          ? `Mismo coste que ${routeName(data, r.sameCostAs)}: no hay alternativa mejor en este criterio.`
+          ? `Mismo coste que ${routeName(data, r.sameCostAs)}${r.exhausted ? '.' : ': no hay alternativa mejor en este criterio.'}`
           : esc(r.description);
       return `<tr data-i="${i}" class="${i === current.selected ? 'selected' : ''}">
         <td><span class="name">${esc(r.label)}${r.recommended ? '<span class="tag">Recomendada</span>' : ''}</span>
