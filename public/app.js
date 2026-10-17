@@ -649,8 +649,10 @@ function renderDiagnostics(data) {
       </article>`
     )
     .join('');
+  // A cut search proves nothing is impossible: the title does not say it is.
+  const cut = data.routes.some((r) => r.recommended && r.exhausted);
   return `<section class="diagnostics" id="diagnostics">
-    <h3 class="section-title">Por qué no se puede conseguir todo</h3>
+    <h3 class="section-title">${cut ? 'Por qué la ruta no lo consigue todo' : 'Por qué no se puede conseguir todo'}</h3>
     <p class="diag-intro">${intro}</p>
     ${cards}
   </section>`;

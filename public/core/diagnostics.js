@@ -26,6 +26,7 @@ const list = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} y 
  */
 function explore(ctx, protect, { ignoreTime = false } = {}) {
   const { sim, events } = ctx;
+  const maxStates = ctx.maxExploreStates ?? MAX_STATES;
   const canonical = (n, track, last) => (sim.rawIdsAt(n, track).has(last) ? last : 0);
   const { n, track } = sim.start;
   const queue = [{ n, track, last: canonical(n, track, ctx.inventory.lastCat), slot: ctx.startSlot }];
@@ -39,7 +40,7 @@ function explore(ctx, protect, { ignoreTime = false } = {}) {
     const s = queue.pop();
     const id = `${s.n}${s.track}|${s.last}|${s.slot}`;
     if (seen.has(id)) continue;
-    if (seen.size >= MAX_STATES) {
+    if (seen.size >= maxStates) {
       truncated = true;
       break;
     }
@@ -145,7 +146,8 @@ class Diagnoser {
   run() {
     const recommended = this.routes.find((r) => r.recommended);
     const items = [];
-    if (recommended && recommended.exhausted) {
+    this.cut = !!recommended?.exhausted;
+    if (this.cut) {
       items.push({
         target: null,
         headline: 'La búsqueda fue demasiado grande y se cortó antes de terminar.',
@@ -188,14 +190,55 @@ class Diagnoser {
     }));
   }
 
+  // Something is only called impossible when the search that would have found
+  // it ran to the end: a cut search (`cut`, `truncated`) proves nothing.
   diagnose(target) {
     const protect = this.ctx.protect;
     const protecting = protect.avoidLegend || protect.avoidLegendFest;
     const reach = this.reach(protect);
     const has = (r) => this.spotsIn(r, target).length > 0;
-    if (has(reach)) return this.conflict(target, reach);
-    if (protecting && has(this.reach({}))) return this.protection(target);
+    if (has(reach)) return this.cut ? this.unchecked(target, reach) : this.conflict(target, reach);
+    if (reach.truncated) return this.tooManyToExplore(target);
+    if (protecting) {
+      const free = this.reach({});
+      if (has(free)) return this.protection(target);
+      if (free.truncated) return this.tooManyToExplore(target);
+    }
     return this.structural(target);
+  }
+
+  // --- The search was cut before it could tell ------------------------------
+  unchecked(target, reach) {
+    const name = target.names.join(' / ');
+    const spots = this.spotsIn(reach, target);
+    return {
+      target: name,
+      group: 'cut',
+      groupHeadline: 'La búsqueda se cortó antes de comprobar si estos gatos caben en la misma ruta que los demás objetivos.',
+      perTarget: [`${name} sale en: ${this.describeSpots(spots)}.`],
+      headline: `La búsqueda se cortó antes de comprobar si ${name} cabe en la misma ruta que los demás objetivos.`,
+      details: [
+        `${name} sale en: ${this.describeSpots(spots)}.`,
+        'Que no esté en la ruta mostrada no quiere decir que no se pueda: el cálculo llegó a su límite antes de demostrarlo.',
+      ],
+      fix: 'Quita algún gato, acorta las fechas o revisa menos tiros y vuelve a calcular: con menos combinaciones la búsqueda termina y lo comprueba.',
+      links: this.spotLinks(spots),
+    };
+  }
+
+  tooManyToExplore(target) {
+    const name = target.names.join(' / ');
+    const usable = this.occurrences(target);
+    return {
+      target: name,
+      headline: `Hay demasiadas combinaciones para comprobar si alguna llega a ${name}.`,
+      details: [
+        `${name} sale en: ${this.describeSpots(usable)}.`,
+        'El repaso de las casillas a las que se puede llegar alcanzó su límite antes de terminar: no está demostrado que no se pueda.',
+      ],
+      fix: 'Acorta las fechas o revisa menos tiros y vuelve a calcular: con menos combinaciones se puede comprobar del todo.',
+      links: this.spotLinks(usable),
+    };
   }
 
   // --- Protection keeps the cat's only cells -------------------------------
@@ -297,12 +340,28 @@ class Diagnoser {
     const name = target.names.join(' / ');
     const ctx = this.ctx;
     const conflicts = [];
+    const unsure = []; // pairs whose check was cut: neither together nor apart is proven
     for (const other of ctx.targets) {
       if (other === target) continue;
       const pair = findRoute({ ...ctx, targets: [target, other] }, 'fastest', { enforceBudget: false });
-      if (!pair.complete) conflicts.push(other);
+      if (pair.exhausted) unsure.push(other);
+      else if (!pair.complete) conflicts.push(other);
     }
     const mySpots = this.spotsIn(reach, target);
+    const unsureNames = unsure.map((c) => c.names.join(' / '));
+    const unsureNote = `Con ${list(unsureNames)} no se ha podido comprobar: hay demasiadas combinaciones.`;
+    if (!conflicts.length && unsure.length) {
+      return {
+        target: name,
+        headline: `${name} se puede conseguir por separado, pero no a la vez que todos los demás objetivos.`,
+        details: [
+          `${name} sale en: ${this.describeSpots(mySpots)}.`,
+          `No se ha podido comprobar con cuáles choca. ${unsureNote}`,
+        ],
+        fix: 'Quita alguno de los objetivos menos importantes y vuelve a calcular.',
+        links: this.spotLinks(mySpots),
+      };
+    }
     if (!conflicts.length) {
       return {
         target: name,
@@ -323,6 +382,7 @@ class Diagnoser {
         `${name} solo sale en: ${this.describeSpots(mySpots)}.`,
         ...conflicts.map((c) => `${c.names.join(' / ')} solo sale en: ${this.describeSpots(this.spotsIn(reach, c))}.`),
         'Una ruta solo avanza: no puede volver a una fila anterior de la semilla ni a un evento que ya terminó. Para conseguir uno hay que pasar de largo (o dejar atrás en el tiempo) las casillas del otro.',
+        ...(unsure.length ? [unsureNote] : []),
       ],
       fix: `Elige cuál prefieres: quita ${list(names)} o ${name} y vuelve a calcular.`,
       links: [...this.spotLinks(mySpots).slice(0, 4), ...conflicts.flatMap((c) => this.spotLinks(this.spotsIn(reach, c)).slice(0, 2))],

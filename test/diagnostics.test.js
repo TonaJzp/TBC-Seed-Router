@@ -139,6 +139,51 @@ test('the explorer covers what the optimizer can reach and records protected cel
   assert.ok(blocked.blocked.size > 0, 'protected cells are recorded when they stop a roll');
 });
 
+// An explanation may only call something impossible if the search that would
+// have found it ran to the end (deep audit, finding 2).
+const IMPOSSIBLE = /no se puede conseguir|ninguna combinación|no a la vez que|solo sale en casillas protegidas|impiden llegar/i;
+
+test('when the search was cut, a cat it did not get is not called impossible', () => {
+  const { ctx } = plan(someUbers(8), { inventory: { tickets: 0, food: 100000 } });
+  const cut = { ...ctx, maxStates: 200 };
+  const routes = optimizeRoutes(cut);
+  const recommended = routes.find((r) => r.recommended);
+  assert.ok(recommended.exhausted, 'fixture: the search is cut');
+  const missing = recommended.targets.filter((t) => !t.obtained).map((t) => t.query);
+  assert.ok(missing.length > 0, 'fixture: some cat is missing');
+  const items = diagnose(cut, routes, META);
+  for (const item of items) assert.doesNotMatch(text(item), IMPOSSIBLE, item.headline);
+  const told = items.flatMap((i) => i.targets);
+  for (const name of missing) assert.ok(told.some((t) => t.includes(name)), `${name} is explained`);
+  assert.match(items.map(text).join(' '), /se cortó antes de comprobar/);
+});
+
+test('a pair check that was cut is not a conflict', () => {
+  const events = loadEvents();
+  const early = events.find((e) => e.end === '2026-10-16');
+  const late = events.find((e) => e.start === '2026-10-16');
+  fake(early, '8A', 990001, 'Gato Temprano');
+  fake(late, '5A', 990002, 'Gato Tardío');
+  const { ctx, routes } = plan(['Gato Temprano', 'Gato Tardío'], { events, inventory: { food: 1e6 } });
+  // The main search ended (it proved the two cannot go together); only the
+  // checks done to explain it are cut.
+  const items = diagnose({ ...ctx, maxStates: 1 }, routes, META);
+  assert.equal(items.length, 1);
+  assert.doesNotMatch(text(items[0]), /no se puede conseguir en la misma ruta que/);
+  assert.doesNotMatch(text(items[0]), /por separado sí hay ruta/);
+  assert.match(text(items[0]), /no se ha podido comprobar/);
+});
+
+test('when the reachable cells could not all be explored, no cell is called unreachable', () => {
+  const events = loadEvents();
+  fake(events[0], '1B', 990004, 'Gato Imposible');
+  const { ctx, routes } = plan(['Gato Imposible'], { events, inventory: { food: 1e6 } });
+  const items = diagnose({ ...ctx, maxExploreStates: 5 }, routes, META);
+  for (const item of items) assert.doesNotMatch(text(item), IMPOSSIBLE, item.headline);
+  assert.match(items.map(text).join(' '), /demasiadas combinaciones/);
+  assert.match(items.map(text).join(' '), /1B/, 'still says where the cat is');
+});
+
 test('nothing to explain when the recommended route gets every target', () => {
   const { ctx, routes } = plan(someUbers(2), { inventory: { food: 1e6 } });
   assert.ok(routes[0].complete);
