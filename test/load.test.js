@@ -115,6 +115,59 @@ test('measured lists that ended guaranteed get a level whose time covers them', 
   assert.ok(withTickets.guaranteed && withTickets.level === 'heavy', '13 ubers with tickets: guaranteed, longer');
 });
 
+// Measured with Rare Tickets (02-DOCS ftd audit-2026-10-17b; 2 seeds, site
+// data, 16 banners, ubers concentrated in the longest banners): each count of
+// tickets left is a state of its own, so with many rolls they take the search
+// to its limit with few cats.
+test('every list measured to reach the safety limit because of its tickets is very heavy', () => {
+  const reached = [
+    // [ubers, rolls, tickets, share of the limit] (1 = cut)
+    [13, 1000, 60, 1], [12, 1000, 60, 1], [12, 1000, 400, 1], [11, 1000, 400, 1], [10, 1000, 400, 1],
+    [8, 1000, 400, 1], [6, 1000, 400, 1], [10, 1000, 60, 0.93],
+    [13, 200, 150, 0.88], [12, 200, 400, 0.81],
+  ];
+  for (const [uber, rolls, tickets, share] of reached) {
+    const l = levelOf({ uber, legend: 0, super: 0, rare: 0, banners: 16 }, rolls, tickets);
+    assert.equal(l.level, 'veryHeavy', `${uber} ubers, ${rolls} rolls, ${tickets} tickets (${share * 100} % of the limit)`);
+  }
+  // The same lists without tickets are guaranteed: the tickets make the difference.
+  assert.equal(levelOf({ uber: 13, legend: 0, super: 0, rare: 0, banners: 16 }, 1000, 0).guaranteed, true);
+});
+
+test('more tickets or more rolls never make the load lighter', () => {
+  const order = LEVELS.map((l) => l.key);
+  const rank = (uber, rolls, tickets) => order.indexOf(levelOf({ uber, legend: 0, super: 0, rare: 0, banners: 16 }, rolls, tickets).level);
+  const tickets = [0, 1, 5, 6, 19, 20, 21, 60, 61, 150, 400];
+  const rolls = [20, 60, 61, 100, 101, 150, 200, 201, 500, 1000];
+  for (const uber of [1, 4, 6, 8, 10, 12, 13, 14, 20, 22]) {
+    for (const r of rolls) {
+      for (let i = 1; i < tickets.length; i++) assert.ok(rank(uber, r, tickets[i]) >= rank(uber, r, tickets[i - 1]), `${uber} ubers, ${r} rolls: ${tickets[i - 1]} → ${tickets[i]} tickets`);
+    }
+    for (const t of tickets) {
+      // Only within a band: the bands themselves allow more ubers with fewer rolls.
+      for (const [a, b] of [[101, 150], [150, 200], [201, 500], [500, 1000]]) assert.ok(rank(uber, b, t) >= rank(uber, a, t), `${uber} ubers, ${t} tickets: ${a} → ${b} rolls`);
+    }
+  }
+});
+
+test('measured lists with tickets that ended guaranteed get a level whose time covers them', () => {
+  const ended = [
+    // [ubers, rolls, tickets, slowest seconds]
+    [8, 200, 5, 23.2], [8, 200, 20, 60.7], [8, 200, 60, 113.9], [13, 200, 5, 35.9], [13, 200, 60, 98.3], [11, 200, 400, 95.6],
+    [10, 100, 60, 17.3], [14, 100, 60, 65.2], [13, 100, 400, 42.0],
+    [15, 60, 60, 21.4], [22, 60, 60, 97.6], [21, 60, 400, 63.9],
+    [6, 1000, 20, 19.8], [10, 1000, 5, 12.2], [10, 1000, 20, 31.4], [12, 1000, 5, 20.2], [12, 1000, 20, 43.0], [6, 1000, 60, 74.1],
+  ];
+  for (const [uber, rolls, tickets, slowest] of ended) {
+    const l = levelOf({ uber, legend: 0, super: 0, rare: 0, banners: 16 }, rolls, tickets);
+    const name = `${uber} ubers, ${rolls} rolls, ${tickets} tickets`;
+    assert.equal(l.guaranteed, true, name);
+    assert.ok(slowest <= l.maxS, `${name}: ${slowest} s within «${l.range}»`);
+  }
+  // The list that showed it: 8 ubers, 200 rolls and 20 tickets said «Ligero, menos de 10 segundos».
+  assert.notEqual(levelOf({ uber: 8, legend: 0, super: 0, rare: 0, banners: 16 }, 200, 20).level, 'light');
+});
+
 test('no load without data, without counted cats, or without banners in the dates', () => {
   const base = { rolls: 200, tickets: 0, ...DATES };
   assert.equal(analysisLoad({ ...base, data: null, targets: pick('uber', 3) }), null);

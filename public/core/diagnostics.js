@@ -360,9 +360,13 @@ class Diagnoser {
     const ctx = this.ctx;
     const conflicts = [];
     const unsure = []; // pairs whose check was cut: neither together nor apart is proven
+    // Without a budget, Rare Tickets only change what a roll costs, never which
+    // rolls can be made: the check leaves them out, or each count of tickets
+    // left would be a state of its own (up to ten times slower).
+    const free = { ...ctx, inventory: { ...ctx.inventory, tickets: 0 } };
     for (const other of ctx.targets) {
       if (other === target) continue;
-      const pair = findRoute({ ...ctx, targets: [target, other] }, 'fastest', { enforceBudget: false });
+      const pair = findRoute({ ...free, targets: [target, other] }, 'fastest', { enforceBudget: false });
       if (pair.exhausted) unsure.push(other);
       else if (!pair.complete) conflicts.push(other);
     }

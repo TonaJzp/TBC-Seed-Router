@@ -174,6 +174,25 @@ test('a pair check that was cut is not a conflict', () => {
   assert.match(text(items[0]), /no se ha podido comprobar/);
 });
 
+test('Rare Tickets do not slow down the check of two cats together: it gives the same answer without them', () => {
+  const events = loadEvents();
+  const early = events.find((e) => e.end === '2026-10-16');
+  const late = events.find((e) => e.start === '2026-10-16');
+  fake(early, '8A', 990001, 'Gato Temprano');
+  fake(late, '5A', 990002, 'Gato Tardío');
+  // With 60 tickets each count of tickets left was a state of its own: the
+  // check needed ~20 times the states and, past 5000, said it could not tell.
+  const items = (tickets) => {
+    const { ctx, routes } = plan(['Gato Temprano', 'Gato Tardío'], { events, inventory: { tickets, food: 1e6 } });
+    return diagnose({ ...ctx, maxStates: 5000 }, routes, META);
+  };
+  const withTickets = items(60);
+  assert.equal(withTickets.length, 1);
+  assert.match(text(withTickets[0]), /no se puede conseguir en la misma ruta que/);
+  assert.doesNotMatch(text(withTickets[0]), /no se ha podido comprobar/);
+  assert.deepEqual(withTickets, items(0));
+});
+
 test('when the reachable cells could not all be explored, no cell is called unreachable', () => {
   const events = loadEvents();
   fake(events[0], '1B', 990004, 'Gato Imposible');

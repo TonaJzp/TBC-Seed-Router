@@ -10,8 +10,10 @@
 //   route can reach, which grows with the rolls up to ~150 and then stays;
 // - super rares and rares are in every banner: they weigh a quarter of an
 //   uber with up to 5 banners and a third with more;
-// - tickets make up to three searches of what was one (×2.5–3.5 the time),
-//   but each search is no bigger: they change the time, not the guarantee.
+// - tickets make three searches of what was one, and each count of tickets
+//   left is a state of its own: they lengthen the time always, and with many
+//   rolls (room for many singles) they also take the search to its limit
+//   (02-DOCS ftd audit-2026-10-17b; see ticketUnits).
 // The guaranteed zone ends where the hardest lists measured still ended
 // whole: ubers concentrated in the longest banners (all of one, then the
 // next) reach the safety limit with fewer cats than lists drawn at random.
@@ -49,8 +51,25 @@ const BANDS = [
   { rolls: 100, upTo: [12, 13, 14] },
   { rolls: MAX_ROLLS, upTo: [11, 12, 13] },
 ];
-// One more uber for the time (not for the guarantee).
-const TICKET_UNITS = 1;
+/**
+ * Units that `tickets` Rare Tickets add to the list for the guarantee, with
+ * `rolls` rolls (Infinity: never guaranteed). Measured at the edge of the
+ * guaranteed zone, as states stored out of the search's limit:
+ * - up to 100 rolls, none: at most 39 % with 150 or 400 tickets;
+ * - up to 200 rolls, none with up to 60 tickets (13 ubers: 52 %); past 60, two
+ *   (13 ubers and 150 tickets: 88 %; 12 and 400: 81 %; 11 and 400: 74 %);
+ * - with more rolls they weigh more than the cats: none up to 5 (12 ubers:
+ *   19 %), one up to 20 (12 and 20: 47 %), seven up to 60 (6 ubers: 62 %, 10:
+ *   93 %, 12: cut) and past 60 never guaranteed (400 tickets: cut with 6).
+ */
+export function ticketUnits(tickets, rolls) {
+  if (!(tickets > 0) || rolls <= 100) return 0;
+  if (rolls <= 200) return tickets <= 60 ? 0 : 2;
+  if (tickets <= 5) return 0;
+  if (tickets <= 20) return 1;
+  if (tickets <= 60) return 7;
+  return Infinity;
+}
 
 const localIsoDate = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -92,11 +111,14 @@ export function levelOf(counts, rolls, tickets = 0) {
   const r = Math.min(MAX_ROLLS, Math.max(MIN_ROLLS, Number.isFinite(rolls) ? rolls : MIN_ROLLS));
   const { upTo } = BANDS.find((b) => r <= b.rolls);
   const last = upTo.length - 1;
-  const inZone = units <= upTo[last];
-  const weight = units + (tickets > 0 ? TICKET_UNITS : 0);
-  // In the guaranteed zone, tickets can make it longer, at most «Pesado».
+  const weight = units + ticketUnits(tickets, r);
+  const inZone = weight <= upTo[last];
+  // Tickets make three searches of one, each one bigger: in the guaranteed
+  // zone, one level longer, two with 20 or more (measured: «Ligero» lists up
+  // to 61 s with 20, «Pesado» ones up to 98 s with 60), at most «Pesado».
   const at = upTo.findIndex((limit) => weight <= limit);
-  const step = !inZone ? LEVELS.length - 1 : at < 0 ? last : at;
+  const longer = tickets >= 20 ? 2 : tickets > 0 ? 1 : 0;
+  const step = !inZone ? LEVELS.length - 1 : Math.min(at + longer, last);
   // The bar: a quarter per level, filled within it by how near its limit.
   const lo = step === 0 ? 0 : upTo[Math.min(step, upTo.length) - 1];
   const hi = step > last ? upTo[last] * 2 : upTo[step];

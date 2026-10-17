@@ -140,12 +140,14 @@ actualiza al cambiar los gatos, las fechas, los tiros o los tickets.
 - Lo que más pesa son los **ubers y legendarios**: cada uno cuenta como tres o cuatro superraros o raros
   (tres si tus fechas tienen más de cinco banners).
   Puedes pedir casi todos los superraros y raros de tus banners sin que el análisis se note.
-- Más tiros a revisar y tener Rare Tickets también alargan el análisis.
+- Más tiros a revisar y tener Rare Tickets también alargan el análisis. Los tickets pesan más cuantos
+  más tiros revises: con más de 200 tiros y más de 60 tickets el análisis siempre es **muy pesado**,
+  aunque pidas pocos gatos.
 - Hasta **pesado**, la ruta que ves está garantizada como la mejor.
 - **Muy pesado**: antes de empezar se te pide confirmación. Puede tardar muchos minutos y, si llega al
   límite de seguridad del cálculo (que evita que la página se quede sin memoria), verás la mejor ruta
   encontrada con un aviso arriba: **«Ruta no garantizada como la mejor»**. Para una garantizada, quita
-  algunos ubers o legendarios, o revisa menos tiros.
+  algunos ubers o legendarios, o revisa menos tiros (con muchos Rare Tickets, sobre todo menos tiros).
 
 ---
 
