@@ -432,7 +432,8 @@ Una tarea automática de GitHub hace esto **cada día**:
    nuevos unas horas antes de que lleguen a los datos abiertos de godfat: la web lo dice (esos
    banners aún no entran en las rutas), y solo se avisa al dueño si siguen faltando 2 días después o
    si el banner empieza ya.
-5. Publica la web con los datos nuevos.
+5. Publica la web con los datos nuevos. Cada script y estilo lleva la versión publicada en su
+   dirección, para que nadie mezcle archivos de dos versiones justo después de publicar.
 6. Si algo falla, no coincide o falta el icono de algún gato de los banners, **abre una incidencia en
    el repositorio** (GitHub avisa por email al dueño). Si afecta a los cálculos, la web muestra
    además un aviso a los usuarios hasta que se resuelva. Cuando todo vuelve a estar en orden, la
