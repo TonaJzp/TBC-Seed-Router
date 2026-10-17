@@ -571,6 +571,7 @@ const FIT = {
   same: ['Misma ruta', 'Tira esa casilla en este banner: mismo coste y el resto de la ruta no cambia.'],
   draw: ['Cambia la ruta', 'Esa casilla va dentro de un 11-draw y su banner no se puede cambiar solo para esa tirada: añádelo a tus objetivos y la ruta se recalcula.'],
   next: ['Cambia la ruta', 'Tirarla en este banner cambiaría las tiradas siguientes: añádelo a tus objetivos y la ruta se recalcula.'],
+  target: ['Cambia la ruta', 'Ahí la ruta saca uno de tus objetivos, y no lo saca en ningún otro paso: tirarla en este banner lo perdería. Añádelo a tus objetivos y la ruta se recalcula.'],
 };
 
 /** "Add to targets" button, or a tag if it already is one. */
@@ -599,7 +600,7 @@ function renderRouteLegendCells(r, data) {
       const rows = options.length
         ? options.map((l) => {
           const ev = evById.get(l.eventId);
-          const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : 'next'];
+          const [label, why] = FIT[l.sameRoute ? 'same' : c.inDraw ? 'draw' : l.losesTarget ? 'target' : 'next'];
           return `<td class="opt"><b>${esc(l.name)}</b></td>
               <td class="ev" title="${esc(l.eventName)}"><span class="ev-name">${esc(l.eventName)}</span>${ev ? `<small>hasta el ${esc(shortWithHour(ev.end, ev.endTime))}</small>` : ''}</td>
               <td class="fitc"><span class="fit ${l.sameRoute ? 'same' : 'change'}" title="${esc(why)}">${label}</span></td>

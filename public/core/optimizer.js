@@ -534,6 +534,7 @@ function describeRoute(ctx, result) {
   const chain = result.path.slice(1);
 
   const obtainedAt = new Map(); // target index -> action number
+  const hitActions = targets.map(() => new Set()); // target index -> every action where it counts
   const crossings = []; // legend cells the route rolls on
   let prev = result.path[0];
   const steps = chain.map((node, i) => {
@@ -544,6 +545,7 @@ function describeRoute(ctx, result) {
       const wanted = targets.some((t) => t.ids.has(c.id));
       const counts = countsAsTarget(sim, ctx.protect, c, cell);
       const hits = counts ? targets.flatMap((t, ti) => (t.ids.has(c.id) ? [ti] : [])) : [];
+      hits.forEach((ti) => hitActions[ti].add(i));
       const firstTime = hits.filter((ti) => !obtainedAt.has(ti));
       firstTime.forEach((ti) => obtainedAt.set(ti, i));
       const color = legendColorOf(sim, cell, ctx.doubleLegend);
@@ -625,8 +627,12 @@ function describeRoute(ctx, result) {
     const changed = performAction(sim, evAfter, after.step.type, { ...node, last: s.cat.id });
     return !!(original && changed && sameIds(original, changed));
   };
+  // A single that gives the route its only copy of a target: rolled in another
+  // banner, that target is lost even if every other roll stays the same.
+  const onlyTargetAt = (i) => hitActions.some((actions) => actions.size === 1 && actions.has(i));
   const legendCells = crossings.map((x) => {
     const active = activeAt(x.slot);
+    const losesTarget = x.single && onlyTargetAt(x.action);
     return {
       key: x.key,
       color: x.color,
@@ -637,7 +643,7 @@ function describeRoute(ctx, result) {
       legends: sim
         .legendsAt(parseInt(x.key, 10), x.key.at(-1))
         .filter((l) => active.has(l.eventId) && l.id !== x.got.id)
-        .map((l) => ({ ...l, sameRoute: x.single && keepsRoute(x.action, byId.get(l.eventId)) })),
+        .map((l) => ({ ...l, sameRoute: x.single && !losesTarget && keepsRoute(x.action, byId.get(l.eventId)), losesTarget })),
     };
   });
   return {

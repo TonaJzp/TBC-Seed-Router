@@ -222,8 +222,9 @@ lugar de repetirla, y si llevan a otra ruta con las mismas cifras, «Mismo coste
   sacas en ella y qué otros legendarios podrías sacar ahí con los banners abiertos en ese momento:
   - **Misma ruta**: tira esa casilla en ese otro banner y te llevas el legendario sin cambiar nada
     más ni gastar más.
-  - **Cambia la ruta**: conseguirlo obliga a cambiar el resto de la ruta. Pulsa «Añadir a objetivos»
-    y se recalcula para conseguirlo junto a los demás.
+  - **Cambia la ruta**: conseguirlo obliga a cambiar el resto de la ruta, o te haría perder un
+    objetivo que la ruta solo saca en esa casilla. Pulsa «Añadir a objetivos» y se recalcula para
+    conseguirlo junto a los demás.
   - Si la ruta gasta alguna casilla de legendario sin sacar el legendario, un aviso te lo dice.
 
 ### Pasos

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { plan, replayRoute, makeSim, loadEvents, loadVariant, gachaData } from './helpers.js';
 import { plan as planner, catalogOf } from '../public/core/planner.js';
-import { eventWindow, rollSlot, totalCost } from '../public/core/optimizer.js';
+import { eventWindow, rollSlot, totalCost, optimizeRoutes } from '../public/core/optimizer.js';
 import { localMinute, nextDayMinute } from '../public/core/time.js';
 import { buildEvents } from '../public/core/gacha.js';
 import { Simulator } from '../public/core/simulator.js';
@@ -471,6 +471,75 @@ test('a legendary of another banner is "without leaving the route" only if the r
   assert.equal(inDraw.inDraw, true);
   assert.equal(inDraw.got.name, 'Megidora');
   assert.deepEqual(inDraw.legends.map((l) => [l.name, l.sameRoute]), [['Lumina', false]]);
+});
+
+test('a cell where the route gets a target is never "the same route" in another banner: the target would be lost', () => {
+  const key = (name) => String(catalogOf(gachaData).find((c) => c.name === name).key);
+  // Musashi Miyamoto (legendary) is only taken at 2A, a single roll. A
+  // legendary counts even on a protected cell, so protecting changes nothing.
+  for (const avoid of [false, true]) {
+    const r = planner({
+      url: 'https://bc.godfat.org/?seed=4102194373&last=39', targets: [key('Musashi Miyamoto')], from: '2026-10-09', to: '2026-10-15',
+      rolls: 200, tickets: 0, food: 100000, avoidLegend: avoid, avoidLegendFest: avoid,
+    }, gachaData, { now: new Date(2026, 9, 9, 3, 42) });
+    const route = r.routes[0];
+    assert.equal(route.targets[0].obtained, true);
+    const cell = route.legendCells.find((c) => c.key === '2A');
+    assert.equal(cell.got.name, 'Musashi Miyamoto');
+    assert.equal(cell.inDraw, false);
+    assert.ok(cell.legends.length >= 2, 'fixture: other banners give another legendary there');
+    for (const l of cell.legends) {
+      assert.equal(l.sameRoute, false, `${l.name} (protect ${avoid}) would lose Musashi Miyamoto`);
+      assert.equal(l.losesTarget, true, `${l.name} (protect ${avoid}) says why`);
+    }
+  }
+});
+
+test('a target the route gets again later does not stop its legend cell from being "the same route"', () => {
+  // Made-up cats on two banners open at once: the target «Doble» at 2A (a
+  // purple cell) and, depending on the case, again at 4A; «Final» at 5A. The
+  // other banner gives a legendary at 2A.
+  const run = (again) => {
+    const events = loadEvents();
+    const [main, other] = events;
+    const put = (ev, key, id, name) => {
+      ev.raw[key] = { ...ev.raw[key], id, name };
+      ev.names[id] = name;
+    };
+    put(main, '2A', 990010, 'Gato Doble');
+    if (again) put(main, '4A', 990010, 'Gato Doble');
+    put(main, '5A', 990011, 'Gato Final');
+    put(other, '2A', 990012, 'Leyenda Falsa');
+    const { ctx } = plan(['Gato Doble', 'Gato Final'], { events });
+    other.rarityOf.set(990012, 'legendary'); // the simulator builds rarityOf
+    ctx.sim.legendColors.set('2A', new Set(['legend']));
+    const route = optimizeRoutes(ctx)[0];
+    assert.ok(route.complete, 'fixture: both targets');
+    const cell = route.legendCells.find((c) => c.key === '2A');
+    assert.equal(cell.got.name, 'Gato Doble');
+    assert.equal(cell.inDraw, false, 'fixture: 2A is a single roll');
+    const legend = cell.legends.find((l) => l.name === 'Leyenda Falsa');
+    assert.ok(legend, 'fixture: the other banner is open there');
+    if (again) {
+      const hits = route.steps.flatMap((s) => s.cats).filter((c) => c.name === 'Gato Doble' && c.target);
+      assert.deepEqual(hits.map((c) => c.cell), ['2A', '4A'], 'fixture: the route gets it twice');
+    }
+    return legend;
+  };
+  assert.deepEqual(run(true), { ...run(true), sameRoute: true, losesTarget: false }, 'got again at 4A: nothing is lost');
+  assert.deepEqual(run(false), { ...run(false), sameRoute: false, losesTarget: true }, 'only at 2A: the target would be lost');
+});
+
+test('a cell whose cat is not a target can still be rolled in another banner', () => {
+  const key = (name) => String(catalogOf(gachaData).find((c) => c.name === name).key);
+  // Oda Nobunaga's route rolls 2A on a single and gets Musashi Miyamoto there,
+  // who is not a target: the other banners keep the route (as before).
+  const r = planner({
+    url: 'https://bc.godfat.org/?seed=4102194373&last=39', targets: [key('Oda Nobunaga')], from: '2026-10-09', to: '2026-10-15',
+    rolls: 200, tickets: 0, food: 100000,
+  }, gachaData, { now: new Date(2026, 9, 9, 3, 42) });
+  const cell = r.routes[0].legendCells.find((c) => c.key === '2A');
+  assert.ok(cell.legends.length && cell.legends.every((l) => l.sameRoute && !l.losesTarget));
 });
 
 // --- «Incluirlo siempre en la ruta» (11-draw at 750) ---------------------------
