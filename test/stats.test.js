@@ -33,7 +33,10 @@ test('events are sent as GoatCounter events with their name and title', () => {
   assert.equal(new URL(countUrl({ path: '/' })).searchParams.has('e'), false);
 });
 
-test('the screen size goes only with the page view', () => {
-  assert.equal(new URL(countUrl({ path: '/', screen: '412,915,2.625' })).searchParams.get('s'), '412,915,2.625');
-  assert.equal(new URL(countUrl({ path: 'calcular-ruta', event: true })).searchParams.has('s'), false);
+// Reading the screen is reading the visitor's device: it is never sent.
+test('nothing about the screen or the device is sent', () => {
+  for (const hit of [{ path: '/', title: 'TBC Seed Router', referrer: 'https://www.reddit.com/', screen: '412,915,2.625' }, { path: 'calcular-ruta', event: true }]) {
+    const keys = [...new URL(countUrl(hit)).searchParams.keys()].sort();
+    assert.deepEqual(keys, hit.event ? ['e', 'p', 'r', 'rnd', 't'] : ['p', 'r', 'rnd', 't']);
+  }
 });

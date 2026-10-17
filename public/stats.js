@@ -1,6 +1,7 @@
-// Anonymous usage counts with GoatCounter (goatcounter.com): no cookies and
-// nothing from the form, only that the page was opened and the name of an
-// event ("calcular-ruta"...). The numbers are on the GoatCounter dashboard.
+// Anonymous usage counts with GoatCounter (goatcounter.com): no cookies,
+// nothing from the form and nothing read from the device (not even the
+// screen), only that the page was opened and the name of an event
+// ("calcular-ruta"...). The numbers are on the GoatCounter dashboard.
 // Only the published site counts, so local runs and tests never do.
 
 export const STATS_ENDPOINT = 'https://tbcseedrouter.goatcounter.com/count';
@@ -25,9 +26,8 @@ export function shouldCount({ hostname, optedOut, doNotTrack, globalPrivacyContr
 }
 
 /** The GoatCounter /count URL for a page view or an event. */
-export function countUrl({ path, title = '', referrer = '', screen = '', event = false }) {
+export function countUrl({ path, title = '', referrer = '', event = false }) {
   const params = new URLSearchParams({ p: path, t: title, r: referrer });
-  if (screen) params.set('s', screen); // GoatCounter keeps only the width, to tell phones from computers
   if (event) params.set('e', 'true');
   params.set('rnd', Math.random().toString(36).slice(2, 7)); // cache buster
   return `${STATS_ENDPOINT}?${params}`;
@@ -72,7 +72,6 @@ export function initStats() {
     path: '/',
     title: 'TBC Seed Router',
     referrer: externalReferrer(document.referrer, location.origin),
-    screen: `${window.screen.width},${window.screen.height},${window.devicePixelRatio || 1}`,
   });
 }
 

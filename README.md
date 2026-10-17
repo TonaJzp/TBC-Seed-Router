@@ -451,14 +451,18 @@ por última vez contra godfat.
 
 - Todo se calcula en tu navegador. Tu semilla, tus gatos, tus fechas y tu inventario no se envían a
   ningún sitio. No hay cookies ni publicidad.
-- Estadísticas anónimas con [GoatCounter](https://www.goatcounter.com/), sin cookies: solo se cuenta
-  cada visita y cada cálculo de rutas, nunca lo que escribes en el formulario. Si tu navegador
-  envía Do Not Track o Global Privacy Control, no se cuenta nada.
+- Estadísticas anónimas con [GoatCounter](https://www.goatcounter.com/) (servidores en la UE), sin
+  cookies y sin leer nada de tu dispositivo: solo se cuenta cada visita y cada cálculo de rutas, nunca
+  lo que escribes en el formulario. Si tu navegador envía Do Not Track o Global Privacy Control, no se
+  cuenta nada; también puedes abrir la web con `?estadisticas=no` para que deje de contarte.
 - Tu navegador guarda el último formulario y el tema claro u oscuro (botón junto al título) para
   que no tengas que repetirlos. Puedes borrarlos con «Borrar datos guardados»,
   al pie de la página. Si tu navegador bloquea los datos del sitio, la web funciona igual,
   solo que no recuerda nada.
-- Más detalles en la página [Créditos, licencias y privacidad](https://tonajzp.github.io/TBC-Seed-Router/credits.html).
+- Si escribes al correo, tu mensaje solo se usa para contestarte y se borra como máximo un año
+  después de resolverlo.
+- Política de privacidad completa, condiciones de uso y retirada de contenido en la página
+  [Créditos, privacidad y condiciones](https://tonajzp.github.io/TBC-Seed-Router/credits.html).
 
 ---
 
@@ -482,7 +486,7 @@ no se puede copiar, publicar ni alojar en otro sitio, ni usar para sacar ingreso
 autor. Detalles en [LICENSE](LICENSE) y [NOTICE.md](NOTICE.md).
 
 - **Battle Cats Rolls**, de Lin Jen-Shin (godfat), licencia Apache 2.0: datos de los banners y el
-  algoritmo de tiradas, adaptado a JavaScript ([LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+  algoritmo de tiradas, adaptado a JavaScript ([copia de la licencia](public/licenses/Apache-2.0.txt), publicada también con la web).
 - **Battle Cats Wiki** (Miraheze): iconos de los gatos.
 - **The Battle Cats** y sus imágenes © PONOS Corporation. Proyecto no afiliado ni aprobado por PONOS.
 

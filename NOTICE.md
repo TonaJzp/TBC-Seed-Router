@@ -10,7 +10,7 @@ works based on it, needs the author's written permission. See [LICENSE](LICENSE)
 
 - **Battle Cats Rolls** by Lin Jen-Shin (godfat), https://gitlab.com/godfat/battle-cats-rolls,
   Copyright (c) 2018-2026 Lin Jen-Shin, licensed under the Apache License 2.0
-  ([LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+  ([public/licenses/Apache-2.0.txt](public/licenses/Apache-2.0.txt), also published with the site).
   - `public/core/gacha.js` is a port of its roll algorithm (`lib/battle-cats-rolls/gacha.rb`,
     `gacha_pool.rb`, `cat.rb`) and `scripts/lib/godfat-data.js` ports its end-date normalisation
     (`crystal_ball.rb`). Changes: rewritten in JavaScript and limited to what the route planner needs.
