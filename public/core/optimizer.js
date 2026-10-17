@@ -839,24 +839,33 @@ function optimizeRoutes(ctx) {
  * The recommended route is the cheapest overall (1 Rare Ticket = 150 Cat
  * Food). But when even that one needs more Cat Food than you have, the one
  * that asks for the least extra Cat Food is recommended instead: it spends
- * your Rare Tickets first. It must get as many targets. Marks it with
- * `recommended` and `recommendedFor` ('cheapest' or 'leastFood') and puts it
- * first.
+ * your Rare Tickets first. It must get as many targets.
+ *
+ * Searches that run to the end all get the same targets. One cut at its limit
+ * may get fewer: then the route getting the most is recommended, the lowest
+ * total spend among those ('mostTargets'). Never a route that was not found;
+ * if none was, none is recommended. Marks it with `recommended` and
+ * `recommendedFor` ('cheapest', 'leastFood', 'mostTargets' or 'found') and
+ * puts it first.
  */
 function pickRecommended(routes) {
   const got = (r) => r.targets.filter((t) => t.obtained).length;
+  const found = routes.filter((r) => r.found);
+  const most = Math.max(...found.map(got));
+  const best = (r) => !!r?.found && got(r) === most;
   const cheapest = routes.find((r) => r.key === 'optimal');
   const leanest = routes.find((r) => r.key === 'saveFood');
   const switchToLeanest =
-    cheapest?.found && !cheapest.totals.affordable &&
-    leanest?.found && got(leanest) >= got(cheapest) &&
-    leanest.totals.foodUsed < cheapest.totals.foodUsed;
-  // Never a route that was not found: if the cheapest search ran out, the
-  // first one found; if none was, none is recommended.
+    best(cheapest) && !cheapest.totals.affordable &&
+    best(leanest) && leanest.totals.foodUsed < cheapest.totals.foodUsed;
   let pick = switchToLeanest ? leanest : cheapest;
-  if (!pick?.found) pick = routes.find((r) => r.found) || null;
+  if (!best(pick)) {
+    pick = found.filter(best).reduce((a, r) => (!a || r.totals.totalCost < a.totals.totalCost ? r : a), null);
+  }
   for (const r of routes) r.recommended = r === pick;
-  if (pick) pick.recommendedFor = switchToLeanest ? 'leastFood' : pick === cheapest ? 'cheapest' : 'found';
+  if (pick) {
+    pick.recommendedFor = switchToLeanest ? 'leastFood' : pick === cheapest ? 'cheapest' : cheapest?.found ? 'mostTargets' : 'found';
+  }
   return [pick, ...routes.filter((r) => r !== pick)].filter(Boolean);
 }
 

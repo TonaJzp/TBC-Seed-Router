@@ -210,6 +210,9 @@ lugar de repetirla, y si llevan a otra ruta con las mismas cifras, «Mismo coste
   pide más Cat Food de la que tienes. Por ejemplo, con 70 tickets y 500 Cat Food, «Menor coste total»
   podría usar 8 tickets y pedirte 11.500 Cat Food más, y «Máximo ahorro de Cat Food» usar los 70 y
   pedirte solo 3.100. En ese caso, el detalle de la ruta explica por qué se recomienda.
+- **Si una búsqueda muy pesada llega a su límite de tamaño**, puede quedarse con menos objetivos que
+  otra. Entonces se recomienda la que más objetivos consigue (y, entre esas, la de menor coste total),
+  y el detalle de la ruta lo explica.
 
 ### Detalle de la ruta
 

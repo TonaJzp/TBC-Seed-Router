@@ -639,7 +639,7 @@ test('a step says by a field, not by its wording, whether it takes a discount', 
 
 test('the recommended route is always one that was found', async () => {
   const { pickRecommended } = await import('../public/core/optimizer.js');
-  const route = (key, found, extra = {}) => ({ key, found, targets: [{ obtained: found }], totals: { affordable: true, foodUsed: 0 }, ...extra });
+  const route = (key, found, extra = {}) => ({ key, found, targets: [{ obtained: found }], totals: { affordable: true, foodUsed: 0, totalCost: 0 }, ...extra });
   // The cheapest search ran out without a route; another one found it.
   const routes = [route('optimal', false), route('saveFood', true), route('saveTickets', true)];
   const [first] = pickRecommended(routes);
@@ -649,4 +649,34 @@ test('the recommended route is always one that was found', async () => {
   const none = [route('optimal', false), route('saveFood', false), route('saveTickets', false)];
   pickRecommended(none);
   assert.ok(none.every((r) => !r.recommended));
+});
+
+test('a route that gets more targets is recommended over a cheaper one whose search was cut', async () => {
+  const { pickRecommended } = await import('../public/core/optimizer.js');
+  // Targets got (of 3), total cost, Cat Food and whether it is affordable.
+  const route = (key, got, cost, { food = cost, affordable = true, exhausted = true } = {}) => ({
+    key, found: true, exhausted,
+    targets: [0, 1, 2].map((i) => ({ obtained: i < got })),
+    totals: { totalCost: cost, foodUsed: food, affordable },
+  });
+  // The real case (seed 1234567, 16 cats): the cheapest two were cut short.
+  const cut = [route('optimal', 2, 9000), route('saveFood', 2, 9000), route('saveTickets', 3, 12000, { exhausted: false })];
+  const ordered = pickRecommended(cut);
+  assert.equal(ordered[0].key, 'saveTickets', 'it goes first');
+  assert.ok(ordered[0].recommended && cut.filter((r) => r.recommended).length === 1);
+  assert.equal(ordered[0].recommendedFor, 'mostTargets');
+  // Among the ones getting the most, the lowest total spend.
+  const two = pickRecommended([route('optimal', 1, 3000), route('saveFood', 3, 9000), route('saveTickets', 3, 8000)]);
+  assert.equal(two[0].key, 'saveTickets');
+  // As many targets: the cheapest stays recommended even if its search was cut.
+  const tie = pickRecommended([route('optimal', 3, 5000), route('saveFood', 3, 6000), route('saveTickets', 3, 7000)]);
+  assert.equal(tie[0].key, 'optimal');
+  assert.equal(tie[0].recommendedFor, 'cheapest');
+  // Short of Cat Food: the least extra Cat Food, as before, only among the ones getting the most.
+  const short = { affordable: false };
+  const lean = pickRecommended([route('optimal', 3, 5000, short), route('saveFood', 3, 6000, { ...short, food: 1000 }), route('saveTickets', 2, 9000)]);
+  assert.equal(lean[0].key, 'saveFood');
+  assert.equal(lean[0].recommendedFor, 'leastFood');
+  const notLean = pickRecommended([route('optimal', 3, 5000, short), route('saveFood', 2, 6000, { ...short, food: 1000 }), route('saveTickets', 2, 9000)]);
+  assert.equal(notLean[0].key, 'optimal', 'never one with fewer targets');
 });

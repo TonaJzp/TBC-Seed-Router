@@ -791,8 +791,13 @@ function renderDetail(data) {
 
   // A missing cat links straight to the card that explains it.
   const reasons = reasonIds(data);
-  const missing = (name) =>
-    `<li class="missing"><span>${esc(name)}</span><a class="where why-link" href="#${reasons.get(name) || 'diagnostics'}">Ver motivo <span aria-hidden="true">↑</span></a></li>`;
+  // Without explanations (the recommended route gets them all) there is nothing to link to.
+  const missing = (name) => {
+    const id = reasons.get(name) || (data.diagnostics?.length ? 'diagnostics' : null);
+    return `<li class="missing"><span>${esc(name)}</span>${
+      id ? `<a class="where why-link" href="#${id}">Ver motivo <span aria-hidden="true">↑</span></a>` : ''
+    }</li>`;
+  };
   const targets = r.targets
     .map((x) =>
       x.obtained
@@ -805,10 +810,15 @@ function renderDetail(data) {
   // Step that gets the last target: an 11-draw after it only spends the discount.
   const lastHit = Math.max(0, ...r.targets.filter((x) => x.obtained).map((x) => x.step));
   const cheapest = data.routes.find((x) => x.key === 'optimal');
+  const gotOf = (x) => x.targets.filter((y) => y.obtained).length;
   const why =
     r.recommendedFor === 'leastFood' && cheapest?.found
       ? `<p class="why">Se recomienda esta porque no tienes Cat Food suficiente para ninguna ruta y es la que menos te pide: gasta primero tus Rare Tickets. «${esc(cheapest.label)}» gasta menos en total porque prefiere 11-draws (más baratos por tiro), pero te pediría ${fmt(cheapest.totals.shortfall)} de Cat Food más.</p>`
-      : '';
+      : r.recommendedFor === 'mostTargets' && cheapest?.found
+        ? `<p class="why">Se recomienda esta porque consigue más objetivos (${gotOf(r)} de ${r.targets.length + (data.unplanned || []).length}) que «${esc(cheapest.label)}» (${gotOf(cheapest)})${
+          cheapest.exhausted ? ', cuya búsqueda llegó a su límite de tamaño antes de terminar' : ''
+        }.</p>`
+        : '';
 
   return `<section class="detail">
     <div class="detail-head">
