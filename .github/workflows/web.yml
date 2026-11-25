@@ -1,6 +1,8 @@
 # Every day (and on every push to main): tests, fresh data from godfat's open
 # repository, a full check against bc.godfat.org, publication on GitHub Pages
-# and a GitHub issue to the owner if anything needs attention.
+# and a GitHub issue to the owner only if the tool's results are at risk or a
+# hiccup has lasted days (scripts/notify.js). The run is red only when tests
+# fail or the issue gets something new: one email per problem, not per day.
 name: Datos, comprobación y web
 
 on:
@@ -32,7 +34,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.deploy_retry.outputs.page_url }}
     steps:
       # Actions pinned to a commit (the version in the comment): a moved tag cannot change what runs.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -103,9 +105,23 @@ jobs:
         with:
           path: public
 
+      # Pages sometimes fails for a moment (2026-11-25: the artifact was
+      # uploaded but not found): one more try a minute later. Neither attempt
+      # turns the run red; "Avisar" decides if it is worth an email.
       - name: Publicar
         id: deploy
         if: steps.build.outcome == 'success'
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Esperar antes de reintentar
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 60
+
+      - name: Publicar (reintento)
+        id: deploy_retry
+        if: steps.deploy.outcome == 'failure'
+        continue-on-error: true
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
       - name: Avisar
@@ -115,7 +131,8 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
-          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome == 'failure' && steps.deploy_retry.outcome || steps.deploy.outcome }}
+          PUBLISHED_STATUS: ${{ env.SITE_URL }}data/status.json
           OPTIMALITY_OUTCOME: ${{ steps.optimality.outcome }}
           OPTIMALITY_SEED: ${{ github.run_id }}
           OPTIMALITY_CASES: 3000

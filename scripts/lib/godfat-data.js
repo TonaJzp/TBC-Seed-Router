@@ -89,7 +89,7 @@ function parseYaml(text) {
  * @param raw   parsed bc-en.yaml
  * @param today build date, YYYY-MM-DD (UTC)
  * @param hours eventHours() of the game's event file, or null if it could not be read
- * @returns { data, errors, warnings }
+ * @returns { data, errors, warnings, notes }
  */
 function transform(raw, { today, source = {}, hours = null }) {
   const errors = [];
@@ -115,13 +115,16 @@ function transform(raw, { today, source = {}, hours = null }) {
 
   const endOf = normalizedEnds(raw);
   const from = addDays(today, -KEEP_ENDED_DAYS);
-  if (!hours) warnings.push(`No se ha podido leer la hora de los banners (${GODFAT.eventsDir}); se usa ${DEFAULT_HOUR}, la habitual.`);
+  // A missing hour is a note, not a warning: 11:00 is the hour banners change
+  // in practice, so no result changes (owner's rule, 2026-11-25).
+  const notes = [];
+  if (!hours) notes.push(`No se ha podido leer la hora de los banners (${GODFAT.eventsDir}); se usa ${DEFAULT_HOUR}, la habitual.`);
   // The hour a banner starts or ends, checked against the event file.
   const hourOf = (key, kind, where) => {
     if (!hours) return DEFAULT_HOUR;
     const t = hours.get(key);
     if (t?.[kind]) return t[kind];
-    warnings.push(`${where}: no se encuentra su hora de ${kind === 'start' ? 'inicio' : 'fin'} en los datos del juego; se usa ${DEFAULT_HOUR}.`);
+    notes.push(`${where}: no se encuentra su hora de ${kind === 'start' ? 'inicio' : 'fin'} en los datos del juego; se usa ${DEFAULT_HOUR}.`);
     return DEFAULT_HOUR;
   };
   const events = [];
@@ -216,6 +219,7 @@ function transform(raw, { today, source = {}, hours = null }) {
     data: { version: 1, generatedAt: new Date().toISOString(), source: { ...GODFAT, ...source }, events, gacha, cats, skipped },
     errors,
     warnings,
+    notes,
   };
 }
 

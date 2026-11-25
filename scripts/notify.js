@@ -1,12 +1,16 @@
-// Turns the daily run into a notification for the owner: if anything failed or
-// does not match godfat, it opens a GitHub issue labelled "vigilancia" (GitHub
-// emails the owner), comments on it when the problem changes, and closes it
-// when everything is fine again. Exit code 1 when there is something to look
-// at, so the run is also marked as failed.
+// Turns the daily run into a notification for the owner, only for what puts
+// the truth of the tool at risk or has not fixed itself in days (the owner's
+// rule, 2026-11-25): it opens a GitHub issue labelled "vigilancia" (GitHub
+// emails the owner), comments on it when the kind of problem changes, and
+// closes it when everything is fine again. Exit code 1 only when it writes
+// something new, so the run is marked as failed (one more email) once per
+// problem, not every day while it lasts. Missing icons and the 11:00 hour
+// fallback never notify: they do not change any result.
 //
 // Environment (set by the workflow): GITHUB_TOKEN, GITHUB_REPOSITORY,
-// RUN_URL, TESTS_OUTCOME (lint and tests), BUILD_OUTCOME, DEPLOY_OUTCOME, and OPTIMALITY_OUTCOME,
-// OPTIMALITY_SEED, OPTIMALITY_CASES (the daily exploration of optimal routes).
+// RUN_URL, TESTS_OUTCOME (lint and tests), BUILD_OUTCOME, DEPLOY_OUTCOME, OPTIMALITY_OUTCOME,
+// OPTIMALITY_SEED, OPTIMALITY_CASES (the daily exploration of optimal routes),
+// PUBLISHED_STATUS (URL of the status.json the site is serving).
 
 import fs from 'fs';
 import path from 'path';
@@ -17,12 +21,15 @@ const LABEL = 'vigilancia';
 const TITLE = 'Vigilancia: hay algo que revisar';
 // godfat being down for a while is not our problem; for longer it is.
 const UNVERIFIED_DAYS = 3;
+// A failed download or deploy keeps the previous data online, still correct:
+// GitLab or Pages failing for a day fixes itself the next day. The site's data
+// this many days old is no longer a hiccup.
+const STALE_DAYS = 2;
 // godfat's page can list a new banner before its open data has it (hours, on
 // 2026-10-16). Pending for this many calendar days, or starting tomorrow at
 // the latest, it is no longer a delay. Days, not hours: the daily run can
 // start hours late.
 const PENDING_DAYS = 2;
-const MAX_LISTED = 10;
 
 const readJson = (file) => {
   try {
@@ -32,31 +39,30 @@ const readJson = (file) => {
   }
 };
 
-/** Problems found by this run, as markdown sections (empty if all is well). */
-function findProblems(env, build, verify, now = new Date()) {
+/**
+ * Problems found by this run, as markdown sections (empty if all is well).
+ * `published` is the status.json the site serves (its checkedAt is when the
+ * data online was built), or null if unknown.
+ */
+function findProblems(env, build, verify, now = new Date(), published = null) {
   const problems = [];
   if (env.TESTS_OUTCOME && env.TESTS_OUTCOME !== 'success') {
     problems.push('### Han fallado los tests, el lint o la instalación\nNo se ha publicado nada: la web sigue con la versión anterior. Mira el registro de la ejecución.');
     return problems;
   }
-  if (env.BUILD_OUTCOME !== 'success' || !build?.ok) {
+  const builtAt = published?.checkedAt ? new Date(published.checkedAt) : null;
+  const stale = !builtAt || now - builtAt > STALE_DAYS * 86_400_000;
+  const since = builtAt ? `Los datos de la web son del ${builtAt.toISOString().slice(0, 10)}.` : 'No se sabe de cuándo son los datos de la web.';
+  const built = env.BUILD_OUTCOME === 'success' && build?.ok;
+  if (!built && stale) {
     problems.push(
       '### No se han podido actualizar los datos\n' +
-        'La web sigue publicada con los datos anteriores.\n\n' +
+        `La web sigue publicada con los datos anteriores. ${since}\n\n` +
         (build?.errors?.length ? build.errors.map((e) => `- ${e}`).join('\n') : '- El paso de construcción falló; mira el registro de la ejecución.')
     );
   }
   if (build?.warnings?.length) {
     problems.push('### Avisos en los datos\n' + build.warnings.map((w) => `- ${w}`).join('\n'));
-  }
-  if (build?.iconsMissing?.length) {
-    const list = build.iconsMissing.slice(0, MAX_LISTED).map((c) => `- ${c.name} (${c.id}): ${c.reason}`);
-    if (build.iconsMissing.length > MAX_LISTED) list.push(`- y ${build.iconsMissing.length - MAX_LISTED} más`);
-    problems.push(
-      `### Faltan iconos\n${build.iconsMissing.length} gatos de los banners salen en la web sin imagen. ` +
-        'El cálculo no se ve afectado.\n\n' +
-        list.join('\n')
-    );
   }
   if (env.OPTIMALITY_OUTCOME === 'failure') {
     problems.push(
@@ -68,10 +74,10 @@ function findProblems(env, build, verify, now = new Date()) {
         `\`OPTIMALITY_SEED=${env.OPTIMALITY_SEED} OPTIMALITY_CASES=${env.OPTIMALITY_CASES || 400} node --test test/optimality.test.js\``
     );
   }
-  if (env.DEPLOY_OUTCOME && env.DEPLOY_OUTCOME !== 'success' && env.BUILD_OUTCOME === 'success') {
+  if (env.DEPLOY_OUTCOME && env.DEPLOY_OUTCOME !== 'success' && built && stale) {
     problems.push(
       '### No se ha podido publicar la web\n' +
-        'El despliegue en GitHub Pages falló o no llegó a hacerse. Comprueba que el repositorio es público y que en ' +
+        `El despliegue en GitHub Pages falló, también al reintentarlo, y no es la primera vez. ${since} Comprueba que el repositorio es público y que en ` +
         '*Settings → Pages* la fuente es *GitHub Actions*; si es así, mira el registro de la ejecución.'
     );
   }
@@ -126,11 +132,32 @@ async function github(env, method, endpoint, body) {
   return res.status === 204 ? null : res.json();
 }
 
+/**
+ * What a report is about: its section titles, without the parts that change
+ * every day (seed, dates, examples). The issue gets a new comment, and the
+ * owner a new email, only when this changes.
+ */
+function signature(problems) {
+  return problems.map((p) => p.split('\n')[0].replace(/^#+\s*/, '')).join(' | ');
+}
+const SIGNATURE = /<!-- firma: (.*?) -->/;
+
+/** The status.json the site is serving now, or null. */
+async function publishedStatus(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(`${url}?t=${Date.now()}`);
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 async function main() {
   const env = process.env;
   const build = readJson('.cache/build-report.json');
   const verify = readJson('.cache/verify-report.json');
-  const problems = findProblems(env, build, verify);
+  const problems = findProblems(env, build, verify, new Date(), await publishedStatus(env.PUBLISHED_STATUS));
   const runLink = env.RUN_URL ? `\n\n[Ver la ejecución](${env.RUN_URL})` : '';
 
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPOSITORY) {
@@ -142,17 +169,25 @@ async function main() {
   const [open] = await github(env, 'GET', `/issues?labels=${LABEL}&state=open&per_page=1`);
   if (problems.length) {
     const report = problems.join('\n\n');
+    const sign = signature(problems);
+    const body = `${report}${runLink}\n\n<!-- firma: ${sign} -->`;
+    let wrote = false;
     if (!open) {
       await github(env, 'POST', '/labels', { name: LABEL, color: 'b60205', description: 'Avisos automáticos de la comprobación diaria' });
-      await github(env, 'POST', '/issues', { title: TITLE, labels: [LABEL], body: `${report}${runLink}` });
+      await github(env, 'POST', '/issues', { title: TITLE, labels: [LABEL], body });
+      wrote = true;
     } else {
-      // Only write again when the problem changes, not every day.
+      // Only write again when the kind of problem changes, not every day.
       const comments = await github(env, 'GET', `/issues/${open.number}/comments?per_page=100`);
       const latest = comments.length ? comments.at(-1).body : open.body;
-      if (!latest.startsWith(report)) await github(env, 'POST', `/issues/${open.number}/comments`, { body: `${report}${runLink}` });
+      if (SIGNATURE.exec(latest || '')?.[1] !== sign) {
+        await github(env, 'POST', `/issues/${open.number}/comments`, { body });
+        wrote = true;
+      }
     }
     console.log(report);
-    process.exitCode = 1;
+    // The run turns red (GitHub emails too) the day the problem is new, not every day after.
+    process.exitCode = wrote ? 1 : 0;
   } else {
     if (open) {
       await github(env, 'POST', `/issues/${open.number}/comments`, { body: `Todo vuelve a estar en orden.${runLink}` });
@@ -162,6 +197,6 @@ async function main() {
   }
 }
 
-export { findProblems };
+export { findProblems, signature };
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) main();

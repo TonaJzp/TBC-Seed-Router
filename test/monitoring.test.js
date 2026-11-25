@@ -10,7 +10,7 @@ import { parseHTML } from 'linkedom';
 import { parseEventList, parseTable, organize } from '../scripts/lib/godfat-html.js';
 import { transform, eventHours } from '../scripts/lib/godfat-data.js';
 import { buildIcons, missingIcons, iconUrls } from '../scripts/lib/wiki-icons.js';
-import { findProblems } from '../scripts/notify.js';
+import { findProblems, signature } from '../scripts/notify.js';
 import { Differences, compareList, trackPending } from '../scripts/lib/compare.js';
 
 const fixtureHtml = fs.readFileSync(new URL('./fixtures/godfat-table.html', import.meta.url), 'utf8');
@@ -164,13 +164,17 @@ test('anything unexpected in the data file is reported, never guessed', () => {
   // A broken list of cats takes out both banners of that gacha: 2 of 3, too many.
   assert.match(check((r) => r.gacha[100].cats.push(999)).errors.join(), /más de la mitad.*faltan o no son de gacha.*999/s);
   assert.match(check((r) => delete r.gacha).errors.join(), /no tiene las secciones/);
-  // Hours: missing or not matching the event file is reported, with 11:00 meanwhile.
+  // Hours: a missing one is a note (11:00, the usual hour, changes no result);
+  // an end date not matching the event file is a warning.
   const noFile = transform(yamlLike(), { today: '2026-10-08', hours: null });
-  assert.match(noFile.warnings.join(), /No se ha podido leer la hora de los banners/);
+  assert.match(noFile.notes.join(), /No se ha podido leer la hora de los banners/);
+  assert.deepEqual(noFile.warnings, []);
   assert.ok(noFile.data.events.every((e) => e.startTime === '11:00' && e.endTime === '11:00'));
   const partial = eventHours(tsvLike());
   partial.delete('2026-10-05_101');
-  assert.match(transform(yamlLike(), { today: '2026-10-08', hours: partial }).warnings.join(), /Banner 2026-10-05_101: no se encuentra su hora de inicio/);
+  const noHour = transform(yamlLike(), { today: '2026-10-08', hours: partial });
+  assert.match(noHour.notes.join(), /Banner 2026-10-05_101: no se encuentra su hora de inicio/);
+  assert.deepEqual(noHour.warnings, []);
   assert.match(check((r) => (r.events['2026-10-10_100'].end_on = '2026-10-26')).warnings.join(), /2026-10-10_100: la fecha de fin no coincide/);
   const stale = transform(yamlLike(), { today: '2026-10-24', hours: eventHours(tsvLike()) });
   assert.match(stale.warnings.join(), /No hay banners anunciados/);
@@ -310,14 +314,37 @@ test('every kind of problem is reported to the owner', () => {
   const deploy = findProblems({ ...ok, DEPLOY_OUTCOME: 'failure' }, { ok: true, warnings: [] }, { result: 'ok', lastOk: now.toISOString(), differences: [] }, now);
   assert.match(deploy.join(), /No se ha podido publicar/);
 
-  const iconsMissing = Array.from({ length: 12 }, (_, i) => ({ id: 900 + i, name: `Cat ${i}`, reason: 'la wiki no respondió (HTTP 403)' }));
-  const icons = findProblems(ok, { ok: true, warnings: [], iconsMissing }, { result: 'ok', lastOk: now.toISOString(), differences: [] }, now).join();
-  assert.match(icons, /Faltan iconos\n12 gatos.*Cat 0 \(900\): la wiki no respondió \(HTTP 403\).*y 2 más/s);
-  assert.doesNotMatch(icons, /Cat 10 /, 'long lists are cut');
-
   const tests = findProblems({ TESTS_OUTCOME: 'failure', BUILD_OUTCOME: 'skipped' }, null, null, now);
   assert.equal(tests.length, 1, 'a failing test explains the rest, without follow-up noise');
   assert.match(tests[0], /Han fallado los tests/);
+});
+
+// The owner's rule (2026-11-25): an email only when the tool's results are at
+// risk, or when a hiccup has not fixed itself in days.
+test('what does not change any result never notifies: missing icons', () => {
+  const iconsMissing = Array.from({ length: 12 }, (_, i) => ({ id: 900 + i, name: `Cat ${i}`, reason: 'la wiki no respondió (HTTP 403)' }));
+  assert.deepEqual(findProblems(ok, { ok: true, warnings: [], notes: ['x'], iconsMissing }, { result: 'ok', lastOk: now.toISOString(), differences: [] }, now), []);
+});
+
+test('a failed download or deploy keeps correct data online: reported only once the site is days behind', () => {
+  const fine = { result: 'ok', lastOk: now.toISOString(), differences: [] };
+  const yesterday = { checkedAt: '2026-10-09T05:40:00Z' };
+  const longAgo = { checkedAt: '2026-10-07T05:40:00Z' };
+  const noData = { ok: false, errors: ['fetch failed'] };
+  assert.deepEqual(findProblems({ BUILD_OUTCOME: 'failure' }, noData, null, now, yesterday), []);
+  assert.match(findProblems({ BUILD_OUTCOME: 'failure' }, noData, null, now, longAgo).join(), /No se han podido actualizar.*del 2026-10-07.*fetch failed/s);
+  assert.deepEqual(findProblems({ ...ok, DEPLOY_OUTCOME: 'failure' }, { ok: true, warnings: [] }, fine, now, yesterday), []);
+  assert.match(findProblems({ ...ok, DEPLOY_OUTCOME: 'failure' }, { ok: true, warnings: [] }, fine, now, longAgo).join(), /No se ha podido publicar.*del 2026-10-07/s);
+  // What puts the results at risk is never delayed.
+  const mismatch = { result: 'mismatch', seed: 5, banners: 3, rolls: 300, differences: [{ kind: 'Gato distinto en una casilla', count: 1, examples: ['a'] }] };
+  assert.match(findProblems(ok, { ok: true, warnings: [] }, mismatch, now, yesterday).join(), /no coincide/);
+});
+
+test('the same problem on another day, with another seed, is not a new email', () => {
+  const day = (seed) => findProblems(ok, { ok: true, warnings: [] }, { result: 'mismatch', seed, banners: 3, rolls: 300, differences: [{ kind: 'Gato distinto en una casilla', count: seed, examples: [`ex ${seed}`] }] }, now);
+  assert.equal(signature(day(5)), signature(day(77)));
+  const withTests = findProblems({ TESTS_OUTCOME: 'failure' }, null, null, now);
+  assert.notEqual(signature(day(5)), signature(withTests), 'a new kind of problem is');
 });
 
 test('godfat being briefly unreachable is tolerated; for days, it is reported', () => {

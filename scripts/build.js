@@ -127,14 +127,13 @@ async function main() {
     raw = null;
     console.error(`El archivo de godfat no es YAML válido: ${err.message}`);
   }
-  const { data, errors, warnings } = raw ? transform(raw, { today, source, hours }) : { data: null, errors: ['El archivo de godfat no es YAML válido.'], warnings: [] };
+  const { data, errors, warnings, notes = [] } = raw ? transform(raw, { today, source, hours }) : { data: null, errors: ['El archivo de godfat no es YAML válido.'], warnings: [] };
   if (errors.length) {
     writeReport({ ok: false, errors, warnings, source });
     for (const e of errors) console.error(`Error: ${e}`);
     process.exit(1);
   }
 
-  const notes = [];
   let iconsMissing = [];
   if (!process.argv.includes('--no-icons')) {
     const ids = Object.keys(data.cats).map(Number);
