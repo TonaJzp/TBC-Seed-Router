@@ -50,7 +50,8 @@ function parseTable(document) {
   const cells = [];
   for (const td of document.querySelectorAll('td.position.cat[onclick]')) {
     if (td.classList.contains('score')) continue;
-    const m = (td.getAttribute('onclick') || '').match(/pick\('(\d+)([AB])(R?)(G?)'\)/);
+    // pick('1A') before 2026-11, pick('1A', event) since.
+    const m = (td.getAttribute('onclick') || '').match(/pick\('(\d+)([AB])(R?)(G?)'\s*[,)]/);
     if (!m) continue;
     const nameLink = td.querySelector('a[title]');
     const catLink = td.querySelector('a[href*="/cats/"]');

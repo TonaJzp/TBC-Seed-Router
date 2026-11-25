@@ -39,12 +39,14 @@ class Differences {
 function compareList(diff, data, webEvents, today) {
   const ours = new Map(data.events.map((e) => [e.id, e]));
   const pending = [];
+  // godfat's page is HTML: runs of spaces in a name show as one.
+  const shown = (name) => name.replace(/\s+/g, ' ').trim();
   for (const w of webEvents) {
     const e = ours.get(w.id);
     if (!e) pending.push({ id: w.id, name: w.name, start: w.start, end: w.end });
     else if (e.start !== w.start || e.end !== w.end) {
       diff.add('Fechas distintas', `${w.id}: web ${w.start}~${w.end}, datos ${e.start}~${e.end}`);
-    } else if (e.name !== w.name) diff.add('Nombre de banner distinto', `${w.id}: web «${w.name}», datos «${e.name}»`);
+    } else if (shown(e.name) !== w.name) diff.add('Nombre de banner distinto', `${w.id}: web «${w.name}», datos «${e.name}»`);
   }
   // Banners surely not past anywhere must be on godfat's list too.
   const listed = new Set(webEvents.map((w) => w.id));

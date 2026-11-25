@@ -63,12 +63,16 @@ async function downloadGodfat() {
   return { text: await getRaw(id, GODFAT.file), source: { commit: id, committedAt: commit.committed_date } };
 }
 
+// The newest event file is not a full copy of the schedule: on 2026-11-25
+// 20261228.tsv left out banners running since 2026-11-20 that 20261127.tsv had.
+const EVENT_FILES = 4;
+
 /**
- * The game's newest event file at the same commit (data/en/events/YYYYMMDD.tsv,
- * a full copy of the schedule): bc-en.yaml is built from these files but
- * leaves out the hours. Returns its text and name.
+ * The game's newest event files at the same commit (data/en/events/YYYYMMDD.tsv):
+ * bc-en.yaml is built from these files but leaves out the hours. Returns
+ * their texts, oldest first, and names.
  */
-async function downloadEventFile(commit) {
+async function downloadEventFiles(commit) {
   const names = [];
   for (let page = 1; page < 50; page++) {
     const query = new URLSearchParams({ path: GODFAT.eventsDir, ref: commit, per_page: '100', page: String(page) });
@@ -76,9 +80,11 @@ async function downloadEventFile(commit) {
     names.push(...list.map((f) => f.name).filter((n) => /^\d{8}\.tsv$/.test(n)));
     if (list.length < 100) break;
   }
-  const newest = names.sort().at(-1);
-  if (!newest) throw new Error(`no hay archivos de eventos en ${GODFAT.eventsDir}`);
-  return { text: await getRaw(commit, `${GODFAT.eventsDir}/${newest}`), name: newest };
+  const newest = names.sort().slice(-EVENT_FILES);
+  if (!newest.length) throw new Error(`no hay archivos de eventos en ${GODFAT.eventsDir}`);
+  const texts = [];
+  for (const name of newest) texts.push(await getRaw(commit, `${GODFAT.eventsDir}/${name}`));
+  return { texts, name: newest.join(', ') };
 }
 
 function writeReport(report) {
@@ -105,9 +111,9 @@ async function main() {
   let hours = null;
   try {
     const tsvFile = arg('--tsv');
-    const events = yamlFile ? (tsvFile ? { text: fs.readFileSync(tsvFile, 'utf8'), name: tsvFile } : null) : await downloadEventFile(source.commit);
+    const events = yamlFile ? (tsvFile ? { texts: [fs.readFileSync(tsvFile, 'utf8')], name: tsvFile } : null) : await downloadEventFiles(source.commit);
     if (events) {
-      hours = eventHours(events.text);
+      hours = eventHours(...events.texts);
       source.eventFile = events.name;
     }
   } catch (err) {

@@ -59,6 +59,17 @@ test('the score colour is read as godfat computes it, also under an exclusive ca
   });
 });
 
+test('cells are read in the markup godfat uses since 2026-11: pick(key, event)', () => {
+  // A cell copied from bc.godfat.org/tracks on 2026-11-25 (title shortened), plus a re-roll and a guaranteed one.
+  const cell = (key, extra = '') =>
+    `<td rowspan="1" class="position cat pick minor_supa major_supa" onclick="pick('${key}', event)"> <span><a href="//bc.godfat.org/tracks?seed=2297487059&last=62&highlighting=advanced&count=300" title="*Sushi Cat | Fried Shrimp Cat">Sushi Cat</a> <a href="//bc.godfat.org/cats/62?seed=1532886853&highlighting=advanced&count=300">🐾</a></span>${extra} </td>`;
+  const { document } = parseHTML(`<table><tr>${cell('1A')}${cell('3BR', ' -> 5A')}${cell('4AG', ' -> 15B')}</tr></table>`);
+  const ev = organize({ id: 'x' }, [{ offset: 0, table: parseTable(document) }]);
+  assert.deepEqual(ev.raw['1A'], { id: 62, name: 'Sushi Cat', dest: null, colors: ['supa'] });
+  assert.equal(ev.alt['3B'].dest, '5A');
+  assert.equal(ev.guaranteed['4A'].dest, '15B');
+});
+
 test('a godfat page without the expected parts is noticed, not misread', () => {
   const { document } = parseHTML('<html><body><p>Mantenimiento</p></body></html>');
   assert.equal(parseEventList(document), null);
@@ -104,6 +115,16 @@ test('the hours of the banners are read from the game\'s event file', () => {
   const hours = eventHours(tsvLike());
   assert.equal(hours.size, 4);
   assert.deepEqual(hours.get('2026-10-10_100'), { start: '12:00', end: '11:00', endDate: '2026-10-25' });
+});
+
+// 2026-11-25: the newest file (20261228.tsv) no longer listed the banners that
+// started on 2026-11-20 and were still running; 20261127.tsv did.
+test('several event files are read together, oldest first: a banner missing from the newest is still found', () => {
+  const older = ['[start]', tsvRow('20261120', '1100', '20261127', '1100', 200), tsvRow('20261201', '1100', '20261210', '1100', 201), '[end]'].join('\r\n');
+  const newest = ['[start]', tsvRow('20261201', '1200', '20261212', '1100', 201), '[end]'].join('\r\n');
+  const hours = eventHours(older, newest);
+  assert.deepEqual(hours.get('2026-11-20_200'), { start: '11:00', end: '11:00', endDate: '2026-11-27' });
+  assert.deepEqual(hours.get('2026-12-01_201'), { start: '12:00', end: '11:00', endDate: '2026-12-12' }, 'the newest file wins');
 });
 
 test('the data file becomes compact banner data, with godfat\'s end dates', () => {
@@ -327,6 +348,18 @@ test('a banner godfat lists before its open data has it is pending, not a differ
   const gone = new Differences();
   assert.deepEqual(compareList(gone, data, [], '2026-10-16'), []);
   assert.deepEqual(gone.list.map((d) => d.kind), ['Banner de los datos que la web de godfat no muestra']);
+});
+
+// 2026-11-25: the data said «units!  With» and godfat's page, HTML, shows one space.
+test('a banner name differing only in spaces is the same name; other changes are not', () => {
+  const name = 'Capsules featuring Colossus Slayer units!  With Increasing Capsules!';
+  const data = { events: [dataBanner('2026-12-11_772', '2026-12-11', '2026-12-14', name)] };
+  const same = new Differences();
+  compareList(same, data, [webBanner('2026-12-11_772', '2026-12-11', '2026-12-14', name.replace(/\s+/g, ' '))], '2026-11-25');
+  assert.deepEqual(same.list, []);
+  const renamed = new Differences();
+  compareList(renamed, data, [webBanner('2026-12-11_772', '2026-12-11', '2026-12-14', 'Other name')], '2026-11-25');
+  assert.deepEqual(renamed.list.map((d) => d.kind), ['Nombre de banner distinto']);
 });
 
 test('a pending banner keeps the day it was first seen, from one check to the next', () => {

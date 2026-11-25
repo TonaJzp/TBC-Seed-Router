@@ -50,12 +50,13 @@ function normalizedEnds(raw) {
 }
 
 /**
- * Hours of the rare gacha banners from one of the game's event files
- * (gatya.tsv, as godfat stores it): key "YYYY-MM-DD_<gacha id>" -> { start,
- * end } as "HH:MM", in the player's local time. Port of godfat's
- * TsvReader#gacha (Apache 2.0), keeping only the dates and hours.
+ * Hours of the rare gacha banners from the game's event files (gatya.tsv, as
+ * godfat stores them), given oldest first: a later file wins for the same
+ * banner. Key "YYYY-MM-DD_<gacha id>" -> { start, end, endDate }, hours as
+ * "HH:MM" in the player's local time. Port of godfat's TsvReader#gacha
+ * (Apache 2.0), keeping only the dates and hours.
  */
-function eventHours(tsv) {
+function eventHours(...tsvs) {
   const POOL_OFFSET = 9;
   const POOL_FIELDS = 15;
   const date = (v) => (/^\d{8}$/.test(v) ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` : null);
@@ -64,7 +65,7 @@ function eventHours(tsv) {
     return n % 100 < 60 && n < 2400 ? `${String(Math.floor(n / 100)).padStart(2, '0')}:${String(n % 100).padStart(2, '0')}` : null;
   };
   const hours = new Map();
-  for (const line of tsv.split(/\r?\n/)) {
+  for (const line of tsvs.flatMap((tsv) => tsv.split(/\r?\n/))) {
     if (!line || line.startsWith('[')) continue; // [start], [end]
     const row = line.split('\t');
     if (Number(row[8]) !== 1) continue; // rare gacha
